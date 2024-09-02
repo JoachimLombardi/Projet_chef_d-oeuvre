@@ -77,8 +77,6 @@ WSGI_APPLICATION = 'pubmed_analyze.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-pg_service_file = os.getenv('PGSERVICEFILE')
-database_url = os.getenv('DATABASE_URL')
 
 DATABASES = {
     'default': {
