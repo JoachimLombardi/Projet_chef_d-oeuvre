@@ -8,8 +8,24 @@ class PubmedSpider(scrapy.Spider):
     start_urls = ['https://pubmed.ncbi.nlm.nih.gov/29717108/']
  
     def parse(self, response):
+
+        # Extract date
+        pub_date = response.css(".cit::text").get().split(";")[0].strip() 
+
+        # Extract title
+        title = response.css(".heading-title::text").get().strip()
+
+        # Extract Abstract
+        abstract = response.css('.abstract-content.selected p::text').get().strip()
+
+        # Extract pmid
+        pmid = response.css('.id-link::text').getall()[0].strip()
+
+        # Extract doi
+        doi = response.css('.id-link::text').getall()[2].strip()
+
         # Extract authors names
-        author_section = response.css('inline-authors')
+        author_section = response.css(".heading-title::text").get()
         if author_section:
             authors = author_section.xpath('.//a[@class="full-name"]/text()').getall()
             author_names = [author.strip() for author in authors if author.strip()]
@@ -26,21 +42,7 @@ class PubmedSpider(scrapy.Spider):
         else:
             print("Aucun élément 'affiliation' trouvé")
 
-        # Extract abstract
-        abs_block = response.xpath('//div[@class="abstract-content"]')
-        if abs_block:
-            p_abs = abs_block.xpath('.//p/text()').get().strip()
-            print("Abstract:", p_abs)
-        else:
-            print("Aucun élément 'abstract' trouvé")
-
-        # Extract title
-        title_block = response.xpath('//h1[@class="heading-title"]/text()').get()
-        if title_block:
-            p_tit = title_block.strip()
-            print("Title:", p_tit)
-        else:
-            print("Aucun élément 'titre' trouvé")
+     
 
         # Extract DOI
         doi_section = response.xpath('//span[@class="identifier doi"]')
@@ -60,7 +62,7 @@ class PubmedSpider(scrapy.Spider):
             print("Aucun élément 'journal' trouvé")
 
         # Extract references
-        ref_block = response.xpath('//span[@class="cit"]/text()').get()
+        
         if ref_block:
             p_ref = ref_block.strip()
             print("References:", p_ref)
