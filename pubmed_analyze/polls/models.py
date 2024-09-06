@@ -1,57 +1,45 @@
-from django.utils import timezone
+
 from django.db import models
-import datetime
 
 
 class Review(models.Model):
-    title = models.CharField(max_length=200)
-    impact_factor = models.FloatField(default=0)
-    issn = models.IntegerField()
+    title = models.CharField(max_length=200, null=True)
+    abbreviation = models.CharField(max_length=200, null=True)
+    issn = models.CharField(max_length=200, null=True)
+    impact_factor = models.CharField(max_length=200, null=True)
+    
 
     def __str__(self):
         return self.title
 
 
 class Article(models.Model):
-    review = models.ForeignKey(Review, on_delete=models.CASCADE)
-    pub_date = models.DateTimeField("date published")
-    title = models.CharField(max_length=200)
-    authors = models.CharField(max_length=200)
-    author_affiliation = models.CharField(max_length=200)
-    abstract = models.CharField(max_length=200)
-    pmid = models.IntegerField()
-    doi = models.CharField(max_length=200)
-    mesh_terms = models.CharField(max_length=200)
-    disclosure = models.CharField(max_length=200)
+    review = models.ForeignKey(Review, null=True, on_delete=models.SET_NULL)
+    title_review = models.TextField(null=True)
+    pub_date = models.DateTimeField("date published", null=True)
+    title = models.TextField(null=True)
+    authors = models.TextField(null=True)
+    author_affiliation = models.TextField(null=True)
+    abstract = models.TextField(null=True)
+    pmid = models.IntegerField(null=True)
+    doi = models.TextField(null=True)
+    disclosure = models.TextField(null=True)
+    mesh_terms = models.TextField(null=True)
+    url = models.CharField(max_length=200, null=True)
+
 
     def __str__(self):
         return self.title
     
-    def was_published_recently(self):
-        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
-
-    def format_date(self):
-        return self.pub_date.strftime('%d/%m/%Y %H:%M:%S')
-
-    def get_absolute_url(self):
-        return "https://pubmed.ncbi.nlm.nih.gov/"+str(self.pmid)
-    
-
-    def __str__(self):
-        return self.names
-
 
 class Cited_by(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
-    review = models.ForeignKey(Review, on_delete=models.CASCADE)
-    pmid = models.IntegerField()
-    doi = models.CharField(max_length=200)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, null=True)
+    review = models.ForeignKey(Review, null=True, on_delete=models.SET_NULL)
+    doi = models.CharField(max_length=200, null=True)
+    pmid = models.IntegerField(null=True)
+    url = models.CharField(max_length=200, null=True)
+    
 
     def __str__(self):
         return self.review_title
     
-    def format_date(self):
-        return self.pub_date.strftime('%d/%m/%Y %H:%M:%S')
-    
-    def get_absolute_url(self):
-        return "https://pubmed.ncbi.nlm.nih.gov/"+str(self.pmid)
