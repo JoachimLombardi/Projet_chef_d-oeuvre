@@ -12,14 +12,23 @@ class Review(models.Model):
     def __str__(self):
         return self.title
 
+class Authors(models.Model):
+    name = models.CharField(max_length=200, null=True)
+
+    def __str__(self):
+        return self.name
+    
+class Affiliations(models.Model):
+    name = models.TextField(null=True)
+
+    def __str__(self):
+        return self.affiliation
 
 class Article(models.Model):
     review = models.ForeignKey(Review, null=True, on_delete=models.SET_NULL)
     title_review = models.TextField(null=True)
     pub_date = models.DateTimeField("date published", null=True)
     title = models.TextField(null=True)
-    authors = models.TextField(null=True)
-    author_affiliation = models.TextField(null=True)
     abstract = models.TextField(null=True)
     pmid = models.IntegerField(null=True)
     doi = models.TextField(null=True)
@@ -30,7 +39,13 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
+
+class Articles_authors_affiliations(models.Model):
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, null=True)
+    author = models.ForeignKey(Authors, on_delete=models.CASCADE, null=True)
+    affiliation = models.ForeignKey(Affiliations, on_delete=models.CASCADE, null=True)
     
+   
 
 class Cited_by(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, null=True)
