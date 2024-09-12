@@ -7,12 +7,14 @@ from bs4 import BeautifulSoup
 import time
 from datetime import datetime
 from dateutil import parser
-from .models import Review, Authors, Affiliations, Article, Articles_authors_affiliations, Cited_by
+from .models import Authors, Affiliations, Article, Articles_authors_affiliations, Cited_by
 
 # def index(request):
 #     return HttpResponse("Hello, world. You're at the polls index.")
 
 def format_date(date):
+    if date is None:
+        return None  # Gérer le cas où l'entrée est None
     try:
         date_obj = parser.parse(date, fuzzy=True)
         return date_obj
@@ -34,39 +36,6 @@ def init_soup(url):
     return soup
 
 
-def extract_review_url(url='https://www.journalsinsights.com/journals/'):
-    links = []
-    # We iter 110 times to get all the journals with a step of 20
-    for i in range(0, 2180, 20):
-        soup = init_soup(url+str(i))
-        list_reviews = soup.select('div.abbreviation_box') 
-        for review in list_reviews:
-            links.extend([a['href'] for a in review.find_all('a', href=True)])
-        time.sleep(1)
-    pattern_to_exclude = re.compile(r"https://www\.journalsinsights\.com/journals/(\d+)?$")
-    filtered_links = [link for link in links if not pattern_to_exclude.match(link)]
-    return filtered_links
-
-
-def extract_reviews_info(request):
-    links = extract_review_url() 
-    for link in links: 
-        soup = init_soup(link)
-        title = soup.find('td', string='Journal title').find_next_sibling('td').text.strip() if soup.find('td', string='Journal title') else None
-        abbreviation = soup.find('td', string='Abbreviation').find_next_sibling('td').text.strip() if soup.find('td', string='Abbreviation') else None
-        online_issn_td = soup.find('td', string='Online ISSN')
-        issn = online_issn_td.find_next_sibling('td').text.strip() if online_issn_td else None
-        # Trouver le titre "Impact Factor"
-        title_h2 = soup.find('h2', string='Impact Factor')
-        # Trouver le parent div du titre
-        impact_factor_div = title_h2.find_parent('div', class_='col-md-12') if title_h2 else None
-        # Trouver le chiffre en gras
-        impact_factor = impact_factor_div.find('b').text.strip() if impact_factor_div else None
-        Review.objects.create(title=title, abbreviation=abbreviation, issn=issn, impact_factor=impact_factor)
-        time.sleep(1)
-    return HttpResponse("Review scraped with success.")
-
-
 def extract_authors(url):
     soup = init_soup(url)
     authors = soup.select('.authors-list-item')
@@ -81,7 +50,6 @@ def extract_affiliations(url):
     affiliation_list = [affil.get_text(strip=True) for affil in affiliations]
     # Remove first number from affiliation list with regex
     affiliation_list = [re.sub(r'^\d+', '', affil) for affil in affiliation_list]
-    print(affiliation_list)
     return affiliation_list
 
 
@@ -106,13 +74,12 @@ def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
     soup = init_soup(url)
     page_max = int(soup.select_one('label.of-total-pages').get_text(strip=True).split(" ")[-1]) if soup.select_one('label.of-total-pages') else 1
-    for i in range(1, 2, 1):
+    for i in range(1, page_max+1, 1):
         list_articles = soup.select('div.search-results-chunk')
         for article in list_articles:
             links.extend([base_url+a['href'] for a in article.find_all('a', href=True)][:10])
         time.sleep(1)
         soup = init_soup(url+"&page="+str(i))
-    print(links)
     return links
 
 def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
@@ -123,7 +90,7 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
         # Initialize soup
         soup = init_soup(link)
         # Extract reviews title
-        title_review = soup.select_one('button.journal-actions-trigger')['title']
+        title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
         # Extract date
         date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
         date = format_date(date)
