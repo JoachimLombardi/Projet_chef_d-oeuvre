@@ -5,20 +5,27 @@ from django.http import HttpResponse
 import requests
 from bs4 import BeautifulSoup
 import time
-from datetime import datetime
 from dateutil import parser
 from .models import Authors, Affiliations, Article, Articles_authors_affiliations, Cited_by
+from django.utils import timezone
+import pytz
 
-# def index(request):
-#     return HttpResponse("Hello, world. You're at the polls index.")
+def index(request):
+    return HttpResponse("You're at the index.")
+
 
 def format_date(date):
     if date is None:
         return None  # Gérer le cas où l'entrée est None
     try:
         date_obj = parser.parse(date, fuzzy=True)
+        if timezone.is_naive(date_obj):
+            return timezone.make_aware(date_obj, timezone=timezone.utc)
+         # Assurez-vous que le fuseau horaire est valide
+        if date_obj.tzinfo:
+            date_obj = date_obj.astimezone(pytz.UTC)
         return date_obj
-    except ValueError:
+    except (ValueError, OverflowError, pytz.UnknownTimeZoneError):
         return None
 
 
@@ -33,19 +40,18 @@ def init_soup(url):
     if response.status_code == 200:
     # Parser le contenu HTML avec BeautifulSoup
         soup = BeautifulSoup(response.content, 'html.parser')
-    return soup
+        return soup
+    return None
 
 
-def extract_authors(url):
-    soup = init_soup(url)
+def extract_authors(soup):
     authors = soup.select('.authors-list-item')
     # Extract author name
     author_names = [author.select_one('.full-name').get_text(strip=True) for author in authors]
     return author_names
 
 
-def extract_affiliations(url):
-    soup = init_soup(url)
+def extract_affiliations(soup):
     affiliations = soup.select('.affiliations ul.item-list li')
     affiliation_list = [affil.get_text(strip=True) for affil in affiliations]
     # Remove first number from affiliation list with regex
@@ -58,14 +64,25 @@ def get_authors_affiliations_numbers(url, article_number):
     authors = soup.select('.authors-list-item')
     for author in authors:
         # Extract author name
-        author_name = author.select_one('.full-name').get_text(strip=True)
-        author_number = Authors.objects.get(name=author_name)
+        author_name = author.select_one('.full-name').get_text(strip=True) if author.select_one('.full-name') else None
+        if author_name:
+            try:
+                author_number = Authors.objects.get(name=author_name)
+            except Authors.DoesNotExist:
+                author_number = None
+        else:
+            author_number = None
         # Extract affiliation
         affiliation_elements = author.select('.affiliation-link')
-        affiliations_names = [affil.get('title') for affil in affiliation_elements]
-        for affiliation_name in affiliations_names:
-            affiliation_number = Affiliations.objects.get(name=affiliation_name)
-            Articles_authors_affiliations.objects.create(article=article_number, author=author_number, affiliation=affiliation_number)
+        if affiliation_elements:
+            affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
+            for affiliation_name in affiliations_names:
+                try:
+                    affiliation_number = Affiliations.objects.get(name=affiliation_name)
+                except Affiliations.DoesNotExist:
+                    affiliation_number = None
+                if not Articles_authors_affiliations.objects.filter(article=article_number, author=author_number, affiliation=affiliation_number).exists():
+                    Articles_authors_affiliations.objects.create(article=article_number, author=author_number, affiliation=affiliation_number)
     return HttpResponse("Authors and affiliations scraped with success.")
 
 
@@ -82,6 +99,22 @@ def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
         soup = init_soup(url+"&page="+str(i))
     return links
 
+
+def extract_cited_by(soup, article):
+    cited_articles = soup.select('.similar-articles .articles-list li.full-docsum')
+    for cited_article in cited_articles:
+        if "doi" in cited_article.select_one('.docsum-journal-citation').get_text(strip=True):
+            doi = cited_article.select_one('.docsum-journal-citation').get_text(strip=True).split("doi:")[-1].replace(".","").split("Epub")[0] if cited_article.select_one('.docsum-journal-citation') else None
+            if doi:
+                doi = "https://doi.org/"+doi
+        else:
+            doi = ""
+        pmid = cited_article.select_one('.docsum-pmid').get_text(strip=True) if cited_article.select_one('.docsum-pmid') else None
+        url = get_absolute_url(pmid)
+        if not Cited_by.objects.filter(doi=doi).exists():
+            Cited_by.objects.create(article=article, doi=doi, pmid=pmid, url=url)
+
+
 def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
     links = extract_pubmed_url(base_url)
     authors = []
@@ -89,6 +122,8 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
     for link in links:
         # Initialize soup
         soup = init_soup(link)
+        if soup is None:
+            continue
         # Extract reviews title
         title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
         # Extract date
@@ -105,60 +140,41 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
         pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
         # Extract DOI
         doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
+        if doi:
+            doi = "https://doi.org/"+doi
         # Extract conflict of interest statement
         disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
         # Extract mesh terms
         buttons = soup.select('button.keyword-actions-trigger')
         mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
-        author_names = extract_authors(link)
+        mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
+        author_names = extract_authors(soup)
         authors.extend(author_names)
-        affiliation_names = extract_affiliations(link)
+        affiliation_names = extract_affiliations(soup)
         affiliations.extend(affiliation_names)
         url = get_absolute_url(pmid)
-        # try:
-        #     review = Review.objects.get(title=title_review)
-        # except Review.DoesNotExist:
-        #     pass
-        Article.objects.create(title_review=title_review, pub_date=date, title=title, abstract=abstract, pmid=pmid, doi=doi, disclosure=disclosure, mesh_terms=mesh_terms, url=url)
+        if not Article.objects.filter(doi=doi).exists():
+           article = Article.objects.create(title_review=title_review, pub_date=date, title=title, abstract=abstract, pmid=pmid, doi=doi, disclosure=disclosure, mesh_terms=mesh_terms, url=url)
+           extract_cited_by(soup, article)
     # Remove duplicate authors
     authors = list(set(authors))
     for author in authors:
-        Authors.objects.create(name=author)
+        if not Authors.objects.filter(name=author).exists():
+            Authors.objects.create(name=author)
     # Remove duplicate affiliations
     affiliations = list(set(affiliations))
     for affiliation in affiliations:
-        Affiliations.objects.create(name=affiliation)
-    return HttpResponse("Article scraped with success.")
+        if not Affiliations.objects.filter(name=affiliation).exists():
+            Affiliations.objects.create(name=affiliation)
+    return HttpResponse("Article, authors, affiliations and cited_by scraped with success.")
 
 
-def create_article_authors_affiliations(request):
+def create_articles_authors_affiliations(request):
     articles = Article.objects.all()
     for article in articles:
-        get_authors_affiliations_numbers(article.url, Article.objects.get(title=article.title))
+        get_authors_affiliations_numbers(article.url, Article.objects.get(doi=article.doi))
     return HttpResponse("Authors and affiliation created with success.")
 
 
-def extract_cited_by(url='https://pubmed.ncbi.nlm.nih.gov/30920776/'):
-    soup = init_soup(url)
-    doi_related_article = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
-    cited = soup.select('.similar-articles .articles-list li.full-docsum')
-    cited_articles = []
-    for article in cited:
-        abbreviation_title_review = article.select_one('.docsum-journal-citation').get_text(strip=True).split(".")[0]
-        if "doi" in article.select_one('.docsum-journal-citation').get_text(strip=True):
-            doi = article.select_one('.docsum-journal-citation').get_text(strip=True).split("doi:")[-1].replace(".","").split("Epub")[0] if article.select_one('.docsum-journal-citation') else None
-        else:
-            doi = ""
-        pmid = article.select_one('.docsum-pmid').get_text(strip=True) if article.select_one('.docsum-pmid') else None
-        try:
-            article = Article.objects.get(doi=doi_related_article)
-        except Article.DoesNotExist:
-            pass
-        try:
-            review = Review.objects.get(abbreviation=abbreviation_title_review)
-        except Review.DoesNotExist:
-            pass
-        url = get_absolute_url(pmid)
-        Cited_by.objects.create(article=article, review=review, doi=doi, pmid=pmid, url=url)
-    return cited_articles
+
 
