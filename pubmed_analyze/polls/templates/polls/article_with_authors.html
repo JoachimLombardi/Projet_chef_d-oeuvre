@@ -1,0 +1,18 @@
+<form method="POST">
+    {% csrf_token %}
+    {{ article_form.as_p }}
+
+    <h3>Auteurs et Affiliations</h3>
+    {{ formset.management_form }}
+
+    {% for form in formset %}
+        <div>
+            <h4>Auteur</h4>
+            {{ form.author }}
+            <h4>Affiliation</h4>
+            {{ form.affiliation }}
+        </div>
+    {% endfor %}
+
+    <button type="submit">Enregistrer</button>
+</form>

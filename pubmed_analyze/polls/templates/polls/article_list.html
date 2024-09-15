@@ -1,0 +1,10 @@
+<h1>Liste des articles</h1>
+<a href="{% url 'create_article' %}">Ajouter un article</a>
+<ul>
+    {% for article in articles %}
+        <li>{{ article.title }} 
+            <a href="{% url 'update_article' article.id %}">Modifier</a> 
+            <a href="{% url 'delete_article' article.id %}">Supprimer</a>
+        </li>
+    {% endfor %}
+</ul>

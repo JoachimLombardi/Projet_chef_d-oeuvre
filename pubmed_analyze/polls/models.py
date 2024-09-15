@@ -1,5 +1,7 @@
 
 from django.db import models
+from django import forms
+
 
 class Authors(models.Model):
     name = models.TextField(null=True, verbose_name='name of author', db_column='name of author')
@@ -11,7 +13,7 @@ class Affiliations(models.Model):
     name = models.TextField(null=True, verbose_name='name of affiliation', db_column='name of affiliation')
 
     def __str__(self):
-        return self.affiliation
+        return self.name
 
 class Article(models.Model):
     title_review = models.TextField(null=True, verbose_name='title of review', db_column='title of review')

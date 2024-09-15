@@ -1,0 +1,8 @@
+<h1>{% if form.instance.id %}Modifier l'article{% else %}Ajouter un article{% endif %}</h1>
+<form method="post">
+    {% csrf_token %} <!-- Add the CSRF token to the form -->
+    {{ form.as_p }} <!-- Display the form as a paragraph -->
+    <!-- A -->
+    <button type="submit">Enregistrer</button>
+</form>
+<a href="{% url 'article_list' %}">Retour à la liste</a>

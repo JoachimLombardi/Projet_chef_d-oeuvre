@@ -1,5 +1,4 @@
 # from django.shortcuts import render
-# from django.http import HttpResponse
 import re
 from django.http import HttpResponse
 import requests
@@ -9,9 +8,8 @@ from dateutil import parser
 from .models import Authors, Affiliations, Article, Articles_authors_affiliations, Cited_by
 from django.utils import timezone
 import pytz
-
-def index(request):
-    return HttpResponse("You're at the index.")
+from django.shortcuts import render, redirect
+from .forms import AffiliationForm, ArticleForm, AuteurAffiliationFormSet, AuthorForm
 
 
 def format_date(date):
@@ -169,12 +167,126 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
     return HttpResponse("Article, authors, affiliations and cited_by scraped with success.")
 
 
-def create_articles_authors_affiliations(request):
+def extract_articles_authors_affiliations(request):
     articles = Article.objects.all()
     for article in articles:
         get_authors_affiliations_numbers(article.url, Article.objects.get(doi=article.doi))
     return HttpResponse("Authors and affiliation created with success.")
 
 
+def create_article(request):
+    if request.method == 'POST':
+        article_form = ArticleForm(request.POST)
+        formset = AuteurAffiliationFormSet(request.POST)
+        if article_form.is_valid() and formset.is_valid():
+            article = Article.objects.filter(doi=article_form.cleaned_data['doi']).first()
+            if article is None:
+                article = article_form.save()
+                for form in formset:
+                    author = form.cleaned_data.get('author')
+                    affiliations = form.cleaned_data.get('affiliation')
+                # Vérifier ou créer l'auteur
+                    if auteur:
+                        auteur, created = Authors.objects.get_or_create(name=author)
+                    # Vérifier ou créer l'affiliation
+                    if affiliations:
+                        for affiliation in affiliations:
+                            affiliation, affiliation_created = Affiliations.objects.get_or_create(name=affiliation)
+                    # Créer la relation Article-Auteur-Affiliation
+                            if auteur and affiliation:
+                                Articles_authors_affiliations.objects.get_or_create(
+                                    article=article,
+                                    auteur=auteur,
+                                    affiliation=affiliation
+                                )
+                return redirect('article_list')
+    else:
+        article_form = ArticleForm()
+        formset = AuteurAffiliationFormSet()
+        context = {'article_form': article_form, 'formset': formset}
+    return render(request, 'polls/article_with_authors.html', context)
 
 
+def article_list(request):
+    articles = Article.objects.all()
+    context = {'articles': articles}
+    return render(request, 'polls/article_list.html', context)
+
+
+def update_article(request, id):
+    article = Article.objects.get(id=id)
+    if request.method == 'POST':
+        form = ArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            form.save()
+            return redirect('article_list')
+    else:
+        form = ArticleForm(instance=article)
+    context = {'form': form}
+    return render(request, 'polls/article_form.html', context)
+
+
+def delete_article(request, id):
+    article = Article.objects.get(id=id)
+    if request.method == 'POST':
+        article.delete()
+        return redirect('article_list')
+    context = {'article': article}
+    return render(request, 'polls/article_confirm_delete.html', context)
+
+
+def author_list(request):
+    authors = Authors.objects.all()
+    context = {'authors': authors}
+    return render(request, 'polls/author_list.html', context)
+
+
+def update_author(request, id):
+    author = Authors.objects.get(id=id)
+    if request.method == 'POST':
+        form = AuthorForm(request.POST, instance=author)
+        if form.is_valid():
+            form.save()
+            return redirect('author_list')
+    else:
+        form = AuthorForm(instance=author)
+    context = {'form': form}
+    return render(request, 'polls/author_form.html', context)
+
+
+def delete_author(request, id):
+    author = Authors.objects.get(id=id)
+    if request.method == 'POST':
+        author.delete()
+        return redirect('author_list')
+    context = {'author': author}
+    return render(request, 'polls/author_confirm_delete.html', context)
+
+
+
+def affiliation_list(request):
+    affiliations = Affiliations.objects.all()
+    context = {'affiliations': affiliations}
+    return render(request, 'polls/affiliation_list.html', context)
+
+
+def update_affiliation(request, id):
+    affiliation = Affiliations.objects.get(id=id)
+    if request.method == 'POST':
+        form = AffiliationForm(request.POST, instance=affiliation)
+        if form.is_valid():
+            form.save()
+            return redirect('affiliation_list')
+    else:
+        form = AffiliationForm(instance=affiliation)
+    context = {'form': form}
+    return render(request, 'polls/affiliation_form.html', context)
+
+
+def delete_affiliation(request, id):
+    affiliation = Affiliations.objects.get(id=id)
+    if request.method == 'POST':
+        affiliation.delete()
+        return redirect('affiliation_list')
+    context = {'affiliation': affiliation}
+    return render(request, 'polls/affiliation_confirm_delete.html', context)
