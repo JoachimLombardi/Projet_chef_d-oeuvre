@@ -9,7 +9,7 @@ from .models import Authors, Affiliations, Article, Articles_authors_affiliation
 from django.utils import timezone
 import pytz
 from django.shortcuts import render, redirect
-from .forms import ArticleForm,  AuthorAffiliationForm, AuthorAffiliationFormSet
+from .forms import AffiliationForm, ArticleForm,  AuthorAffiliationForm, AuthorAffiliationFormSet, AuthorForm
 
 
 def format_date(date):
@@ -172,58 +172,6 @@ def extract_articles_authors_affiliations(request):
     for article in articles:
         get_authors_affiliations_numbers(article.url, Article.objects.get(doi=article.doi))
     return HttpResponse("Authors and affiliation created with success.")
-
-
-# def create_article(request):
-#     if request.method == 'POST':
-#         article_form = ArticleForm(request.POST)
-#         formset = AuteurAffiliationFormSet(request.POST)
-#         if article_form.is_valid() and formset.is_valid():
-#             article = Article.objects.filter(doi=article_form.cleaned_data['doi']).first()
-#             if article is None:
-#                 article = article_form.save()
-#                 for form in formset:
-#                     author = form.cleaned_data.get('author')
-#                     affiliations = form.cleaned_data.get('affiliation')
-#                 # Vérifier ou créer l'auteur
-#                     if auteur:
-#                         auteur, created = Authors.objects.get_or_create(name=author)
-#                     # Vérifier ou créer l'affiliation
-#                     if affiliations:
-#                         for affiliation in affiliations:
-#                             affiliation, affiliation_created = Affiliations.objects.get_or_create(name=affiliation)
-#                     # Créer la relation Article-Auteur-Affiliation
-#                             if auteur and affiliation:
-#                                 Articles_authors_affiliations.objects.get_or_create(
-#                                     article=article,
-#                                     auteur=auteur,
-#                                     affiliation=affiliation
-#                                 )
-#                 return redirect('article_list')
-#     else:
-#         article_form = ArticleForm()
-#         formset = AuteurAffiliationFormSet()
-#         context = {'article_form': article_form, 'formset': formset}
-#     return render(request, 'polls/article_with_authors.html', context)
-
-
-
-# def create_article(request):
-#     if request.method == 'POST':
-#         article_form = ArticleForm(request.POST)
-#         author_affiliation_form = AuthorAffiliationForm(request.POST)
-#         if article_form.is_valid() and author_affiliation_form.is_valid():
-#             article = article_form.save()
-#             author_affiliation_form.save(article)
-#             return redirect('article_list')
-#     else:
-#         article_form = ArticleForm()
-#         author_affiliation_form = AuthorAffiliationForm()
-#     context = {
-#         'article_form': article_form,
-#         'author_affiliation_form': author_affiliation_form
-#     }
-#     return render(request, 'polls/create_article.html', context)
 
 
 def create_article(request):

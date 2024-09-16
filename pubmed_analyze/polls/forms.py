@@ -23,8 +23,19 @@ class ArticleForm(forms.ModelForm):
                     # Create the relationship in the intermediate table
                     Articles_authors_affiliations.objects.create(article=article, author=author, affiliation=affiliation)
             return article
-
     
+class AuthorForm(forms.ModelForm):
+    class Meta:
+        model = Authors
+        fields = '__all__'
+
+
+class AffiliationForm(forms.ModelForm):
+    class Meta:
+        model = Affiliations
+        fields = '__all__'
+
+
 class AuthorAffiliationForm(forms.Form):
     author_name = forms.CharField(label='Nom de l\'auteur', widget=forms.TextInput(attrs={'class': 'form-control'}))
     affiliations = forms.CharField(label='Affiliations (séparées par des virgules)', widget=forms.Textarea(attrs={'class': 'form-control'}))
