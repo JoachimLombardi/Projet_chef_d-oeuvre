@@ -244,7 +244,7 @@ def create_article(request):
     else:
         article_form = ArticleForm()
         formset = AuthorAffiliationFormSet()
-    return render(request, 'polls/article_with_authors.html', {'article_form': article_form, 'formset': formset})
+    return render(request, 'polls/create_article.html', {'article_form': article_form, 'formset': formset})
 
 
 def article_list(request):
