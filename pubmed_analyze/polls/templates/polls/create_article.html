@@ -1,0 +1,53 @@
+<form method="POST">
+    {% csrf_token %}
+    {{ article_form.as_p }}
+
+    <h3>Auteurs et Affiliations</h3>
+    {{ formset.management_form }}
+
+    <div id="formset-container">
+        {% for form in formset %}
+            <div class="form-row">
+                <h4>Auteur</h4>
+                {{ form.author_name }}
+                <h4>Affiliations (séparées par des virgules)</h4>
+                {{ form.affiliations }}
+                <button type="button" class="remove-form btn btn-danger">Remove</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-form" class="btn btn-primary">Add Author + Affiliations</button>
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let formsetContainer = document.getElementById('formset-container');
+        let totalForms = document.querySelector('#id_form-TOTAL_FORMS');
+        let formIndex = formsetContainer.children.length;
+
+        document.getElementById('add-form').addEventListener('click', function () {
+            let newForm = `
+                <div class="form-row">
+                    <h4>Auteur</h4>
+                    <input type="text" name="form-${formIndex}-author_name" class="form-control" id="id_form-${formIndex}-author_name">
+                    <h4>Affiliations (séparées par des virgules)</h4>
+                    <textarea name="form-${formIndex}-affiliations" class="form-control" id="id_form-${formIndex}-affiliations"></textarea>
+                    <button type="button" class="remove-form btn btn-danger">Remove</button>
+                </div>
+            `;
+            formsetContainer.insertAdjacentHTML('beforeend', newForm);
+            formIndex++;
+            totalForms.value = formIndex;  // Update the management form total
+        });
+
+        formsetContainer.addEventListener('click', function (event) {
+            if (event.target.classList.contains('remove-form')) {
+                event.target.closest('.form-row').remove();
+                formIndex--;
+                totalForms.value = formIndex;  // Update the management form total
+            }
+        });
+    });
+</script>
