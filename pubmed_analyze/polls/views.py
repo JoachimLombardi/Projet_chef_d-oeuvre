@@ -231,26 +231,20 @@ def create_article(request):
         article_form = ArticleForm(request.POST)
         formset = AuthorAffiliationFormSet(request.POST)
         if article_form.is_valid() and formset.is_valid():
-            # Save the article
-            article = article_form.save()
-            for form in formset:
-                author_name = form.cleaned_data.get('author_name')
-                affiliations = form.cleaned_data.get('affiliations')
-                if author_name:
-                    # Check if the author exists
-                    author, created = Authors.objects.get_or_create(name=author_name)
-                    # Split affiliations by commas
-                    affiliation_list = [aff.strip() for aff in affiliations.split(',')]
-                    for aff_name in affiliation_list:
-                        # Check if the affiliation exists
-                        affiliation, created = Affiliations.objects.get_or_create(name=aff_name)
-                        # Save the relationship in ArticleAuthorAffiliation table
-                        Articles_authors_affiliations.objects.create(article=article, author=author, affiliation=affiliation)
+            author_affiliation_data = [
+                {
+                    'author_name': form.cleaned_data.get('author_name'),
+                    'affiliations': form.cleaned_data.get('affiliations')
+                }
+                for form in formset
+            ]
+            # Use the save method from ArticleForm to handle saving the article with authors and affiliations
+            article_form.save_article_with_authors(author_affiliation_data)
             return redirect('article_list')
     else:
         article_form = ArticleForm()
         formset = AuthorAffiliationFormSet()
-    return render(request, 'polls/create_article.html', {'article_form': article_form, 'formset': formset})
+    return render(request, 'polls/article_with_authors.html', {'article_form': article_form, 'formset': formset})
 
 
 def article_list(request):
