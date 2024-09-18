@@ -4,7 +4,7 @@ from django import forms
 
 
 class Authors(models.Model):
-    name = models.TextField(null=True, verbose_name='name of author', db_column='name of author')
+    name = models.CharFieldField(null=True, verbose_name='name of author', db_column='name of author')
 
     def __str__(self):
         return self.name
