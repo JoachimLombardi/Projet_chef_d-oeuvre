@@ -251,7 +251,6 @@ def delete_author(request, id):
     return render(request, 'polls/author_confirm_delete.html', context)
 
 
-
 def affiliation_list(request):
     affiliations = Affiliations.objects.all()
     context = {'affiliations': affiliations}
