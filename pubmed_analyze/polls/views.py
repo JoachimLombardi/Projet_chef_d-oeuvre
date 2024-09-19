@@ -5,11 +5,11 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from dateutil import parser
-from .models import Authors, Affiliations, Article, Articles_authors_affiliations, Cited_by
+from .models import Authors, Affiliations, Article, Cited_by
 from django.utils import timezone
 import pytz
 from django.shortcuts import render, redirect
-from .forms import AffiliationForm, ArticleForm,  AuthorAffiliationForm, AuthorAffiliationFormSet, AuthorForm
+from .forms import ArticleForm, AuthorAffiliationFormSet, AuthorForm
 
 
 def format_date(date):
@@ -42,46 +42,29 @@ def init_soup(url):
     return None
 
 
-def extract_authors(soup):
-    authors = soup.select('.authors-list-item')
-    # Extract author name
-    author_names = [author.select_one('.full-name').get_text(strip=True) for author in authors]
-    return author_names
-
-
-def extract_affiliations(soup):
-    affiliations = soup.select('.affiliations ul.item-list li')
-    affiliation_list = [affil.get_text(strip=True) for affil in affiliations]
-    # Remove first number from affiliation list with regex
-    affiliation_list = [re.sub(r'^\d+', '', affil) for affil in affiliation_list]
-    return affiliation_list
-
-
-def get_authors_affiliations_numbers(url, article_number):
-    soup = init_soup(url)
-    authors = soup.select('.authors-list-item')
-    for author in authors:
-        # Extract author name
-        author_name = author.select_one('.full-name').get_text(strip=True) if author.select_one('.full-name') else None
+def get_authors_affiliations(soup, article):
+    authors_tags = soup.select('.authors-list-item')
+    for author_tag in authors_tags:
+     # Extract author name
+        author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
         if author_name:
             try:
-                author_number = Authors.objects.get(name=author_name)
+                author, created = Authors.objects.get_or_create(name=author_name)
             except Authors.DoesNotExist:
-                author_number = None
+                author = None
         else:
-            author_number = None
+            author = None
         # Extract affiliation
         affiliation_elements = author.select('.affiliation-link')
         if affiliation_elements:
             affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
             for affiliation_name in affiliations_names:
                 try:
-                    affiliation_number = Affiliations.objects.get(name=affiliation_name)
+                    affiliation, created = Affiliations.objects.get_or_create(name=affiliation_name)
+                    author.affiliations.add(affiliation)
                 except Affiliations.DoesNotExist:
-                    affiliation_number = None
-                if not Articles_authors_affiliations.objects.filter(article=article_number, author=author_number, affiliation=affiliation_number).exists():
-                    Articles_authors_affiliations.objects.create(article=article_number, author=author_number, affiliation=affiliation_number)
-    return HttpResponse("Authors and affiliations scraped with success.")
+                    affiliation = None
+        article.authors.add(author)
 
 
 def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
@@ -115,8 +98,8 @@ def extract_cited_by(soup, article):
 
 def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
     links = extract_pubmed_url(base_url)
-    authors = []
-    affiliations = []
+    # authors = []
+    # affiliations = []
     for link in links:
         # Initialize soup
         soup = init_soup(link)
@@ -146,32 +129,13 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
         buttons = soup.select('button.keyword-actions-trigger')
         mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
         mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
-        author_names = extract_authors(soup)
-        authors.extend(author_names)
-        affiliation_names = extract_affiliations(soup)
-        affiliations.extend(affiliation_names)
         url = get_absolute_url(pmid)
         if not Article.objects.filter(doi=doi).exists():
-           article = Article.objects.create(title_review=title_review, pub_date=date, title=title, abstract=abstract, pmid=pmid, doi=doi, disclosure=disclosure, mesh_terms=mesh_terms, url=url)
-           extract_cited_by(soup, article)
-    # Remove duplicate authors
-    authors = list(set(authors))
-    for author in authors:
-        if not Authors.objects.filter(name=author).exists():
-            Authors.objects.create(name=author)
-    # Remove duplicate affiliations
-    affiliations = list(set(affiliations))
-    for affiliation in affiliations:
-        if not Affiliations.objects.filter(name=affiliation).exists():
-            Affiliations.objects.create(name=affiliation)
+            article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review)
+            get_authors_affiliations(soup, article)
+            # Extract number of citations
+            extract_cited_by(soup, article)
     return HttpResponse("Article, authors, affiliations and cited_by scraped with success.")
-
-
-def extract_articles_authors_affiliations(request):
-    articles = Article.objects.all()
-    for article in articles:
-        get_authors_affiliations_numbers(article.url, Article.objects.get(doi=article.doi))
-    return HttpResponse("Authors and affiliation created with success.")
 
 
 def create_article(request):
