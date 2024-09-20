@@ -55,7 +55,7 @@ def get_authors_affiliations(soup, article):
         else:
             author = None
         # Extract affiliation
-        affiliation_elements = author.select('.affiliation-link')
+        affiliation_elements = author_tag.select('.affiliation-link')
         if affiliation_elements:
             affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
             for affiliation_name in affiliations_names:
