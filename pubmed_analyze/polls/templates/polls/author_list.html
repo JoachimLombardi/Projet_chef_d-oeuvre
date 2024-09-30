@@ -1,5 +1,4 @@
 <h1>Liste des auteurs</h1>
-<a href="{% url 'create_author' %}">Ajouter un auteur</a>
 <ul>
     {% for author in authors %}
         <li>{{ author.name }} 

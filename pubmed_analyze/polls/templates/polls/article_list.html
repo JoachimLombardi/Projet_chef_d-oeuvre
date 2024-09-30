@@ -1,10 +1,27 @@
-<h1>Liste des articles</h1>
-<a href="{% url 'create_article' %}">Ajouter un article</a>
+<a href="{% url 'create_article' %}">Créer un article</a> 
+<h1>Liste d'articles</h1>
 <ul>
     {% for article in articles %}
-        <li>{{ article.title }} 
-            <a href="{% url 'update_article' article.id %}">Modifier</a> 
-            <a href="{% url 'delete_article' article.id %}">Supprimer</a>
-        </li>
+    <li>
+        <h2>{{ article.title }}</h2>
+        <p><strong>Titre de la revue:</strong> {{ article.title_review }}</p>
+        <p><strong>Date de publication:</strong> {{ article.date }}</p>
+        <p><strong>Auteurs et affiliations:</strong></p>
+        <ul>
+            {% for author in article.authors.all %}
+            <li>
+                <strong>{{ author.name }}</strong> 
+                <br> Affiliations:
+                <ul>
+                    {% for affiliation in author.affiliations.all %}
+                    <li>{{ affiliation.name }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'update_article' article.id %}">Modifier</a> 
+        <a href="{% url 'delete_article' article.id %}">Supprimer</a>
+    </li>
     {% endfor %}
 </ul>

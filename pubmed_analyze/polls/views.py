@@ -9,7 +9,9 @@ from .models import Authors, Affiliations, Article, Cited_by
 from django.utils import timezone
 import pytz
 from django.shortcuts import render, redirect
-from .forms import ArticleForm, AuthorAffiliationFormSet, AuthorForm
+from .forms import ArticleForm, AuthorAffiliationFormSet
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 def format_date(date):
@@ -156,7 +158,7 @@ def create_article(request):
     else:
         article_form = ArticleForm()
         formset = AuthorAffiliationFormSet()
-    return render(request, 'polls/create_article.html', {'article_form': article_form, 'formset': formset})
+    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset})
 
 
 def article_list(request):
@@ -167,15 +169,35 @@ def article_list(request):
 
 def update_article(request, id):
     article = Article.objects.get(id=id)
+    # Get all authors and their affiliations related to this article
+    authors = article.authors.all()
     if request.method == 'POST':
-        form = ArticleForm(request.POST, instance=article)
-        if form.is_valid():
-            form.save()
+        article_form = ArticleForm(request.POST, instance=article)
+        formset = AuthorAffiliationFormSet(request.POST)
+        if article_form.is_valid() and formset.is_valid():
+            # Iterate through the formset to update authors and affiliations
+            author_affiliation_data = [
+                {
+                    'author_name': form.cleaned_data.get('author_name'),
+                    'affiliations': form.cleaned_data.get('affiliations')
+                }
+                for form in formset
+            ]        
+            article_form.save_article_with_authors(author_affiliation_data)
             return redirect('article_list')
     else:
-        form = ArticleForm(instance=article)
-    context = {'form': form}
-    return render(request, 'polls/article_form.html', context)
+        # Populate the Article form with the instance
+        article_form = ArticleForm(instance=article)
+        # Prepare the initial data for the formset
+        initial_data = []
+        for author in authors:
+            initial_data.append({
+                'author_name': author.name,
+                'affiliations': '; '.join([aff.name for aff in author.affiliations.all()]),
+            })
+        formset = AuthorAffiliationFormSet(initial=initial_data)
+    context = {'article_form': article_form, 'formset': formset}
+    return render(request, 'polls/create_update_article.html', context)
 
 
 def delete_article(request, id):
@@ -187,32 +209,31 @@ def delete_article(request, id):
     return render(request, 'polls/article_confirm_delete.html', context)
 
 
+# Signal qui s'active après la suppression d'un article
+@receiver(post_delete, sender=Article)
+def delete_orphan_authors(sender, instance, **kwargs):
+    print(f"Article supprimé : {instance.title}")  # Debugging
+    authors = instance.authors.all()
+    for author in authors:
+        if not author.articles.exists():
+            print(f"Suppression de l'auteur : {author.name}")  # Debugging
+            author.delete()
+
+
+@receiver(post_delete, sender=Authors)
+def delete_orphan_affiliations(sender, instance, **kwargs):
+    print(f"Auteur supprimé : {instance.name}")  # Debugging
+    affiliations = instance.affiliations.all()
+    for affiliation in affiliations:
+        if not affiliation.authors.exists():
+            print(f"Suppression de l'affiliation : {affiliation.name}")  # Debugging
+            affiliation.delete()
+
+
 def author_list(request):
     authors = Authors.objects.all()
     context = {'authors': authors}
     return render(request, 'polls/author_list.html', context)
-
-
-def update_author(request, id):
-    author = Authors.objects.get(id=id)
-    if request.method == 'POST':
-        form = AuthorForm(request.POST, instance=author)
-        if form.is_valid():
-            form.save()
-            return redirect('author_list')
-    else:
-        form = AuthorForm(instance=author)
-    context = {'form': form}
-    return render(request, 'polls/author_form.html', context)
-
-
-def delete_author(request, id):
-    author = Authors.objects.get(id=id)
-    if request.method == 'POST':
-        author.delete()
-        return redirect('author_list')
-    context = {'author': author}
-    return render(request, 'polls/author_confirm_delete.html', context)
 
 
 def affiliation_list(request):
@@ -221,23 +242,3 @@ def affiliation_list(request):
     return render(request, 'polls/affiliation_list.html', context)
 
 
-def update_affiliation(request, id):
-    affiliation = Affiliations.objects.get(id=id)
-    if request.method == 'POST':
-        form = AffiliationForm(request.POST, instance=affiliation)
-        if form.is_valid():
-            form.save()
-            return redirect('affiliation_list')
-    else:
-        form = AffiliationForm(instance=affiliation)
-    context = {'form': form}
-    return render(request, 'polls/affiliation_form.html', context)
-
-
-def delete_affiliation(request, id):
-    affiliation = Affiliations.objects.get(id=id)
-    if request.method == 'POST':
-        affiliation.delete()
-        return redirect('affiliation_list')
-    context = {'affiliation': affiliation}
-    return render(request, 'polls/affiliation_confirm_delete.html', context)

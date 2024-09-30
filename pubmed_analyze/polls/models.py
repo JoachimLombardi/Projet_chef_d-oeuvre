@@ -1,6 +1,5 @@
 
 from django.db import models
-from django import forms
 
     
 class Affiliations(models.Model):
@@ -12,7 +11,7 @@ class Affiliations(models.Model):
 
 class Authors(models.Model):
     name = models.CharField(null=True, verbose_name='name of author', db_column='name of author')
-    affiliations = models.ManyToManyField(Affiliations)
+    affiliations = models.ManyToManyField(Affiliations, related_name='authors')
 
     def __str__(self):
         return self.name
@@ -28,7 +27,7 @@ class Article(models.Model):
     disclosure = models.TextField(null=True, verbose_name='conflict of interest', db_column='conflict of interest')
     mesh_terms = models.TextField(null=True, verbose_name='mesh terms', db_column='mesh terms')
     url = models.CharField(max_length=200, null=True, verbose_name='url', db_column='url')
-    authors = models.ManyToManyField(Authors)
+    authors = models.ManyToManyField(Authors, related_name='article')
 
 
     def __str__(self):

@@ -1,7 +1,0 @@
-<h1>Supprimer l'affiliation</h1>
-<p>Êtes-vous sûr de vouloir supprimer cette affiliation : {{ affiliation.name }} ?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirmer</button>
-</form>
-<a href="{% url 'affiliation_list' %}">Annuler</a>
