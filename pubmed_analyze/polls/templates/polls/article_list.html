@@ -1,4 +1,4 @@
-<a href="{% url 'create_article' %}">Créer un article</a> 
+<a href="{% url 'create_article' %}">Créer un article</a>
 <h1>Liste d'articles</h1>
 <ul>
     {% for article in articles %}
@@ -6,15 +6,16 @@
         <h2>{{ article.title }}</h2>
         <p><strong>Titre de la revue:</strong> {{ article.title_review }}</p>
         <p><strong>Date de publication:</strong> {{ article.date }}</p>
+        <p><strong>URL de l'article:</strong> {{ article.url }}</p>
         <p><strong>Auteurs et affiliations:</strong></p>
         <ul>
-            {% for author in article.authors.all %}
+            {% for author, affiliations in article.affiliations_by_author.items %}
             <li>
-                <strong>{{ author.name }}</strong> 
+                <strong>{{ author }}</strong>
                 <br> Affiliations:
                 <ul>
-                    {% for affiliation in author.affiliations.all %}
-                    <li>{{ affiliation.name }}</li>
+                    {% for affiliation in affiliations %}
+                    <li>{{ affiliation }}</li>
                     {% endfor %}
                 </ul>
             </li>

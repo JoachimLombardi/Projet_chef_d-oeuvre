@@ -1,5 +1,5 @@
 from django import forms
-from .models import Authors, Affiliations, Article
+from .models import Authors, Affiliations, Article, Authorship
 
 
 class ArticleForm(forms.ModelForm):
@@ -53,30 +53,35 @@ class ArticleForm(forms.ModelForm):
         widget=forms.URLInput(attrs={'class': 'form-control'})
     )
 
-
     def save_article_with_authors(self, author_affiliation_data, commit=True):
+        # Enregistrer l'article, en fonction de l'option commit
         article = self.save(commit=commit)
+        # Vider les relations existantes pour cet article
+        Authorship.objects.filter(article=article).delete()
+        # Traiter les données des auteurs et de leurs affiliations
         for author_data in author_affiliation_data:
             author_name = author_data['author_name']
             affiliations = author_data['affiliations']
-            # Check if the author already exists
+            # Vérifier si l'auteur existe déjà
             author, created = Authors.objects.get_or_create(name=author_name)
-            # Clear existing affiliations to update
-            author.affiliations.clear()
-            # Process each affiliation for the author
-            affiliation_list = [aff.strip() for aff in affiliations.split(';')]
+            # Traiter chaque affiliation pour l'auteur
+            affiliation_list = [aff.strip() for aff in affiliations.split('|')]
             for aff_name in affiliation_list:
-                # Check if the affiliation already exists
+                # Vérifier si l'affiliation existe déjà
                 affiliation, created = Affiliations.objects.get_or_create(name=aff_name)
-                # Create the relationship in the intermediate table
-                author.affiliations.add(affiliation)
-            article.authors.add(author)
-
+                # Créer ou mettre à jour l'instance Authorship
+                Authorship.objects.update_or_create(
+                    article=article,
+                    author=author,
+                    affiliation=affiliation,
+                    defaults={}
+                )
+            
 
 class AuthorForm(forms.Form):
     author_name = forms.CharField(label="Nom de l'auteur", widget=forms.TextInput(attrs={'class': 'form-control'}))
     affiliations = forms.CharField(
-        label="Affiliations (séparées par des points-virgules)", 
+        label="Affiliations (séparées par des points)", 
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
     )
 

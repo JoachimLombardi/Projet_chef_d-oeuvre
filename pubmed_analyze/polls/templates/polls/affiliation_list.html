@@ -1,9 +1,0 @@
-<h1>Liste des affiliations</h1>
-<ul>
-    {% for affiliation in affiliations %}
-        <li>{{ affiliation.name }} 
-            <a href="{% url 'update_affiliation' affiliation.id %}">Modifier</a> 
-            <a href="{% url 'delete_affiliation' affiliation.id %}">Supprimer</a>
-        </li>
-    {% endfor %}
-</ul>
