@@ -128,6 +128,6 @@ def query_processing(
 
 
 def get_vector(article):
-    title = query_processing(article.title) if article.title is not None else ""
-    abstract = query_processing(article.abstract) if article.abstract is not None else ""    
+    title = query_processing(article.title) 
+    abstract = query_processing(article.abstract)    
     return model.encode(title + " " + abstract).tolist()

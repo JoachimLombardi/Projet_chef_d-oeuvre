@@ -32,26 +32,27 @@ def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
         # Extract abstract
         abstract = soup.select('div.abstract-content p')
         abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
-        if isinstance(abstract, list):
-            abstract = " ".join(abstract)
-        # Extract PMID
-        pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
-        # Extract DOI
-        doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
-        if doi:
-            doi = "https://doi.org/"+doi
-        # Extract conflict of interest statement
-        disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
-        # Extract mesh terms
-        buttons = soup.select('button.keyword-actions-trigger')
-        mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
-        mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
-        url = get_absolute_url(pmid)
-        if not Article.objects.filter(doi=doi).exists():
-            article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review)
-            get_authors_affiliations(soup, article)
-            # Extract number of citations
-            extract_cited_by(soup, article)
+        if abstract:
+            if isinstance(abstract, list):
+                abstract = " ".join(abstract)
+            # Extract PMID
+            pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
+            # Extract DOI
+            doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
+            if doi:
+                doi = "https://doi.org/"+doi
+            # Extract conflict of interest statement
+            disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
+            # Extract mesh terms
+            buttons = soup.select('button.keyword-actions-trigger')
+            mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
+            mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
+            url = get_absolute_url(pmid)
+            if not Article.objects.filter(doi=doi).exists():
+                article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review)
+                get_authors_affiliations(soup, article)
+                # Extract number of citations
+                extract_cited_by(soup, article)
     return HttpResponse("Article, authors, affiliations and cited_by scraped with success.")
 
 
