@@ -1,5 +1,5 @@
 from django.db import models
-from sentence_transformers import SentenceTransformer
+from .utils import get_vector
 
 
     
@@ -29,17 +29,13 @@ class Article(models.Model):
     url = models.CharField(max_length=200, null=True, verbose_name='url', db_column='url')
     authors = models.ManyToManyField(Authors, through='Authorship', related_name='articles')
 
-    model = SentenceTransformer('bert-base-nli-mean-tokens')
-
-
     def get_title_abstract_vector(self):
-        title = self.title if self.title is not None else ""
-        abstract = self.abstract if self.abstract is not None else ""
-        return self.model.encode(title + " " + abstract).tolist()
-
+        return get_vector(self)
+  
     def __str__(self):
         return self.title
    
+
 class Authorship(models.Model):
     article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='authorships')
     author = models.ForeignKey(Authors, on_delete=models.CASCADE)

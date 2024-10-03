@@ -3,112 +3,20 @@
 import json
 import os
 from pathlib import Path
-import re
 from django.http import HttpResponse
-import requests
-from bs4 import BeautifulSoup
-import time
-from dateutil import parser
-
+from elasticsearch_dsl import Search
 from .models import Authors, Affiliations, Article, Authorship, Cited_by
-from django.utils import timezone
-import pytz
 from django.shortcuts import render, redirect
 from .forms import ArticleForm, AuthorAffiliationFormSet
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
-from polls.documents import ArticleDocument
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer('bert-base-nli-mean-tokens')
-
-
-def format_date(date):
-    if date is None:
-        return None  # Gérer le cas où l'entrée est None
-    try:
-        date_obj = parser.parse(date, fuzzy=True)
-        if timezone.is_naive(date_obj):
-            return timezone.make_aware(date_obj, timezone=timezone.utc)
-         # Assurez-vous que le fuseau horaire est valide
-        if date_obj.tzinfo:
-            date_obj = date_obj.astimezone(pytz.UTC)
-        return date_obj
-    except (ValueError, OverflowError, pytz.UnknownTimeZoneError):
-        return None
-
-
-def get_absolute_url(pmid):
-    return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
-
-
-def init_soup(url):
-    # Envoyer une requête GET pour récupérer le contenu de la page
-    response = requests.get(url)
-    # Vérifier que la requête a réussi
-    if response.status_code == 200:
-    # Parser le contenu HTML avec BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
-        return soup
-    return None
-
-
-def get_authors_affiliations(soup, article):
-    authors_tags = soup.select('.authors-list-item')
-    for author_tag in authors_tags:
-        # Extraire le nom de l'auteur
-        author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
-        if author_name:
-            # Récupérer ou créer l'auteur
-            author, created = Authors.objects.get_or_create(name=author_name)
-            # Extraire les affiliations
-            affiliation_elements = author_tag.select('.affiliation-link')
-            if affiliation_elements:
-                affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
-                for affiliation_name in affiliations_names:
-                    # Récupérer ou créer l'affiliation
-                    affiliation, created = Affiliations.objects.get_or_create(name=affiliation_name)
-                    # Vérifier si la relation existe déjà dans Authorship
-                    if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
-                        # Créer la liaison entre l'article, l'auteur et l'affiliation
-                        Authorship.objects.create(article=article, author=author, affiliation=affiliation)
-
-
-def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
-    links = []
-    url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
-    soup = init_soup(url)
-    page_max = int(soup.select_one('label.of-total-pages').get_text(strip=True).split(" ")[-1]) if soup.select_one('label.of-total-pages') else 1
-    for i in range(1, page_max+1, 1):
-        list_articles = soup.select('div.search-results-chunk')
-        for article in list_articles:
-            links.extend([base_url+a['href'] for a in article.find_all('a', href=True)][:10])
-        time.sleep(1)
-        soup = init_soup(url+"&page="+str(i))
-    return links
-
-
-def extract_cited_by(soup, article):
-    cited_articles = soup.select('.similar-articles .articles-list li.full-docsum')
-    for cited_article in cited_articles:
-        if "doi" in cited_article.select_one('.docsum-journal-citation').get_text(strip=True):
-            doi = cited_article.select_one('.docsum-journal-citation').get_text(strip=True).split("doi:")[-1].replace(".","").split("Epub")[0] if cited_article.select_one('.docsum-journal-citation') else None
-            if doi:
-                doi = "https://doi.org/"+doi
-        else:
-            doi = ""
-        pmid = cited_article.select_one('.docsum-pmid').get_text(strip=True) if cited_article.select_one('.docsum-pmid') else None
-        url = get_absolute_url(pmid)
-        if not Cited_by.objects.filter(doi=doi).exists():
-            Cited_by.objects.create(article=article, doi=doi, pmid=pmid, url=url)
+from .utils import query_processing, format_date, get_absolute_url, init_soup, get_authors_affiliations, extract_pubmed_url, extract_cited_by, model
 
 
 def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
     links = extract_pubmed_url(base_url)
-    # authors = []
-    # affiliations = []
     for link in links:
         # Initialize soup
         soup = init_soup(link)
@@ -259,17 +167,18 @@ def delete_orphan_affiliations(sender, instance, **kwargs):
 
 def search_articles(request):
     # Get the search query, or use a default value
-    query = request.GET.get("q", "Environmental factors related to multiple sclerosis progression")
+    query = request.GET.get("q", "What is neurofilament light chain ?")
+    # Process the query
+    query_cleaned = query_processing(query)
     # Encode the search query into a vector
-    query_vector = model.encode(query).tolist() 
-    # Perform the KNN search using elastiknn
-    search_results = ArticleDocument.search().query(
-        'elastiknn',
-        field='title_abstract_vector',
-        query_vector=query_vector,
-        model='cosine',  # Specify distance model
-        k=5  # Number of neighbors to return
-    )
+    query_vector = model.encode(query_cleaned).tolist() 
+    search_results = Search(index="articles").query(
+    "knn",
+    field="title_abstract_vector",
+    query_vector=query_vector,
+    k=5,
+    num_candidates=10
+    ).source(['title', 'abstract'])  # Include the 'title' and 'abstract' fields in the response
     # Execute the search
     response = search_results.execute()
     # Prepare results for JSON response
@@ -278,8 +187,10 @@ def search_articles(request):
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
     # Process the search hits and build the results list
     for hit in response.hits:
-        article_id = hit.meta.id
+        article_id = int(hit.meta.id)
         score = hit.meta.score
+        title = hit.title
+        abstract = hit.abstract if hasattr(hit, 'abstract') else "No abstract available"  # Use hasattr to avoid errors
         # Get the article from the pre-fetched queryset
         article = next((art for art in articles if art.id == article_id), None)
         if article:
@@ -304,9 +215,9 @@ def search_articles(request):
             results.append({
                 'id': article_id,
                 'score': score,
-                'title': article.title,
-                'abstract': article.abstract,
-                'authors_affiliations': authors_affiliations,
+                'title': title,
+                'abstract': abstract,
+                'authors_affiliations': authors_affiliations
             })
 
     return JsonResponse(results, safe=False)  # Return results as JSON
