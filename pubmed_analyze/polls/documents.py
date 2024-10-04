@@ -1,4 +1,4 @@
-from elasticsearch_dsl import Document, Text, DenseVector, Index
+from elasticsearch_dsl import Document, Text, DenseVector, Index, Mapping
 from .models import Article
 
 
@@ -10,6 +10,16 @@ article_index.settings(
     number_of_shards=1,
     number_of_replicas=0,
     elastiknn=True  # Enables KNN support in the index
+)
+
+
+# Define the mapping for the document
+article_index.mapping(
+    properties={
+        'title': Text(),
+        'abstract': Text(),
+        'title_abstract_vector': DenseVector(dims=768),  # Assuming 768 dimensions for BERT
+    }
 )
 
 # Register the document to Django's registry

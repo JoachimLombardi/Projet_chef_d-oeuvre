@@ -12,7 +12,43 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
-from .utils import query_processing, format_date, get_absolute_url, init_soup, get_authors_affiliations, extract_pubmed_url, extract_cited_by, model
+from .utils import query_processing, format_date, get_absolute_url, init_soup, extract_pubmed_url, model
+
+
+def get_authors_affiliations(soup, article):
+    authors_tags = soup.select('.authors-list-item')
+    for author_tag in authors_tags:
+        # Extraire le nom de l'auteur
+        author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
+        if author_name:
+            # Récupérer ou créer l'auteur
+            author, created = Authors.objects.get_or_create(name=author_name)
+            # Extraire les affiliations
+            affiliation_elements = author_tag.select('.affiliation-link')
+            if affiliation_elements:
+                affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
+                for affiliation_name in affiliations_names:
+                    # Récupérer ou créer l'affiliation
+                    affiliation, created = Affiliations.objects.get_or_create(name=affiliation_name)
+                    # Vérifier si la relation existe déjà dans Authorship
+                    if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
+                        # Créer la liaison entre l'article, l'auteur et l'affiliation
+                        Authorship.objects.create(article=article, author=author, affiliation=affiliation)
+
+
+def extract_cited_by(soup, article):
+    cited_articles = soup.select('.similar-articles .articles-list li.full-docsum')
+    for cited_article in cited_articles:
+        if "doi" in cited_article.select_one('.docsum-journal-citation').get_text(strip=True):
+            doi = cited_article.select_one('.docsum-journal-citation').get_text(strip=True).split("doi:")[-1].replace(".","").split("Epub")[0] if cited_article.select_one('.docsum-journal-citation') else None
+            if doi:
+                doi = "https://doi.org/"+doi
+        else:
+            doi = ""
+        pmid = cited_article.select_one('.docsum-pmid').get_text(strip=True) if cited_article.select_one('.docsum-pmid') else None
+        url = get_absolute_url(pmid)
+        if not Cited_by.objects.filter(doi=doi).exists():
+            Cited_by.objects.create(article=article, doi=doi, pmid=pmid, url=url)
 
 
 def extract_article_info(request, base_url='https://pubmed.ncbi.nlm.nih.gov'):
@@ -168,7 +204,7 @@ def delete_orphan_affiliations(sender, instance, **kwargs):
 
 def search_articles(request):
     # Get the search query, or use a default value
-    query = request.GET.get("q", "What is neurofilament light chain ?")
+    query = request.GET.get("q", " Positive Autism Diagnostic Observation Schedule-Second")
     # Process the query
     query_cleaned = query_processing(query)
     # Encode the search query into a vector
@@ -177,9 +213,9 @@ def search_articles(request):
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
-    k=5,
-    num_candidates=10
-    ).source(['title', 'abstract'])  # Include the 'title' and 'abstract' fields in the response
+    k=500,
+    num_candidates=5100
+    ).filter('exists', field='abstract').source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
     # Execute the search
     response = search_results.execute()
     # Prepare results for JSON response

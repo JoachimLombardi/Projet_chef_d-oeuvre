@@ -12,10 +12,10 @@ class Command(BaseCommand):
     help = 'Index articles into Elasticsearch with KNN vectors'
 
     def handle(self, *args, **kwargs):
-        # Supprimer les indices existants
-        indices = registry.get_indices(ArticleDocument)
-        for index in indices:
-            index.delete(ignore=404)  # Supprimer chaque index
+        index_name = 'articles'
+        # Supprimer l'index
+        registry.get_index(index_name).delete(ignore=404)
+        self.stdout.write(self.style.SUCCESS(f'Successfully deleted index: {index_name}'))
 
         # Indexer les articles
         articles = Article.objects.all()

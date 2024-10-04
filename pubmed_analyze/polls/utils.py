@@ -2,13 +2,13 @@ import string
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from sentence_transformers import SentenceTransformer
+import numpy as np
+from sentence_transformers import CrossEncoder, SentenceTransformer
 from dateutil import parser
 from django.utils import timezone
 import pytz
 import requests
 from bs4 import BeautifulSoup
-from .models import Authors, Affiliations,  Authorship, Cited_by
 import time
 
 
@@ -44,27 +44,6 @@ def init_soup(url):
     return None
 
 
-def get_authors_affiliations(soup, article):
-    authors_tags = soup.select('.authors-list-item')
-    for author_tag in authors_tags:
-        # Extraire le nom de l'auteur
-        author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
-        if author_name:
-            # Récupérer ou créer l'auteur
-            author, created = Authors.objects.get_or_create(name=author_name)
-            # Extraire les affiliations
-            affiliation_elements = author_tag.select('.affiliation-link')
-            if affiliation_elements:
-                affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
-                for affiliation_name in affiliations_names:
-                    # Récupérer ou créer l'affiliation
-                    affiliation, created = Affiliations.objects.get_or_create(name=affiliation_name)
-                    # Vérifier si la relation existe déjà dans Authorship
-                    if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
-                        # Créer la liaison entre l'article, l'auteur et l'affiliation
-                        Authorship.objects.create(article=article, author=author, affiliation=affiliation)
-
-
 def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
     links = []
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
@@ -73,25 +52,10 @@ def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
     for i in range(1, page_max+1, 1):
         list_articles = soup.select('div.search-results-chunk')
         for article in list_articles:
-            links.extend([base_url+a['href'] for a in article.find_all('a', href=True)][:10])
+            links.extend([base_url+a['href'] for a in article.find_all('a', href=True)][:10]) # TO do tester si le lien a été scrapper
         time.sleep(1)
         soup = init_soup(url+"&page="+str(i))
     return links
-
-
-def extract_cited_by(soup, article):
-    cited_articles = soup.select('.similar-articles .articles-list li.full-docsum')
-    for cited_article in cited_articles:
-        if "doi" in cited_article.select_one('.docsum-journal-citation').get_text(strip=True):
-            doi = cited_article.select_one('.docsum-journal-citation').get_text(strip=True).split("doi:")[-1].replace(".","").split("Epub")[0] if cited_article.select_one('.docsum-journal-citation') else None
-            if doi:
-                doi = "https://doi.org/"+doi
-        else:
-            doi = ""
-        pmid = cited_article.select_one('.docsum-pmid').get_text(strip=True) if cited_article.select_one('.docsum-pmid') else None
-        url = get_absolute_url(pmid)
-        if not Cited_by.objects.filter(doi=doi).exists():
-            Cited_by.objects.create(article=article, doi=doi, pmid=pmid, url=url)
 
 
 def lemmatize(text: str):
@@ -122,12 +86,25 @@ def remove_stop_words_and_punctuation(text: str) -> list[str]:
 def query_processing(
     query: str,
 ) -> str:
-    query = " ".join(remove_stop_words_and_punctuation(query))
-    query = " ".join(lemmatize(query))
-    return query
+    if query:
+        query = " ".join(remove_stop_words_and_punctuation(query))
+        query = " ".join(lemmatize(query))
+        return query
 
 
 def get_vector(article):
     title = query_processing(article.title) 
-    abstract = query_processing(article.abstract)    
+    abstract = query_processing(article.abstract) if article.abstract else ""  
     return model.encode(title + " " + abstract).tolist()
+
+
+def rank_doc(query, text, topN=10):
+    # Initialize the CrossEncoder model with the specified model name
+    reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+    # Predict scores for each document in relation to the query
+    scores = reranker.predict([[query, doc] for doc in text])
+    # Get indices of the top N scores in descending order
+    top_indices = np.argsort(scores)[::-1][:topN]
+    # Retrieve the top-ranked text documents using list indexing
+    top_pairs = [text[index] for index in top_indices]
+    return top_pairs  # Returns a list of the top-ranked text strings
