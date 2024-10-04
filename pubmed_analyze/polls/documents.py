@@ -13,15 +13,6 @@ article_index.settings(
 )
 
 
-# Define the mapping for the document
-article_index.mapping(
-    properties={
-        'title': Text(),
-        'abstract': Text(),
-        'title_abstract_vector': DenseVector(dims=768),  # Assuming 768 dimensions for BERT
-    }
-)
-
 # Register the document to Django's registry
 @article_index.document
 class ArticleDocument(Document):

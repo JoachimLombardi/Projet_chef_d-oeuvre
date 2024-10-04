@@ -13,6 +13,7 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
 from .utils import query_processing, format_date, get_absolute_url, init_soup, extract_pubmed_url, model
+import ollama
 
 
 def get_authors_affiliations(soup, article):
@@ -257,11 +258,37 @@ def search_articles(request):
                 'authors_affiliations': authors_affiliations
             })
 
-    return JsonResponse(results, safe=False)  # Return results as JSON
+    return results, query
 
 
+def rag_articles(query, query_cleaned, corpus_embeddings, documents):
+    retrieved_documents, query = search_articles()
+    context = ""
+    for i, source in enumerate(retrieved_documents):
+        context += f"Abstract n°{i+1}: {source["title"]}" + "." + "\n\n" + {source['abstract']} + "." + "\n\n"
+    model = "mistral"
+    template = """You are an expert in analysing medical abstract. Your task is to use only provided context to answer at best the query.
+    If you don't know or if the answer is not in the provided context just say that you don't know.
 
+        ## Instruction:\n
+        1. Read carefully the query and look in all abstracts for the answer.
+        2. Make synthesis of the information found in the abstracts.
 
+        ## Query:\n
+        '"""+query+"""'
+
+        ## Context:\n
+        '"""+context+"""'
+
+        All your responses must be structured into three distinct paragraphs. 
+        Each paragraph should be coherent, informative, and well-developed. 
+        """
+    messages = [{"role":"user", "content":template}]
+    chat_response = ollama.chat(
+    model=model,
+    messages=messages,
+    temperature=0)
+    print(chat_response.message.content)
 
 
 
