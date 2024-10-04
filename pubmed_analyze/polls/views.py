@@ -203,9 +203,9 @@ def delete_orphan_affiliations(sender, instance, **kwargs):
             affiliation.delete()
 
 
-def search_articles(request):
+def search_articles(query):
     # Get the search query, or use a default value
-    query = request.GET.get("q", " Positive Autism Diagnostic Observation Schedule-Second")
+    # query = request.GET.get("q", " Positive Autism Diagnostic Observation Schedule-Second")
     # Process the query
     query_cleaned = query_processing(query)
     # Encode the search query into a vector
@@ -214,7 +214,7 @@ def search_articles(request):
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
-    k=500,
+    k=10,
     num_candidates=5100
     ).filter('exists', field='abstract').source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
     # Execute the search
@@ -261,14 +261,15 @@ def search_articles(request):
     return results, query
 
 
-def rag_articles(query, query_cleaned, corpus_embeddings, documents):
-    retrieved_documents, query = search_articles()
+def rag_articles(request):
+    query = request.GET.get("q", "how many people have Systemic sclerosis?")
+    retrieved_documents, query = search_articles(query)
     context = ""
     for i, source in enumerate(retrieved_documents):
-        context += f"Abstract n°{i+1}: {source["title"]}" + "." + "\n\n" + {source['abstract']} + "." + "\n\n"
+        context += f"Abstract n°{i+1}:" + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
     model = "mistral"
     template = """You are an expert in analysing medical abstract. Your task is to use only provided context to answer at best the query.
-    If you don't know or if the answer is not in the provided context just say that you don't know.
+    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
         ## Instruction:\n
         1. Read carefully the query and look in all abstracts for the answer.
@@ -280,15 +281,13 @@ def rag_articles(query, query_cleaned, corpus_embeddings, documents):
         ## Context:\n
         '"""+context+"""'
 
-        All your responses must be structured into three distinct paragraphs. 
-        Each paragraph should be coherent, informative, and well-developed. 
+        All your responses must be structured and only based on the context given.
         """
     messages = [{"role":"user", "content":template}]
     chat_response = ollama.chat(
     model=model,
-    messages=messages,
-    temperature=0)
-    print(chat_response.message.content)
+    messages=messages)
+    return JsonResponse((chat_response['message']['content'], context), safe=False)
 
 
 
