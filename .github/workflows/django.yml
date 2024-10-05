@@ -60,4 +60,4 @@ jobs:
       run: python pubmed_analyze/manage.py migrate
 
     - name: Run tests
-      run: python pubmed_analyze/manage.py test  # Exécute vos tests unitaires
+      run: python pubmed_analyze/manage.py test pubmed_analyze/polls  # Exécute vos tests unitaires
