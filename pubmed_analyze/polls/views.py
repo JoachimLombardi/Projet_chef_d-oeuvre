@@ -108,9 +108,8 @@ def create_article(request):
             # Use the save method from ArticleForm to handle saving the article with authors and affiliations
             article_form.save_article_with_authors(author_affiliation_data)
             return redirect('article_list')
-    else:
-        article_form = ArticleForm()
-        formset = AuthorAffiliationFormSet()
+    article_form = ArticleForm()
+    formset = AuthorAffiliationFormSet()
     return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset})
 
 
@@ -167,9 +166,8 @@ def update_article(request, id):
             ]        
             article_form.save_article_with_authors(author_affiliation_data)
             return redirect('article_list')
-    else:
-        article_form = ArticleForm(instance=article)
-        formset = AuthorAffiliationFormSet(initial=initial_data)
+    article_form = ArticleForm(instance=article)
+    formset = AuthorAffiliationFormSet(initial=initial_data)
     context = {
         'article_form': article_form,
         'formset': formset,

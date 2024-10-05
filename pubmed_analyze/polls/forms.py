@@ -65,7 +65,10 @@ class ArticleForm(forms.ModelForm):
             # Vérifier si l'auteur existe déjà
             author, created = Authors.objects.get_or_create(name=author_name)
             # Traiter chaque affiliation pour l'auteur
-            affiliation_list = [aff.strip() for aff in affiliations.split('|')]
+            if affiliations:
+                affiliation_list = [aff.strip() for aff in affiliations.split('|')]
+            else:
+                affiliation_list = []
             for aff_name in affiliation_list:
                 # Vérifier si l'affiliation existe déjà
                 affiliation, created = Affiliations.objects.get_or_create(name=aff_name)

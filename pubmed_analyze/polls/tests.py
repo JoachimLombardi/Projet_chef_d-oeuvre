@@ -27,7 +27,9 @@ class ArticleCRUDTest(TestCase):
         # Association de l'article avec l'auteur et l'affiliation
         Authorship.objects.create(article=cls.article, author=author, affiliation=affiliation)
 
+
     def test_article_list_view(self):
+        print(self.article.id)
         # Test de la vue de la liste d'articles (READ)
         response = self.client.get(reverse('article_list'))
         self.assertEqual(response.status_code, 200)
@@ -41,22 +43,28 @@ class ArticleCRUDTest(TestCase):
         self.assertContains(response, reverse('update_article', args=[self.article.id]))
         self.assertContains(response, reverse('delete_article', args=[self.article.id]))
 
+
     def test_article_create_view(self):
         # Test de la création d'un nouvel article (CREATE)
         data = {
             'title_review': 'New Review Title',
-            'date': '2024-06-01',
+            'date': '2024-01-13 00:00:00+00:00',
             'title': 'New Article',
-            'abstract': 'This is a new test abstract for the article.',
-            'pmid': 654321,
-            'doi': '10.6543/test.doi.new',
+            'abstract': 'This is a new abstract for the article.',
+            'pmid': 123456,
+            'doi': '10.1234/new.doi',
             'disclosure': 'No conflict of interest',
-            'mesh_terms': 'New Test Mesh Terms',
+            'mesh_terms': 'New Mesh Terms',
             'url': 'http://example.com/new-article',
+            'form-0-author_name': 'Author Test',  # Auteur
+            'form-0-affiliations': 'Affiliation Test',  # Affiliations
+            'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
+            'form-INITIAL_FORMS': 0,  # Initial forms
         }
         response = self.client.post(reverse('create_article'), data)
-        self.assertEqual(response.status_code, 302)  # Redirection après création
+        self.assertEqual(response.status_code, 302)  # Redirection spécelle de creation
         self.assertTrue(Article.objects.filter(title='New Article').exists())
+
 
     def test_article_update_view(self):
         # Test de la mise à jour d'un article (UPDATE)
@@ -70,14 +78,23 @@ class ArticleCRUDTest(TestCase):
             'disclosure': self.article.disclosure,
             'mesh_terms': self.article.mesh_terms,
             'url': self.article.url,
+            'form-0-author_name': 'Author Test',  # Auteur
+            'form-0-affiliations': 'Affiliation Test',  # Affiliations
+            'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
+            'form-INITIAL_FORMS': 0,  # Initial forms
         }
         response = self.client.post(reverse('update_article', args=[self.article.id]), data)
         self.assertEqual(response.status_code, 302)  # Redirection après mise à jour
         self.article.refresh_from_db()
         self.assertEqual(self.article.title, 'Updated Article')
 
+
     def test_article_delete_view(self):
         # Test de la suppression d'un article (DELETE)
         response = self.client.post(reverse('delete_article', args=[self.article.id]))
         self.assertEqual(response.status_code, 302)  # Redirection après suppression
         self.assertFalse(Article.objects.filter(id=self.article.id).exists())
+
+
+
+    
