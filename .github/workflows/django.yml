@@ -21,6 +21,11 @@ jobs:
           POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
     - name: Checkout code
@@ -44,9 +49,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt  # Installe les dépendances du projet
 
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        until pg_isready -h localhost -p 5432 -U ${{ secrets.DATABASE_USER }}; do
+          sleep 1
+        done
+
     - name: Run migrations
       run: python manage.py migrate
 
     - name: Run tests
       run: python manage.py test  # Exécute vos tests unitaires
-
