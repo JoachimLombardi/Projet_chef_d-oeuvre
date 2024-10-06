@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import time
 
 
-model = SentenceTransformer('bert-base-nli-mean-tokens')
+model = SentenceTransformer('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
 
 def format_date(date):
     if date is None:
@@ -94,7 +94,7 @@ def query_processing(
 
 def get_vector(article):
     title = query_processing(article.title) 
-    abstract = query_processing(article.abstract) if article.abstract else ""  
+    abstract = query_processing(article.abstract)  
     return model.encode(title + " " + abstract).tolist()
 
 

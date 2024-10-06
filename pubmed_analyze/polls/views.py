@@ -212,8 +212,8 @@ def search_articles(query):
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
-    k=10,
-    num_candidates=5100
+    k=5,
+    num_candidates=5000
     ).filter('exists', field='abstract').source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
     # Execute the search
     response = search_results.execute()
@@ -226,7 +226,7 @@ def search_articles(query):
         article_id = int(hit.meta.id)
         score = hit.meta.score
         title = hit.title
-        abstract = hit.abstract if hasattr(hit, 'abstract') else "No abstract available"  # Use hasattr to avoid errors
+        abstract = hit.abstract 
         # Get the article from the pre-fetched queryset
         article = next((art for art in articles if art.id == article_id), None)
         if article:
@@ -260,7 +260,8 @@ def search_articles(query):
 
 
 def rag_articles(request):
-    query = request.GET.get("q", "how many people have Systemic sclerosis?")
+    query = request.GET.get("q", """How do the genetic factors and social determinants of health contribute to the increased severity and prevalence of multiple sclerosis
+                             in Black and Hispanic populations, and what steps can be taken to improve diversity in clinical research to better address these disparities?""")
     retrieved_documents, query = search_articles(query)
     context = ""
     for i, source in enumerate(retrieved_documents):
