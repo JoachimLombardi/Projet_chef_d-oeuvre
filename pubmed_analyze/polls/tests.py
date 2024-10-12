@@ -1,6 +1,14 @@
+# python manage.py test
+# python manage.py test polls.tests.ArticleCRUDTest.test_article_list_view 
+
+import json
+import unittest
 from django.test import TestCase
 from django.urls import reverse
+import numpy as np
 from polls.models import Article, Affiliations, Authors, Authorship
+from unittest.mock import MagicMock, patch
+from polls.views import search_articles, rag_articles
 
 class ArticleCRUDTest(TestCase):
     @classmethod
@@ -29,7 +37,6 @@ class ArticleCRUDTest(TestCase):
 
 
     def test_article_list_view(self):
-        print(self.article.id)
         # Test de la vue de la liste d'articles (READ)
         response = self.client.get(reverse('article_list'))
         self.assertEqual(response.status_code, 200)
@@ -95,6 +102,64 @@ class ArticleCRUDTest(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirection après suppression
         self.assertFalse(Article.objects.filter(id=self.article.id).exists())
 
+
+class RAGTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        # Create an affiliation
+        affiliation = Affiliations.objects.create(name='Affiliation Test')
+
+        # Create an author
+        author = Authors.objects.create(name='Author Test')
+
+        # Create an article
+        cls.article = Article.objects.create(
+            title_review='Review Title Test',
+            date='2024-01-13 00:00:00+00:00',
+            title='Era of COVID-19 in Multiple Sclerosis Care.',
+            abstract='The unprecedented scope of the coronavirus disease 2019 (COVID-19) pandemic resulted in numerous disruptions to daily life, including for people with multiple sclerosis (PwMS). This article reviews how disruptions in multiple sclerosis (MS) care prompted innovations in delivery of care (eg, via telemedicine) and mobilized the global MS community to rapidly adopt safe and effective practices. We discuss how our understanding of the risks of COVID-19 in PwMS has evolved along with recommendations pertaining to disease-modifying therapies and vaccines. With lessons learned during the COVID-19 pandemic, we examine potential questions for future research in this new era of MS care.',
+            pmid=123456,
+            doi='10.1234/test.doi',
+            disclosure='No conflict of interest',
+            mesh_terms='Test Mesh Terms',
+            url='http://example.com/test-article',
+        )
+
+        # Associate the article with the author and affiliation
+        Authorship.objects.create(article=cls.article, author=author, affiliation=affiliation)
+
+    @patch('polls.views.model.encode')  # Mock the model used for encoding the query
+    @patch('polls.views.Search')  # Mock the Search class
+    @patch('polls.views.ollama.chat')  # Mock the LLM chat function
+    def test_rag(self, mock_chat, mock_search, mock_encode):
+        # Sample query
+        query = " How did the COVID-19 pandemic impact the care of people with multiple sclerosis (PwMS)?"
+        mock_encode.return_value = np.array([0.1, 0.2, 0.3])  # Mock the encoded vector returned by the model
+        
+        # Create a mock response for the search
+        mock_response = MagicMock()
+        mock_response.hits = [
+            MagicMock(meta=MagicMock(id=self.article.id), title=self.article.title, abstract=self.article.abstract)
+        ]
+        
+        mock_search.return_value.query.return_value.source.return_value.execute.return_value = mock_response
+
+        class Request:
+            GET = {'query': query}
+
+        request = Request()
+
+        # Call the rag_articles function
+        context = rag_articles(request)
+  
+        # Assertions for search results
+        self.assertIn("Abstract n°1", context)  # Ensure that the context includes the abstract
+        self.assertIn(self.article.title, context)  # Ensure the title is part of the context
+        self.assertIn(self.article.abstract, context)  # Ensure the abstract is part of the context
+
+if __name__ == '__main__':
+    unittest.main()
+  
 
 
     

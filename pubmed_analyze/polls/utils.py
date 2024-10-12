@@ -98,13 +98,15 @@ def get_vector(article):
     return model.encode(title + " " + abstract).tolist()
 
 
-def rank_doc(query, text, topN=10):
+def rank_doc(query, text, topN):
     # Initialize the CrossEncoder model with the specified model name
     reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
     # Predict scores for each document in relation to the query
-    scores = reranker.predict([[query, doc] for doc in text])
+    scores = reranker.predict([[query, doc["title"] + " " + doc["abstract"]] for doc in text])
+    # Convert scores to Python float for cleaner output
+    scores = [float(score) for score in scores]
     # Get indices of the top N scores in descending order
     top_indices = np.argsort(scores)[::-1][:topN]
     # Retrieve the top-ranked text documents using list indexing
-    top_pairs = [text[index] for index in top_indices]
+    top_pairs = [{**text[index], "score": scores[index]} for index in top_indices]
     return top_pairs  # Returns a list of the top-ranked text strings

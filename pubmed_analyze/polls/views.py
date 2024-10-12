@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from django.http import HttpResponse
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Document, Search
 from .models import Authors, Affiliations, Article, Authorship, Cited_by
 from django.shortcuts import render, redirect
 from .forms import ArticleForm, AuthorAffiliationFormSet
@@ -12,7 +12,7 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
-from .utils import query_processing, format_date, get_absolute_url, init_soup, extract_pubmed_url, model
+from .utils import query_processing, format_date, get_absolute_url, init_soup, extract_pubmed_url, model, rank_doc
 import ollama
 
 
@@ -214,19 +214,22 @@ def search_articles(query):
     query_vector=query_vector,
     k=5,
     num_candidates=5000
-    ).filter('exists', field='abstract').source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
+    ).source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
     # Execute the search
     response = search_results.execute()
+    # rerank
+    retrieved_docs = [{"id":hit.meta.id, "title":hit.title, "abstract":hit.abstract} for hit in response.hits]
+    response = rank_doc(query_cleaned, retrieved_docs, 5)
     # Prepare results for JSON response
     results = []
-    article_ids = [hit.meta.id for hit in response.hits]  # Gather all article IDs for a single query
+    article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
     # Process the search hits and build the results list
-    for hit in response.hits:
-        article_id = int(hit.meta.id)
-        score = hit.meta.score
-        title = hit.title
-        abstract = hit.abstract 
+    for res in response:
+        article_id = int(res['id'])
+        score = res['score']
+        title = res['title']
+        abstract = res['abstract']
         # Get the article from the pre-fetched queryset
         article = next((art for art in articles if art.id == article_id), None)
         if article:
@@ -255,25 +258,22 @@ def search_articles(query):
                 'abstract': abstract,
                 'authors_affiliations': authors_affiliations
             })
-
     return results, query
 
 
 def rag_articles(request):
-    query = request.GET.get("q", """How do the genetic factors and social determinants of health contribute to the increased severity and prevalence of multiple sclerosis
-                             in Black and Hispanic populations, and what steps can be taken to improve diversity in clinical research to better address these disparities?""")
+    query = request.GET.get("q", """How did the COVID-19 pandemic impact the care of people with multiple sclerosis (PwMS)?""")
     retrieved_documents, query = search_articles(query)
     context = ""
     for i, source in enumerate(retrieved_documents):
         context += f"Abstract n°{i+1}:" + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
     model = "mistral"
-    template = """You are an expert in analysing medical abstract. Your task is to use only provided context to answer at best the query.
+    template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
     If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
         ## Instruction:\n
-        1. Read carefully the query and look in all abstracts for the answer.
-        2. Make synthesis of the information found in the abstracts.
-
+        1. Read carefully the query and look in all extract for the answer.
+      
         ## Query:\n
         '"""+query+"""'
 
@@ -286,7 +286,15 @@ def rag_articles(request):
     chat_response = ollama.chat(
     model=model,
     messages=messages)
-    return JsonResponse((chat_response['message']['content'], context), safe=False)
+    try:
+        return JsonResponse((chat_response['message']['content'], context), safe=False)
+    except:
+        return context
+
+
+
+
+
 
 
 
