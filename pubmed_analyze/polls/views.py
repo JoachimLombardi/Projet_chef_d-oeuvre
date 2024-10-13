@@ -1,4 +1,10 @@
 # python manage.py runserver   
+# docker-compose up --build
+# http://localhost:9200/articles/_search?pretty
+# http://localhost:9200/articles/_mapping?pretty
+# http://localhost:9200/_cat/indices?v
+# Remove indices: curl -X DELETE "http://localhost:9200/articles" in bash
+
 
 import json
 import os
@@ -93,7 +99,7 @@ def scrap_article_to_json(request, base_url='https://pubmed.ncbi.nlm.nih.gov', t
 
 
 def article_json_to_database(request): 
-    term = "multiple_sclerosis"
+    term = "herpes_zoster"
     filter = "2024"
     output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
     with output_path.open('r', encoding='utf-8') as f:
@@ -112,7 +118,7 @@ def article_json_to_database(request):
             title_review = article['title_review']
             authors_affiliations = article['authors_affiliations']
             if not Article.objects.filter(doi=doi).exists():
-                article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review)
+                article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review, term=term + "_" + filter)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation['author_name']
                     affiliations = author_affiliation['affiliations']

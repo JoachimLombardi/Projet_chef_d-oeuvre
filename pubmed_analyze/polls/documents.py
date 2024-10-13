@@ -3,7 +3,8 @@ from .models import Article
 
 
 # Define the Elasticsearch index
-article_index = Index('articles')
+index = "herpes_zoster_2024"
+article_index = Index(index)
 
 # Enable KNN vector settings in the index
 article_index.settings(

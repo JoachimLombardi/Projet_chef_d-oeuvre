@@ -36,6 +36,7 @@ class Article(models.Model):
     disclosure = models.TextField(null=True, verbose_name='conflict of interest', db_column='conflict of interest')
     mesh_terms = models.TextField(null=True, verbose_name='mesh terms', db_column='mesh terms')
     url = models.CharField(max_length=200, null=True, verbose_name='url', db_column='url')
+    term = models.CharField(null=True, verbose_name='term', db_column='term')
     authors = models.ManyToManyField(Authors, through='Authorship', related_name='articles')
 
     def get_title_abstract_vector(self):

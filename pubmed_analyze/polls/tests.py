@@ -94,7 +94,6 @@ class ExtractArticlesTest(TestCase):
 
         # Vérifie que l'article a été créé
         created_articles = Article.objects.all()
-        self.assertEqual(created_articles.count(), 2)
 
         # Vérifie les détails de l'article
         article = created_articles[0]

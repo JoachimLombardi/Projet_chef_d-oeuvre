@@ -6,6 +6,7 @@ from django_elasticsearch_dsl.registries import registry
 from polls.models import Article
 from polls.documents import ArticleDocument
 from elasticsearch.exceptions import NotFoundError
+from polls.documents import index
 
 
 class Command(BaseCommand):
@@ -13,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Indexer les articles
-        articles = Article.objects.all()
+        articles = Article.objects.filter(term=index)
         for article in articles:
             # Préparer le vecteur avant de mettre à jour le document
             title_abstract_vector = article.get_title_abstract_vector()  # Appeler votre méthode de génération de vecteur ici
