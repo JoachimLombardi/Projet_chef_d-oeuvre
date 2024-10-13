@@ -93,7 +93,7 @@ class ExtractArticlesTest(TestCase):
         response = article_json_to_database(request)
 
         # Vérifie que l'article a été créé
-        created_articles = Article.objects.all()
+        created_articles = Article.objects.filter(title="Multiple sclerosis")
 
         # Vérifie les détails de l'article
         article = created_articles[0]
