@@ -144,7 +144,7 @@ class ArticleCRUDTest(TestCase):
         # Création d'un article
         cls.article = Article.objects.create(
             title_review='Review Title Test',
-            date='2024-01-13 00:00:00+00:00',
+            date='2024-01-13',
             title='Test Article',
             abstract='This is a test abstract for the article.',
             pmid=123456,
@@ -177,7 +177,7 @@ class ArticleCRUDTest(TestCase):
         # Test de la création d'un nouvel article (CREATE)
         data = {
             'title_review': 'New Review Title',
-            'date': '2024-01-13 00:00:00+00:00',
+            'date': '2024-01-13',
             'title': 'New Article',
             'abstract': 'This is a new abstract for the article.',
             'pmid': 123456,
@@ -237,7 +237,7 @@ class RAGTest(TestCase):
         # Create an article
         cls.article = Article.objects.create(
             title_review='Review Title Test',
-            date='2024-01-13 00:00:00+00:00',
+            date='2024-01-13',
             title='Era of COVID-19 in Multiple Sclerosis Care.',
             abstract='The unprecedented scope of the coronavirus disease 2019 (COVID-19) pandemic resulted in numerous disruptions to daily life, including for people with multiple sclerosis (PwMS). This article reviews how disruptions in multiple sclerosis (MS) care prompted innovations in delivery of care (eg, via telemedicine) and mobilized the global MS community to rapidly adopt safe and effective practices. We discuss how our understanding of the risks of COVID-19 in PwMS has evolved along with recommendations pertaining to disease-modifying therapies and vaccines. With lessons learned during the COVID-19 pandemic, we examine potential questions for future research in this new era of MS care.',
             pmid=123456,
