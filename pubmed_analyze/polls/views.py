@@ -99,7 +99,7 @@ def scrap_article_to_json(request, base_url='https://pubmed.ncbi.nlm.nih.gov', t
 
 
 def article_json_to_database(request): 
-    term = "herpes_zoster"
+    term = "multiple_sclerosis"
     filter = "2024"
     output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
     with output_path.open('r', encoding='utf-8') as f:
