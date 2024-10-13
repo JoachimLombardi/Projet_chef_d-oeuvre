@@ -1,8 +1,17 @@
+# python manage.py makemigrations polls
+# python manage.py migrate
+# To empty the database:
+# python manage.py flush
+# Important changes in models: 
+# 1. remove and recreate database
+# 2. remove migrations files
+# 3. Reexcecute migrations
+
+
 from django.db import models
 from .utils import get_vector
 
 
-    
 class Affiliations(models.Model):
     name = models.TextField(null=True, verbose_name='name of affiliation', db_column='name of affiliation')
 
@@ -19,7 +28,7 @@ class Authors(models.Model):
 
 class Article(models.Model):
     title_review = models.CharField(null=True, verbose_name='title of review', db_column='title of review')
-    date = models.DateTimeField(null=True, verbose_name='date of publication', db_column='date of publication')
+    date = models.DateField(null=True, verbose_name='date of publication', db_column='date of publication')
     title = models.CharField(null=True, verbose_name='title of article', db_column='title of article')
     abstract = models.TextField(null=True, verbose_name='abstract', db_column='abstract')
     pmid = models.IntegerField(null=True, verbose_name='pubmed id', db_column='pubmed id')
@@ -47,13 +56,3 @@ class Authorship(models.Model):
     def __str__(self):
         return f"{self.author.name} - {self.affiliation.name} (Article: {self.article.title})"
 
-class Cited_by(models.Model):
-    article = models.ForeignKey(Article, on_delete=models.CASCADE, null=True, verbose_name='article id')
-    doi = models.CharField(max_length=200, null=True, verbose_name='doi')
-    pmid = models.IntegerField(null=True, verbose_name='pubmed id')
-    url = models.CharField(max_length=200, null=True, verbose_name='url')
-    
-
-    def __str__(self):
-        return self.review_title
-    

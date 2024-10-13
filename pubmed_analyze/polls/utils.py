@@ -20,11 +20,10 @@ def format_date(date):
     try:
         date_obj = parser.parse(date, fuzzy=True)
         if timezone.is_naive(date_obj):
-            return timezone.make_aware(date_obj, timezone=timezone.utc)
+            return timezone.make_aware(date_obj, timezone=timezone.utc).date()
          # Assurez-vous que le fuseau horaire est valide
         if date_obj.tzinfo:
-            date_obj = date_obj.astimezone(pytz.UTC)
-        return date_obj
+            return date_obj.astimezone(pytz.UTC).date()
     except (ValueError, OverflowError, pytz.UnknownTimeZoneError):
         return None
 
@@ -44,10 +43,11 @@ def init_soup(url):
     return None
 
 
-def extract_pubmed_url(base_url, term="multiple_sclerosis", filter="2024"):
+def extract_pubmed_url(base_url, term, filter):
     links = []
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
     soup = init_soup(url)
+    print(soup)
     page_max = int(soup.select_one('label.of-total-pages').get_text(strip=True).split(" ")[-1]) if soup.select_one('label.of-total-pages') else 1
     for i in range(1, page_max+1, 1):
         list_articles = soup.select('div.search-results-chunk')
