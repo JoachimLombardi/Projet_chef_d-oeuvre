@@ -20,7 +20,7 @@ class ExtractArticlesTest(TestCase):
     @patch('polls.utils.init_soup')
     @patch('polls.utils.format_date')
     @patch('polls.utils.get_absolute_url')
-    def test_scrap_article_to_json(self, mock_get_absolute_url, mock_format_date, mock_init_soup, mock_extract_pubmed_url):
+    def test_scrap_article_to_json(self, mock_init_soup, mock_extract_pubmed_url):
         # Configurer les mocks
         mock_extract_pubmed_url.return_value = [
             'https://pubmed.ncbi.nlm.nih.gov/37949093',

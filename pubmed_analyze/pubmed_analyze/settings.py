@@ -26,6 +26,12 @@ EXPORT_JSON_DIR = os.path.join(BASE_DIR, 'data/json')
 if not os.path.exists(EXPORT_JSON_DIR):
     os.makedirs(EXPORT_JSON_DIR)
 
+RAG_JSON_DIR = os.path.join(BASE_DIR, 'polls/rag_evaluation/data/json')
+
+if not os.path.exists(RAG_JSON_DIR):
+    os.makedirs(RAG_JSON_DIR)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 

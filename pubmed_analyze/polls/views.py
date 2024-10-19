@@ -245,7 +245,7 @@ def search_articles(query):
     query_cleaned = query_processing(query)
     # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
-    search_results = Search(index="articles").query(
+    search_results = Search(index="multiple_sclerosis_2024").query(
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
@@ -298,8 +298,8 @@ def search_articles(query):
     return results, query
 
 
-def rag_articles(request):
-    query = request.GET.get("q", """How did the COVID-19 pandemic impact the care of people with multiple sclerosis (PwMS)?""")
+def rag_articles(request, query="What was the process and outcome of the Systemic Lupus Erythematosus (SLE) Working Group's efforts during the OMERACT 2023 conference to develop candidate domains for the SLE Core Outcome Set (COS)?"):
+    query = request.GET.get("q", query)
     retrieved_documents, query = search_articles(query)
     context = ""
     for i, source in enumerate(retrieved_documents):
