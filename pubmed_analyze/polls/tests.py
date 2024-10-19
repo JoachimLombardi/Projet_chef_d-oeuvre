@@ -115,8 +115,8 @@ class ExtractArticlesTest(TestCase):
         self.assertEqual(author_2.name, "Stefan Bittner")
 
         # Vérifie les affiliations
-        affiliation_author_1 = Authorship.objects.filter(author=author_1)
-        affiliation_author_2 = Authorship.objects.filter(author=author_2)
+        affiliation_author_1 = Authorship.objects.filter(author=author_1, article=article)
+        affiliation_author_2 = Authorship.objects.filter(author=author_2, article=article)
         self.assertEqual(affiliation_author_1.count(), 1)
         self.assertEqual(affiliation_author_2.count(), 1)
 
