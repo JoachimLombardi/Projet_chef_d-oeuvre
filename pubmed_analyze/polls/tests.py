@@ -12,14 +12,13 @@ from django.urls import reverse
 import numpy as np
 from polls.models import Article, Affiliations, Authors, Authorship
 from unittest.mock import MagicMock, patch
-from polls.views import article_json_to_database, rag_articles, scrap_article_to_json
+from polls.views import rag_articles
+from polls.business_logic import article_json_to_database, scrap_article_to_json
 
 
 class ExtractArticlesTest(TestCase):
-    @patch('polls.utils.extract_pubmed_url')  # Remplacez par le bon chemin
-    @patch('polls.utils.init_soup')
-    @patch('polls.utils.format_date')
-    @patch('polls.utils.get_absolute_url')
+    @patch('polls.business_logic.extract_pubmed_url')  
+    @patch('polls.business_logic.init_soup')
     def test_scrap_article_to_json(self, mock_init_soup, mock_extract_pubmed_url):
         # Configurer les mocks
         mock_extract_pubmed_url.return_value = [
@@ -248,8 +247,8 @@ class RAGTest(TestCase):
         # Associate the article with the author and affiliation
         Authorship.objects.create(article=cls.article, author=author, affiliation=affiliation)
 
-    @patch('polls.views.model.encode')  # Mock the model used for encoding the query
-    @patch('polls.views.Search')  # Mock the Search class
+    @patch('polls.business_logic.model.encode')  # Mock the model used for encoding the query
+    @patch('polls.business_logic.Search')  # Mock the Search class
     @patch('polls.views.ollama.chat')  # Mock the LLM chat function
     def test_rag(self, mock_chat, mock_search, mock_encode):
         # Sample query
