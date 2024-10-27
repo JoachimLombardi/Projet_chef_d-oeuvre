@@ -1,18 +1,16 @@
+from dateutil import parser
+from django.utils import timezone
+import pytz
 import string
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-import numpy as np
-from sentence_transformers import CrossEncoder, SentenceTransformer
-from dateutil import parser
-from django.utils import timezone
-import pytz
-import requests
-from bs4 import BeautifulSoup
-import time
 
 
-model = SentenceTransformer('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
+
+def get_absolute_url(pmid):
+    return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
+
 
 def format_date(date):
     if date is None:
@@ -26,36 +24,6 @@ def format_date(date):
             return date_obj.astimezone(pytz.UTC).date()
     except (ValueError, OverflowError, pytz.UnknownTimeZoneError):
         return None
-
-
-def get_absolute_url(pmid):
-    return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
-
-
-def init_soup(url):
-    # Envoyer une requête GET pour récupérer le contenu de la page
-    response = requests.get(url)
-    # Vérifier que la requête a réussi
-    if response.status_code == 200:
-    # Parser le contenu HTML avec BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
-        return soup
-    return None
-
-
-def extract_pubmed_url(base_url, term, filter):
-    links = []
-    url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
-    soup = init_soup(url)
-    print(soup)
-    page_max = int(soup.select_one('label.of-total-pages').get_text(strip=True).split(" ")[-1]) if soup.select_one('label.of-total-pages') else 1
-    for i in range(1, page_max+1, 1):
-        list_articles = soup.select('div.search-results-chunk')
-        for article in list_articles:
-            links.extend([base_url+a['href'] for a in article.find_all('a', href=True)][:10]) # TO do tester si le lien a été scrapper
-        time.sleep(1)
-        soup = init_soup(url+"&page="+str(i))
-    return links
 
 
 def lemmatize(text: str):
@@ -92,21 +60,3 @@ def query_processing(
         return query
 
 
-def get_vector(article):
-    title = query_processing(article.title) 
-    abstract = query_processing(article.abstract)  
-    return model.encode(title + " " + abstract).tolist()
-
-
-def rank_doc(query, text, topN):
-    # Initialize the CrossEncoder model with the specified model name
-    reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    # Predict scores for each document in relation to the query
-    scores = reranker.predict([[query, doc["title"] + " " + doc["abstract"]] for doc in text])
-    # Convert scores to Python float for cleaner output
-    scores = [float(score) for score in scores]
-    # Get indices of the top N scores in descending order
-    top_indices = np.argsort(scores)[::-1][:topN]
-    # Retrieve the top-ranked text documents using list indexing
-    top_pairs = [{**text[index], "score": scores[index]} for index in top_indices]
-    return top_pairs  # Returns a list of the top-ranked text strings

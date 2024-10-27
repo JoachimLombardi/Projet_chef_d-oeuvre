@@ -33,7 +33,7 @@ class Command(BaseCommand):
         articles = Article.objects.all()
         for article in articles:
             # Préparer le vecteur avant de mettre à jour le document
-            title_abstract_vector = article.get_title_abstract_vector()  # Appeler votre méthode de génration de vecteur ici
+            title_abstract_vector = article.get_vector()  # Appeler votre méthode de génration de vecteur ici
             doc = ArticleDocument(
                 meta={'id': article.id},  # Assurez-vous que le document a le bon ID
                 title=article.title,
@@ -46,10 +46,6 @@ class Command(BaseCommand):
 
     def evaluate_rag_model(self):
         # RAG model evaluation logic
-        score_generation, score_retrieval = self.calculate_rag_score()
+        score_generation, score_retrieval = evaluate_rag()
         self.stdout.write(self.style.SUCCESS(f'RAG model score generation: {score_generation}, RAG model score retrieval: {score_retrieval}'))
 
-
-    def calculate_rag_score(self):
-        # Logic for evaluating and scoring your RAG model
-        return evaluate_rag()

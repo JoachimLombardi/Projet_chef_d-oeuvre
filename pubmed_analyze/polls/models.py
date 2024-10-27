@@ -9,8 +9,10 @@
 
 
 from django.db import models
-from .utils import get_vector
+from .utils import query_processing
+from sentence_transformers import SentenceTransformer
 
+model = SentenceTransformer('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
 
 class Affiliations(models.Model):
     name = models.TextField(null=True, verbose_name='name of affiliation', db_column='name of affiliation')
@@ -39,8 +41,10 @@ class Article(models.Model):
     term = models.CharField(null=True, verbose_name='term', db_column='term')
     authors = models.ManyToManyField(Authors, through='Authorship', related_name='articles')
 
-    def get_title_abstract_vector(self):
-        return get_vector(self)
+    def get_vector(article):
+        title = query_processing(article.title) 
+        abstract = query_processing(article.abstract)  
+        return model.encode(title + " " + abstract).tolist()
   
     def __str__(self):
         return self.title

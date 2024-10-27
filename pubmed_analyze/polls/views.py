@@ -7,19 +7,16 @@
 
 
 import json
-import os
 from pathlib import Path
+import re
 from django.http import HttpResponse
-from elasticsearch_dsl import Document, Search
 from .models import Authors, Affiliations, Article, Authorship
 from django.shortcuts import render, redirect
 from .forms import ArticleForm, AuthorAffiliationFormSet
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 from django.http import JsonResponse
-from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
-from .utils import query_processing, format_date, get_absolute_url, init_soup, extract_pubmed_url, model, rank_doc
+from .utils import format_date, get_absolute_url
+from .business_logic import init_soup, extract_pubmed_url, search_articles
 import ollama
 
 
@@ -221,112 +218,47 @@ def delete_article(request, id):
     return render(request, 'polls/article_confirm_delete.html', context)
 
 
-# Signal qui s'active après la suppression d'un article
-@receiver(post_delete, sender=Article)
-def delete_orphan_authors(sender, instance, **kwargs):
-    authors = instance.authors.all()
-    for author in authors:
-        if not author.articles.exists():
-            author.delete()
+def rag_articles(request):
+    if request.method == 'POST':
+        query = request.POST.get('query')
+        if query:
+            retrieved_documents, query = search_articles(query)
+            context = ""
+            for i, source in enumerate(retrieved_documents):
+                context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
+            print(context)
+            model = "mistral"
+            template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
+            If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
+                ## Instruction:\n
+                1. Read carefully the query and look in all extract for the answer.
+                
+                ## Query:\n
+                '"""+query+"""'
 
-@receiver(post_delete, sender=Authors)
-def delete_orphan_affiliations(sender, instance, **kwargs):
-    affiliations = instance.affiliations.all()
-    for affiliation in affiliations:
-        if not affiliation.authors.exists():
-            affiliation.delete()
+                ## Context:\n
+                '"""+context+"""'
 
-
-def search_articles(query):
-    # Get the search query, or use a default value
-    # query = request.GET.get("q", " Positive Autism Diagnostic Observation Schedule-Second")
-    # Process the query
-    query_cleaned = query_processing(query)
-    # Encode the search query into a vector
-    query_vector = model.encode(query_cleaned).tolist() 
-    search_results = Search(index="multiple_sclerosis_2024").query(
-    "knn",
-    field="title_abstract_vector",
-    query_vector=query_vector,
-    k=5,
-    num_candidates=5000
-    ).source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
-    # Execute the search
-    response = search_results.execute()
-    # rerank
-    retrieved_docs = [{"id":hit.meta.id, "title":hit.title, "abstract":hit.abstract} for hit in response.hits]
-    response = rank_doc(query_cleaned, retrieved_docs, 5)
-    # Prepare results for JSON response
-    results = []
-    article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query
-    articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
-    # Process the search hits and build the results list
-    for res in response:
-        article_id = int(res['id'])
-        score = res['score']
-        title = res['title']
-        abstract = res['abstract']
-        # Get the article from the pre-fetched queryset
-        article = next((art for art in articles if art.id == article_id), None)
-        if article:
-            # Retrieve authors and their affiliations
-            affiliations_by_author = {}
-            for authorship in article.authorships.all():
-                author_name = authorship.author.name
-                affiliation_name = authorship.affiliation.name
-                # Avoid duplicates by using a set
-                if author_name not in affiliations_by_author:
-                    affiliations_by_author[author_name] = set()
-                affiliations_by_author[author_name].add(affiliation_name)
-            # Prepare data for authors and affiliations
-            authors_affiliations = [
+                ## Expected Answer:\n
                 {
-                    'author_name': author,
-                    'affiliations': '| '.join(affiliations)  # Join affiliations into a single string
+                    "response": str
                 }
-                for author, affiliations in affiliations_by_author.items()
-            ]
-            # Add article details to results
-            results.append({
-                'id': article_id,
-                'score': score,
-                'title': title,
-                'abstract': abstract,
-                'authors_affiliations': authors_affiliations
-            })
-    return results, query
 
-
-def rag_articles(request, query="What was the process and outcome of the Systemic Lupus Erythematosus (SLE) Working Group's efforts during the OMERACT 2023 conference to develop candidate domains for the SLE Core Outcome Set (COS)?"):
-    query = request.GET.get("q", query)
-    retrieved_documents, query = search_articles(query)
-    context = ""
-    for i, source in enumerate(retrieved_documents):
-        context += f"Abstract n°{i+1}:" + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-    model = "mistral"
-    template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
-    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
-
-        ## Instruction:\n
-        1. Read carefully the query and look in all extract for the answer.
-      
-        ## Query:\n
-        '"""+query+"""'
-
-        ## Context:\n
-        '"""+context+"""'
-
-        All your responses must be structured and only based on the context given.
-        """
-    messages = [{"role":"user", "content":template}]
-    chat_response = ollama.chat(
-    model=model,
-    messages=messages)
-    try:
-        return JsonResponse((chat_response['message']['content'], context), safe=False)
-    except:
-        return context
+                You must provid a valid JSON with the key "response".
+                """
+            messages = [{"role":"user", "content":template}]
+            chat_response = ollama.chat(
+            model=model,
+            messages=messages)
+            pattern = r'\{+.*\}'
+            match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
+            response = json.loads(match)['response']
+            try:
+                return render(request, 'polls/rag.html', {'response': response, 'context': context})
+            except:
+                return context
+    return render(request, 'polls/rag.html')
 
 
 
