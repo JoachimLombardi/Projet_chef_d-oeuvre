@@ -31,6 +31,9 @@ RAG_JSON_DIR = os.path.join(BASE_DIR, 'polls/rag_evaluation/data/json')
 if not os.path.exists(RAG_JSON_DIR):
     os.makedirs(RAG_JSON_DIR)
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'rag_articles'  # Redirect to RAG homepage after login
+LOGOUT_REDIRECT_URL = 'login'  # Redirect to login page after logout
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

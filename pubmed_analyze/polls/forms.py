@@ -1,5 +1,7 @@
 from django import forms
 from .models import Authors, Affiliations, Article, Authorship
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
 
 class ArticleForm(forms.ModelForm):
@@ -12,13 +14,13 @@ class ArticleForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     date = forms.DateTimeField(
-            label="Date of Publication",
-            widget=forms.DateInput(
-                attrs={'class': 'form-control', 'type': 'date'},
-                format='%Y-%m-%d'
-            ),
-            input_formats=['%Y-%m-%d']
-        )
+        label="Date of Publication",
+        widget=forms.DateInput(
+            attrs={'class': 'form-control', 'type': 'date'},
+            format='%Y-%m-%d'
+        ),
+        input_formats=['%Y-%m-%d']
+    )
     title = forms.CharField(
         label="Title of Article",
         widget=forms.TextInput(attrs={'class': 'form-control'})
@@ -52,6 +54,7 @@ class ArticleForm(forms.ModelForm):
         required=False,
         widget=forms.URLInput(attrs={'class': 'form-control'})
     )
+
 
     def save_article_with_authors(self, author_affiliation_data, commit=True):
         # Enregistrer l'article, en fonction de l'option commit
@@ -89,3 +92,19 @@ class AuthorForm(forms.Form):
     )
 
 AuthorAffiliationFormSet = forms.formset_factory(AuthorForm, extra=0)
+
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2')
+
+    email = forms.EmailField(required=True, help_text="Requis. Veuillez entrer une adresse e-mail valide.")
+
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user

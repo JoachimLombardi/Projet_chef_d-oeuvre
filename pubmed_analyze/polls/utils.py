@@ -7,7 +7,6 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
 
-
 def get_absolute_url(pmid):
     return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
 
