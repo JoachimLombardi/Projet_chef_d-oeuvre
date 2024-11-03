@@ -169,7 +169,7 @@ def rag_articles(request):
             if match:
                 response = json.loads(match)['response']
             try:
-                return render(request, 'polls/rag.html', {'response': response, 'context': context})
+                return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
             except:
                 return context
     else:
