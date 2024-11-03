@@ -1,23 +1,44 @@
-<h1>{% if article_form.instance.id %}Modifier l'article{% else %}Ajouter un article{% endif %}</h1>
-<form method="POST">
-    {% csrf_token %}
-    {{ article_form.as_p }}
-    <h3>Auteurs et Affiliations</h3>
-    {{ formset.management_form }}
-    <div id="formset-container">
-        {% for form in formset %}
-            <div class="form-row">
-                <h4>Auteur</h4>
-                {{ form.author_name }}
-                <h4>Affiliations (séparées par des pipes)</h4>
-                {{ form.affiliations }}
-                <button type="button" class="remove-form btn btn-danger">Remove</button>
-            </div>
-        {% endfor %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+{% load custom_filters %}
+
+{% if message %}
+    <div class="alert alert-warning" role="alert">
+        {{ message }}
     </div>
-    <button type="button" id="add-form" class="btn btn-primary">Ajouter Auteur</button>
-    <button type="submit" class="btn btn-success">Enregistrer</button>
-</form>
+{% endif %}
+
+<h1 class="mt-4 text-center">{% if article_form.instance.id %}Modifier l'article{% else %}Ajouter un article{% endif %}</h1>
+
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="col-md-8">
+        <form method="POST" class="p-4 border rounded bg-light">
+            {% csrf_token %}
+            {{ article_form.as_p }}
+            <h3 class="mt-4 text-center">Auteurs et Affiliations</h3>
+            </br>
+            {{ formset.management_form }}
+            <div id="formset-container">
+                {% for form in formset %}
+                    <div class="form-row mb-3">
+                        <h4>Auteur</h4>
+                        {{ form.author_name|add_class:"form-control" }}
+                        
+                        <h4 class="mt-3">Affiliations (séparées par des pipes)</h4>
+                        {{ form.affiliations|add_class:"form-control" }}
+                        <button type="button" class="remove-form btn btn-danger mt-2">Supprimer</button>
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="button" id="add-form" class="btn btn-primary mt-3">Ajouter Auteur</button>
+            <div class="mt-4"></div>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <button type="submit" class="btn btn-success">Enregistrer</button>
+                <a href="{% url 'article_list' %}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let formsetContainer = document.getElementById('formset-container');
@@ -26,18 +47,19 @@
 
         document.getElementById('add-form').addEventListener('click', function () {
             let newForm = `
-                <div class="form-row">
+                <div class="form-row mb-3">
                     <h4>Auteur</h4>
                     <input type="text" name="form-${formIndex}-author_name" class="form-control" id="id_form-${formIndex}-author_name" required>
                     <h4>Affiliations (séparées par des points)</h4>
                     <textarea name="form-${formIndex}-affiliations" class="form-control" id="id_form-${formIndex}-affiliations" required></textarea>
-                    <button type="button" class="remove-form btn btn-danger">Remove</button>
+                    <button type="button" class="remove-form btn btn-danger mt-2">Supprimer</button>
                 </div>
             `;
             formsetContainer.insertAdjacentHTML('beforeend', newForm);
             formIndex++;
             totalForms.value = formIndex;  // Met à jour le nombre total de formulaires
         });
+
         formsetContainer.addEventListener('click', function (event) {
             if (event.target.classList.contains('remove-form')) {
                 event.target.closest('.form-row').remove();

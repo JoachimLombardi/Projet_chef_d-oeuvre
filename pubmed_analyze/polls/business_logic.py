@@ -147,12 +147,12 @@ def article_json_to_database(request):
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
-def search_articles(query):
+def search_articles(query, index="multiple_sclerosis_2024"):
     # Process the query
     query_cleaned = query_processing(query)
     # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
-    search_results = Search(index="multiple_sclerosis_2024").query(
+    search_results = Search(index=index).query(
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,

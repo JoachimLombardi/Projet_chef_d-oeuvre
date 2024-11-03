@@ -2,6 +2,7 @@ from django import forms
 from .models import Authors, Affiliations, Article, Authorship
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.db import transaction
 
 
 class ArticleForm(forms.ModelForm):
@@ -56,33 +57,55 @@ class ArticleForm(forms.ModelForm):
     )
 
 
-    def save_article_with_authors(self, author_affiliation_data, commit=True):
-        # Enregistrer l'article, en fonction de l'option commit
-        article = self.save(commit=commit)
-        # Vider les relations existantes pour cet article
-        Authorship.objects.filter(article=article).delete()
-        # Traiter les données des auteurs et de leurs affiliations
-        for author_data in author_affiliation_data:
-            author_name = author_data['author_name']
-            affiliations = author_data['affiliations']
-            # Vérifier si l'auteur existe déjà
-            author, created = Authors.objects.get_or_create(name=author_name)
-            # Traiter chaque affiliation pour l'auteur
-            if affiliations:
-                affiliation_list = [aff.strip() for aff in affiliations.split('|')]
+    def save_article_with_authors(self, author_affiliation_data, article_id=None):
+        updated_fields = []
+        article = None
+        # Ouvrir une transaction atomique
+        with transaction.atomic():
+            if article_id is not None:
+            # Vérifier si l'article existe déjà
+                article = Article.objects.filter(id=article_id).first()
+            if article:
+                # Si l'article existe, mettez à jour ses champs si nécessaire
+                for field, new_value in self.cleaned_data.items():
+                    current_value = getattr(article, field)
+                    if current_value != new_value:
+                        setattr(article, field, new_value)
+                        updated_fields.append((field, current_value, new_value))
+                article.save()
+                created = False
             else:
-                affiliation_list = []
-            for aff_name in affiliation_list:
-                # Vérifier si l'affiliation existe déjà
-                affiliation, created = Affiliations.objects.get_or_create(name=aff_name)
-                # Créer ou mettre à jour l'instance Authorship
-                Authorship.objects.update_or_create(
-                    article=article,
-                    author=author,
-                    affiliation=affiliation,
-                    defaults={}
+                # Si l'article n'existe pas, créez un nouvel article
+                article, created = Article.objects.get_or_create(**self.cleaned_data)
+            # Traiter les données des auteurs et de leurs affiliations
+            for author_data in author_affiliation_data:
+                author_name = author_data['author_name']
+                affiliations = author_data['affiliations']
+                # Vérifiez si l'auteur existe déjà
+                author, author_created = Authors.objects.update_or_create(
+                    name=author_name,
+                    defaults={}  # Vous pouvez ajouter des valeurs par défaut si nécessaire
                 )
-            
+                # Traitez les affiliations
+                if affiliations:
+                    affiliation_list = [aff.strip() for aff in affiliations.split('|')]
+                else:
+                    affiliation_list = []
+                for aff_name in affiliation_list:
+                    # Vérifiez si l'affiliation existe déjà
+                    affiliation, aff_created = Affiliations.objects.update_or_create(
+                        name=aff_name,
+                        defaults={}  # Valeurs par défaut si nécessaire
+                    )
+                    # Créez ou mettez à jour l'instance Authorship
+                    authorship, authorship_created = Authorship.objects.update_or_create(
+                        article=article,
+                        author=author,
+                        affiliation=affiliation,
+                        defaults={}
+                    )
+        return created, updated_fields
+
 
 class AuthorForm(forms.Form):
     author_name = forms.CharField(label="Nom de l'auteur", widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -92,6 +115,18 @@ class AuthorForm(forms.Form):
     )
 
 AuthorAffiliationFormSet = forms.formset_factory(AuthorForm, extra=0)
+
+
+class RAGForm(forms.Form):
+    INDEX_CHOICE = [
+        ('multiple_sclerosis_2024', 'Multiple Sclerosis'),
+        ('herpes_zoster_2024', 'Herpes Zoster'),
+    ]
+
+    query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    index_choice = forms.ChoiceField(choices=INDEX_CHOICE, label="Choisissez un index", 
+                                   widget=forms.Select(attrs={'class': 'form-select'}), 
+                                   required=True)
 
 
 class CustomUserCreationForm(UserCreationForm):

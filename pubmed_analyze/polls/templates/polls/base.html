@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Interface des Articles{% endblock %}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .vertical-menu {
+            width: 100px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: #f8f9fa;
+            padding-top: 20px;
+        }
+        .vertical-menu a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+        }
+        .vertical-menu a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .vertical-menu .active {
+            background-color: #007bff;
+            color: white;
+        }
+        .content {
+            margin-left: 90px;
+            padding: 20px;
+        }
+        .user-status-bar {
+            margin-left: 110px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            z-index: 1; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Menu vertical inclus depuis un fichier séparé -->
+    {% include "polls/includes/menu.html" %}
+
+    <!-- Barre d'état de l'utilisateur connecté et bouton logout -->
+    <div class="user-status-bar d-flex justify-content-between align-items-center">
+        <p class="mb-0">Connecté en tant que <strong>{{ user.username }}</strong></p>
+        <form action="{% url 'logout' %}" method="post" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+        </form>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+</html>

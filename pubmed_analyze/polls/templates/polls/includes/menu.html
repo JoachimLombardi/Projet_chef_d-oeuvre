@@ -1,0 +1,4 @@
+<div class="vertical-menu">
+    <a href="{% url 'rag_articles' %}" class="{% if request.resolver_match.url_name == 'rag_articles' %}active{% endif %}">RAG sur les articles</a>
+    <a href="{% url 'article_list' %}" class="{% if request.resolver_match.url_name == 'article_list' %}active{% endif %}">Liste des Articles</a>
+</div>

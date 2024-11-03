@@ -1,7 +1,22 @@
-<h1>Supprimer l'article</h1>
-<p>Êtes-vous sûr de vouloir supprimer cet article : {{ article.title }} ?</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirmer</button>
-</form>
-<a href="{% url 'article_list' %}">Annuler</a>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+{% load custom_filters %}
+
+{% if message %}
+    <div class="alert alert-warning" role="alert">
+        {{ message }}
+    </div>
+{% endif %}
+
+<div class="container mt-4">
+    <h1 class="text-center">Supprimer l'article</h1>
+    <p class="text-center">Êtes-vous sûr de vouloir supprimer cet article : <strong>{{ article.title }}</strong> ?</p>
+    <form method="post" class="text-center">
+        {% csrf_token %}
+        <div class="d-flex justify-content-center mt-3">
+            <button type="submit" class="btn btn-danger mr-2">Confirmer</button>
+            <a href="{% url 'article_list' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+

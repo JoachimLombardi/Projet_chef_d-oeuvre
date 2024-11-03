@@ -1,35 +1,41 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poser une Question au RAG</title>
-</head>
-<body>
-    <p>Connecté en tant que {{ user.username }}</p>
-    <h1>Poser une question au RAG</h1>
-    <form action="{% url 'logout' %}" method="post">
+{% extends "polls/base.html" %}
+
+{% block title %}
+    RAG
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    
+    <h1 class="text-center mb-4">Poser une question au RAG</h1>
+
+    <form method="POST" action="{% url 'rag_articles' %}" class="mb-4">
         {% csrf_token %}
-        <button type="submit">Logout</button>
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Envoyer</button>
     </form>
-    <form method="POST" action="{% url 'rag_articles' %}">
-        {% csrf_token %}
-        <label for="query">Question:</label>
-        <input type="text" id="query" name="query" required>
-        <button type="submit">Envoyer</button>
-    </form>
+
     {% if response %}
-    <div>
-        <h2>Réponse:</h2>
-        <p>{{ response }}</p>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title">Réponse :</h2>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ response }}</p>
+        </div>
     </div>
     {% endif %}
 
     {% if context %}
-    <div>
-        <h2>Contexte:</h2>
-        <p>{{ context|linebreaks  }}</p>
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Contexte :</h2>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ context|linebreaks }}</p>
+        </div>
     </div>
     {% endif %}
-</body>
-</html>
+</div>
+
+{% endblock %}

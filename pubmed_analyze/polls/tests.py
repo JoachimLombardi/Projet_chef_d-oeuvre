@@ -14,6 +14,8 @@ from polls.models import Article, Affiliations, Authors, Authorship
 from unittest.mock import MagicMock, patch
 from polls.views import rag_articles
 from polls.business_logic import article_json_to_database, scrap_article_to_json
+from django.contrib.auth import get_user_model
+
 
 
 class ExtractArticlesTest(TestCase):
@@ -71,11 +73,6 @@ class ExtractArticlesTest(TestCase):
         self.assertIn('https://doi.org/10.1016/S0140-6736(23)01473-3', json_data[0]["doi"]) 
 
 
-    @classmethod
-    def setUpTestData(cls):
-        # Configuration de données de test si nécessaire
-        pass
-
     def test_article_json_to_database(self):
         # Crée une requête HTTP factice
         request = HttpRequest()
@@ -131,7 +128,14 @@ class ExtractArticlesTest(TestCase):
 
 class ArticleCRUDTest(TestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUpTestData(self):
+
+        # Créer un utilisateur pour les tests
+        self.user = get_user_model().objects.create_user(
+            username='testuser',
+            password='testpassword'
+        )
+
         # Création d'une affiliation
         affiliation = Affiliations.objects.create(name='Affiliation Test')
 
@@ -139,7 +143,7 @@ class ArticleCRUDTest(TestCase):
         author = Authors.objects.create(name='Author Test')
 
         # Création d'un article
-        cls.article = Article.objects.create(
+        self.article = Article.objects.create(
             title_review='Review Title Test',
             date='2024-01-13',
             title='Test Article',
@@ -152,7 +156,7 @@ class ArticleCRUDTest(TestCase):
         )
 
         # Association de l'article avec l'auteur et l'affiliation
-        Authorship.objects.create(article=cls.article, author=author, affiliation=affiliation)
+        Authorship.objects.create(article=self.article, author=author, affiliation=affiliation)
 
 
     def test_article_list_view(self):

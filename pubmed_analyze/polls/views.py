@@ -9,8 +9,8 @@
 import json
 import re
 from .models import Article
-from django.shortcuts import render, redirect
-from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm
 from .business_logic import search_articles
 import ollama
 from django.contrib.auth.decorators import login_required
@@ -19,8 +19,8 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib import messages
 
 
-
 def create_article(request):
+    message = ''
     if request.method == 'POST':
         article_form = ArticleForm(request.POST)
         formset = AuthorAffiliationFormSet(request.POST)
@@ -33,13 +33,21 @@ def create_article(request):
                 for form in formset
             ]
             # Use the save method from ArticleForm to handle saving the article with authors and affiliations
-            article_form.save_article_with_authors(author_affiliation_data)
-            return redirect('article_list')
-    article_form = ArticleForm()
-    formset = AuthorAffiliationFormSet()
-    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset})
+            created, updated = article_form.save_article_with_authors(author_affiliation_data)
+            if created:
+                messages.success(request, "L'article a bien été sauvegardé dans la base de données.")
+                return redirect('article_list') 
+            else:
+                message = "Un article avec les mêmes détails existe déjà dans la base de données."
+        else:
+            message = "Le formulaire n'est pas valide."
+    else:
+        article_form = ArticleForm()
+        formset = AuthorAffiliationFormSet()
+    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
+@login_required
 def article_list(request):
     articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation')
     # Regrouper les affiliations par auteur
@@ -61,7 +69,8 @@ def article_list(request):
 
 
 def update_article(request, id):
-    article = Article.objects.get(id=id)
+    message = ''
+    article = get_object_or_404(Article, id=id)
     authorships = article.authorships.prefetch_related('author', 'affiliation')
     # Regrouper les affiliations par auteur
     affiliations_by_author = {}
@@ -91,32 +100,42 @@ def update_article(request, id):
                 }
                 for form in formset
             ]        
-            article_form.save_article_with_authors(author_affiliation_data)
-            return redirect('article_list')
+            created, updated = article_form.save_article_with_authors(author_affiliation_data, id)
+            if updated:
+                messages.success(request, "L'article a bien été mis à jour.")
+                return redirect('article_list')
+            else:    
+                message = "L'article n'a pas été modifié dans la base de données."
+        else:
+            message = "Le formulaire n'est pas valide."
+            
     article_form = ArticleForm(instance=article)
     formset = AuthorAffiliationFormSet(initial=initial_data)
-    context = {
-        'article_form': article_form,
-        'formset': formset,
-    }
-    return render(request, 'polls/create_update_article.html', context)
+    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
 def delete_article(request, id):
-    article = Article.objects.get(id=id)
+    message = ''
+    article = get_object_or_404(Article, id=id)
     if request.method == 'POST':
         article.delete()
-        return redirect('article_list')
-    context = {'article': article}
-    return render(request, 'polls/article_confirm_delete.html', context)
+        # Check if the article is deleted
+        if not Article.objects.filter(id=id).exists():
+            messages.success(request, "L'article a bien été supprimé de la base de données.")
+            return redirect('article_list')
+        else:
+            message = "L'article n'a pas été supprimé de la base de données."
+    return render(request, 'polls/article_confirm_delete.html', {'article': article, 'message': message})
 
 
 @login_required
 def rag_articles(request):
     if request.method == 'POST':
-        query = request.POST.get('query')
-        if query:
-            retrieved_documents, query = search_articles(query)
+        form = RAGForm(request.POST)
+        if form.is_valid():
+            query = form.cleaned_data.get('query')
+            index = form.cleaned_data.get('index_choice')
+            retrieved_documents, query = search_articles(query, index)
             context = ""
             for i, source in enumerate(retrieved_documents):
                 context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
@@ -153,10 +172,11 @@ def rag_articles(request):
                 return render(request, 'polls/rag.html', {'response': response, 'context': context})
             except:
                 return context
-    return render(request, 'polls/rag.html')
+    else:
+        form = RAGForm()
+    return render(request, 'polls/rag.html', {'form': form})
 
 
-# User Registration View
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -170,18 +190,24 @@ def register(request):
 
 
 def custom_login(request):
-    if request.user.is_authenticated:
-        return redirect('rag_articles') 
-    form = AuthenticationForm(request, data=request.POST)
     if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 auth_login(request, user)
-                return redirect('rag_articles')
-     # Check if the user is coming from the logout and set a message
+                next_url = request.POST.get('next')
+                if next_url:
+                    return redirect(next_url)
+                else:
+                    return redirect('rag_articles')
+            else:
+                messages.error(request, "Nom d'utilisateur ou mot de passe incorrect")
+        else:
+            messages.error(request, "Le formulaire n'est pas valide")
+    form = AuthenticationForm()
     return render(request, 'polls/login.html', {'form': form})
 
 
