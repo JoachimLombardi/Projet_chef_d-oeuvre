@@ -5,7 +5,7 @@ from sentence_transformers import CrossEncoder
 import requests
 from bs4 import BeautifulSoup
 import time
-from .utils import query_processing
+from .utils import text_processing
 from .models import Article, model
 import json
 from pathlib import Path
@@ -149,7 +149,7 @@ def article_json_to_database(request):
 
 def search_articles(query, index="multiple_sclerosis_2024"):
     # Process the query
-    query_cleaned = query_processing(query)
+    query_cleaned = text_processing(query)
     # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
     search_results = Search(index=index).query(

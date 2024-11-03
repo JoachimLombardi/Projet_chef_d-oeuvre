@@ -9,7 +9,7 @@
 
 
 from django.db import models
-from .utils import query_processing
+from .utils import text_processing
 from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer('microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract')
@@ -42,8 +42,8 @@ class Article(models.Model):
     authors = models.ManyToManyField(Authors, through='Authorship', related_name='articles')
 
     def get_vector(article):
-        title = query_processing(article.title) 
-        abstract = query_processing(article.abstract)  
+        title = text_processing(article.title) 
+        abstract = text_processing(article.abstract)  
         return model.encode(title + " " + abstract).tolist()
   
     def __str__(self):

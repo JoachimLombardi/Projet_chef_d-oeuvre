@@ -50,12 +50,12 @@ def remove_stop_words_and_punctuation(text: str) -> list[str]:
         return text.split(" ")
 
 
-def query_processing(
-    query: str,
+def text_processing(
+    text: str,
 ) -> str:
-    if query:
-        query = " ".join(remove_stop_words_and_punctuation(query))
-        query = " ".join(lemmatize(query))
-        return query
+    if text:
+        text = " ".join(remove_stop_words_and_punctuation(text))
+        text = " ".join(lemmatize(text))
+        return text
 
 
