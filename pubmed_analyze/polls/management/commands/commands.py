@@ -10,6 +10,7 @@ from polls.models import Article
 from polls.documents import ArticleDocument
 from elasticsearch.exceptions import NotFoundError
 from polls.documents import index
+from polls.es_config import INDEX_NAME
 from polls.rag_evaluation.evaluation_rag_model import evaluate_rag
 from polls.business_logic import scrap_article_to_json, article_json_to_database
 
@@ -19,25 +20,27 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('operation', type=str, help="Specify the operation")
+        parser.add_argument('--request', type=str, help="Optional request data") 
 
 
     def handle(self, *args, **kwargs):
         self.operation = kwargs['operation']
+        request_data = kwargs.get('request')
         if self.operation == 'index_articles':
             self.index_articles()
         elif self.operation == 'evaluate_rag_model':
             self.evaluate_rag_model()
         elif self.operation == 'scrap_article':
-            self.scrap_article()
+            self.scrap_article(request_data)
         elif self.operation == 'article_to_database':
-            self.article_to_database()
+            self.article_to_database(request_data)
         else:
             self.stdout.write(self.style.ERROR('Invalid operation'))
 
 
     def index_articles(self):
         # Indexer les articles
-        articles = Article.objects.all()
+        articles = Article.objects.filter(term=INDEX_NAME)
         for article in articles:
             # Préparer le vecteur avant de mettre à jour le document
             title_abstract_vector = article.get_vector()  # Appeler votre méthode de génration de vecteur ici
@@ -57,13 +60,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'RAG model score generation: {score_generation}, RAG model score retrieval: {score_retrieval}'))
 
 
-    def scrap_article(self):
-        scrap_article_to_json()
+    def scrap_article(self, request_data):
+        scrap_article_to_json(request_data)
         self.stdout.write(self.style.SUCCESS('Successfully scraped articles'))
 
     
-    def article_to_database(self):
-        article_json_to_database()
+    def article_to_database(self, request_data):
+        article_json_to_database(request_data)
         self.stdout.write(self.style.SUCCESS('Successfully imported articles'))
 
 

@@ -184,6 +184,8 @@ def register(request):
             user = form.save()
             auth_login(request, user)  # Log in the user after registration
             return redirect('rag_articles')
+        else:
+            messages.error("Le formulaire n'est pas valide")
     else:
         form = CustomUserCreationForm()
     return render(request, 'polls/register.html', {'form': form})
@@ -192,6 +194,7 @@ def register(request):
 def custom_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
+        print(form.error_messages)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -207,7 +210,8 @@ def custom_login(request):
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect")
         else:
             messages.error(request, "Le formulaire n'est pas valide")
-    form = AuthenticationForm()
+    else:
+        form = AuthenticationForm()
     return render(request, 'polls/login.html', {'form': form})
 
 

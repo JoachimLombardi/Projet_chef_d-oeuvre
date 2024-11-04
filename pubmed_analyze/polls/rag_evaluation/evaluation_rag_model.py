@@ -2,7 +2,8 @@ import json
 import re
 from elasticsearch_dsl import Search
 from polls.models import Article
-from polls.utils import query_processing, model, rank_doc
+from polls.utils import text_processing
+from polls.business_logic import model, rank_doc
 import ollama
 from pathlib import Path
 from django.conf import settings
@@ -31,7 +32,7 @@ def create_eval_rag_json(query, expected_abstract):
 
 def search_articles(query):
     # Process the query
-    query_cleaned = query_processing(query)
+    query_cleaned = text_processing(query)
     # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
     search_results = Search(index="multiple_sclerosis_2024").query(

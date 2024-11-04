@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 from polls.views import rag_articles
 from polls.business_logic import article_json_to_database, scrap_article_to_json
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.models import AnonymousUser
 
 
 class ExtractArticlesTest(TestCase):
@@ -33,11 +33,16 @@ class ExtractArticlesTest(TestCase):
             'button.journal-actions-trigger': MagicMock(get_text=lambda strip=True: 'Lancet (London, England)'),
             }.get(x, None) 
         mock_soup_1.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-01-13', strip=True)] if x == 'span.cit' else []
-
-        mock_init_soup.side_effect = [mock_soup_1]  # Retourne mock_soup_1 pour le premier lien et mock_soup_2 pour le second
+        
+        mock_soup_2 = MagicMock()
+        mock_soup_2.select_one.side_effect = lambda x: {
+            'button.journal-actions-trigger': MagicMock(get_text=lambda strip=True: 'Medicine (Baltimore)'),
+            }.get(x, None) 
+        mock_soup_1.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-02-23', strip=True)] if x == 'span.cit' else []
+        
+        mock_init_soup.side_effect = [mock_soup_1, mock_soup_2]  
 
         request = HttpRequest()
-        # Appeler la fonction
         links = ['https://pubmed.ncbi.nlm.nih.gov/37949093', 'https://pubmed.ncbi.nlm.nih.gov/38394496']
         response = scrap_article_to_json(request, links, test=True)
 
@@ -160,6 +165,7 @@ class ArticleCRUDTest(TestCase):
 
 
     def test_article_list_view(self):
+        self.client.login(username='testuser', password='testpassword') 
         # Test de la vue de la liste d'articles (READ)
         response = self.client.get(reverse('article_list'))
         self.assertEqual(response.status_code, 200)
@@ -229,6 +235,7 @@ class ArticleCRUDTest(TestCase):
 class RAGTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+
         # Create an affiliation
         affiliation = Affiliations.objects.create(name='Affiliation Test')
 
@@ -267,10 +274,10 @@ class RAGTest(TestCase):
         
         mock_search.return_value.query.return_value.source.return_value.execute.return_value = mock_response
 
-        class Request:
-            GET = {'query': query}
+        request = HttpRequest()
+        request.GET = {'query': query}
+        request.user = AnonymousUser()
 
-        request = Request()
 
         # Call the rag_articles function
         context = rag_articles(request)

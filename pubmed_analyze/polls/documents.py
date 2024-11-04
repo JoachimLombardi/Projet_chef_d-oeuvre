@@ -1,9 +1,11 @@
 from elasticsearch_dsl import Document, Text, DenseVector, Index, Mapping
 from .models import Article
+from polls.es_config import INDEX_NAME
+
 
 
 # Define the Elasticsearch index
-index = "multiple_sclerosis_2024"
+index = INDEX_NAME
 article_index = Index(index)
 
 # Enable KNN vector settings in the index
