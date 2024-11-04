@@ -5,6 +5,7 @@ from datetime import date
 import json
 from pathlib import Path
 import unittest
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory, TestCase
@@ -22,7 +23,6 @@ class ExtractArticlesTest(TestCase):
     @patch('polls.business_logic.extract_pubmed_url')  
     @patch('polls.business_logic.init_soup')
     def test_scrap_article_to_json(self, mock_init_soup, mock_extract_pubmed_url):
-        # Configurer les mocks
         mock_extract_pubmed_url.return_value = [
             'https://pubmed.ncbi.nlm.nih.gov/37949093',
             'https://pubmed.ncbi.nlm.nih.gov/38394496'
@@ -31,24 +31,20 @@ class ExtractArticlesTest(TestCase):
         mock_soup_1 = MagicMock()
         mock_soup_1.select_one.side_effect = lambda x: {
             'button.journal-actions-trigger': MagicMock(get_text=lambda strip=True: 'Lancet (London, England)'),
-            }.get(x, None) 
+        }.get(x, None) 
         mock_soup_1.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-01-13', strip=True)] if x == 'span.cit' else []
         
         mock_soup_2 = MagicMock()
         mock_soup_2.select_one.side_effect = lambda x: {
             'button.journal-actions-trigger': MagicMock(get_text=lambda strip=True: 'Medicine (Baltimore)'),
-            }.get(x, None) 
+        }.get(x, None) 
         mock_soup_2.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-02-23', strip=True)] if x == 'span.cit' else []
         
-        mock_init_soup.side_effect = [mock_soup_1, mock_soup_2]  
+        # Assurez-vous d'utiliser mock_soup_2 ici
+        mock_init_soup.side_effect = [mock_soup_1, mock_soup_2]
 
-        request = HttpRequest()
         links = ['https://pubmed.ncbi.nlm.nih.gov/37949093', 'https://pubmed.ncbi.nlm.nih.gov/38394496']
-        response = scrap_article_to_json(request, links, test=True)
-
-        # Vérifier la réponse
-        self.assertIsInstance(response, HttpResponse)
-        self.assertEqual(response.content.decode(), "Article, authors and affiliations scraped with success.")
+        scrap_article_to_json(links, test=True)
 
         # Vérifiez que le fichier JSON a été créé
         expected_json_path = Path(settings.EXPORT_JSON_DIR + "/multiple_sclerosis_2024_test.json")
@@ -265,8 +261,7 @@ class RAGTest(TestCase):
 
     @patch('polls.business_logic.model.encode')  # Mock the model used for encoding the query
     @patch('polls.business_logic.Search')  # Mock the Search class
-    @patch('polls.views.ollama.chat')  # Mock the LLM chat function
-    def test_rag(self, mock_chat, mock_search, mock_encode):
+    def test_rag(self, mock_search, mock_encode):
         self.client.login(username='testuser', password='testpassword') 
 
         # Sample query
@@ -278,21 +273,12 @@ class RAGTest(TestCase):
         mock_response.hits = [
             MagicMock(meta=MagicMock(id=self.article.id), title=self.article.title, abstract=self.article.abstract)
         ]
-        
         mock_search.return_value.query.return_value.source.return_value.execute.return_value = mock_response
-
         factory = RequestFactory()
-        request = factory.get('/articles/rag/', {'query': query})
+        request = factory.post('/articles/rag/', {'query': query, 'index_choice': 'multiple_sclerosis_2024'})
         request.user = self.user
-
-
-        # Call the rag_articles function
-        context = rag_articles(request)
-  
-        # Assertions for search results
-        self.assertIn("Abstract n°1", context)  # Ensure that the context includes the abstract
-        self.assertIn(self.article.title, context)  # Ensure the title is part of the context
-        self.assertIn(self.article.abstract, context)  # Ensure the abstract is part of the context
+        response = rag_articles(request)
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()

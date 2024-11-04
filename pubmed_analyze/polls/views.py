@@ -130,6 +130,7 @@ def delete_article(request, id):
 
 @login_required
 def rag_articles(request):
+    message = ''
     if request.method == 'POST':
         form = RAGForm(request.POST)
         if form.is_valid():
@@ -164,17 +165,19 @@ def rag_articles(request):
             model=model,
             messages=messages)
             pattern = r'\{+.*\}'
-            match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
+            try:
+                match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
+            except:
+                match = ""
             response = ""
             if match:
                 response = json.loads(match)['response']
-            try:
-                return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
-            except:
-                return context
+            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
+        else:
+            message = "Le formulaire n'est pas valide."
     else:
         form = RAGForm()
-    return render(request, 'polls/rag.html', {'form': form})
+    return render(request, 'polls/rag.html', {'form': form, 'message': message})
 
 
 def register(request):

@@ -13,7 +13,7 @@ from django.http import HttpResponse
 from .models import Authors, Affiliations, Article, Authorship
 from django.conf import settings
 from .utils import format_date, get_absolute_url
-from es_config import INDEX_NAME
+from polls.es_config import INDEX_NAME
 
 
 def init_soup(url):
@@ -42,7 +42,7 @@ def extract_pubmed_url(base_url, term, filter):
     return links
 
 
-def scrap_article_to_json(request, base_url='https://pubmed.ncbi.nlm.nih.gov', test=False):
+def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False):
     articles_data = []
     term = "multiple_sclerosis"
     filter = "2024"
