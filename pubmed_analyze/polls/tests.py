@@ -7,7 +7,7 @@ from pathlib import Path
 import unittest
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 import numpy as np
 from polls.models import Article, Affiliations, Authors, Authorship
@@ -38,7 +38,7 @@ class ExtractArticlesTest(TestCase):
         mock_soup_2.select_one.side_effect = lambda x: {
             'button.journal-actions-trigger': MagicMock(get_text=lambda strip=True: 'Medicine (Baltimore)'),
             }.get(x, None) 
-        mock_soup_1.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-02-23', strip=True)] if x == 'span.cit' else []
+        mock_soup_2.select.side_effect = lambda x: [MagicMock(get_text=lambda strip=True: '2024-02-23', strip=True)] if x == 'span.cit' else []
         
         mock_init_soup.side_effect = [mock_soup_1, mock_soup_2]  
 
@@ -236,6 +236,11 @@ class RAGTest(TestCase):
     @classmethod
     def setUpTestData(cls):
 
+        cls.user = get_user_model().objects.create_user(
+        username='testuser',
+        password='testpassword'
+        )
+
         # Create an affiliation
         affiliation = Affiliations.objects.create(name='Affiliation Test')
 
@@ -262,6 +267,8 @@ class RAGTest(TestCase):
     @patch('polls.business_logic.Search')  # Mock the Search class
     @patch('polls.views.ollama.chat')  # Mock the LLM chat function
     def test_rag(self, mock_chat, mock_search, mock_encode):
+        self.client.login(username='testuser', password='testpassword') 
+
         # Sample query
         query = " How did the COVID-19 pandemic impact the care of people with multiple sclerosis (PwMS)?"
         mock_encode.return_value = np.array([0.1, 0.2, 0.3])  # Mock the encoded vector returned by the model
@@ -274,9 +281,9 @@ class RAGTest(TestCase):
         
         mock_search.return_value.query.return_value.source.return_value.execute.return_value = mock_response
 
-        request = HttpRequest()
-        request.GET = {'query': query}
-        request.user = AnonymousUser()
+        factory = RequestFactory()
+        request = factory.get('/articles/rag/', {'query': query})
+        request.user = self.user
 
 
         # Call the rag_articles function

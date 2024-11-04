@@ -1,1 +1,1 @@
-INDEX_NAME = "herpes_zoster_2024"
+INDEX_NAME = "medical-articles"

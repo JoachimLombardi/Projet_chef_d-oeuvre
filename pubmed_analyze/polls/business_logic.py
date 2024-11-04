@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from .models import Authors, Affiliations, Article, Authorship
 from django.conf import settings
 from .utils import format_date, get_absolute_url
+from es_config import INDEX_NAME
 
 
 def init_soup(url):
@@ -147,12 +148,12 @@ def article_json_to_database(request):
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
-def search_articles(query, index="multiple_sclerosis_2024"):
+def search_articles(query, index=""):
     # Process the query
     query_cleaned = text_processing(query)
     # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
-    search_results = Search(index=index).query(
+    search_results = Search(index=INDEX_NAME).query(
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
@@ -168,6 +169,8 @@ def search_articles(query, index="multiple_sclerosis_2024"):
     results = []
     article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
+    if index:
+        articles = articles.filter(term=index)
     # Process the search hits and build the results list
     for res in response:
         article_id = int(res['id'])

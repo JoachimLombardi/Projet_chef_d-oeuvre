@@ -40,7 +40,7 @@ class Command(BaseCommand):
 
     def index_articles(self):
         # Indexer les articles
-        articles = Article.objects.filter(term=INDEX_NAME)
+        articles = Article.objects.all()
         for article in articles:
             # Préparer le vecteur avant de mettre à jour le document
             title_abstract_vector = article.get_vector()  # Appeler votre méthode de génration de vecteur ici
