@@ -3,7 +3,6 @@ from .models import Article
 from polls.es_config import INDEX_NAME
 
 
-
 # Define the Elasticsearch index
 index = INDEX_NAME
 article_index = Index(index)
@@ -14,7 +13,6 @@ article_index.settings(
     number_of_replicas=0,
     elastiknn=True  # Enables KNN support in the index
 )
-
 
 # Register the document to Django's registry
 @article_index.document
@@ -30,7 +28,5 @@ class ArticleDocument(Document):
             'abstract',
         ]
 
-    def prepare_title_vector(self, instance):
-        """Prepare the vector representation for the title."""
-        return instance.get_title_abstract_vector()  # Assurez-vous que cette méthode est définie dans le modèle Article
+
 

@@ -51,6 +51,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "polls.apps.PollsConfig",
+    "django_extensions",
     'django_elasticsearch_dsl',
     'django.contrib.admin',
     'django.contrib.auth',

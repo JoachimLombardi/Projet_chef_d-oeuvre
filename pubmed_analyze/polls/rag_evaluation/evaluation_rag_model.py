@@ -8,6 +8,7 @@ import ollama
 from pathlib import Path
 from django.conf import settings
 from .file_eval_json import queries, expected_abstracts
+from polls.es_config import INDEX_NAME
 
 
 def create_eval_rag_json(query, expected_abstract):
@@ -30,23 +31,42 @@ def create_eval_rag_json(query, expected_abstract):
     print(f"Saved evaluation to {output_path}")
 
 
-def search_articles(query):
-    # Process the query
+def reciprocal_rank_fusion(results1, results2, k=60):
+    combined_scores = {}
+    for results in [results1, results2]:
+        for rank, doc in enumerate(results):
+            doc_id = doc.meta.id
+            score = 1 / (rank + 1 + k)
+            combined_scores[doc_id] = combined_scores.get(doc_id, 0) + score
+    sorted_results = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
+    hits = {**{hit.meta.id: hit for hit in results1}, **{hit.meta.id: hit for hit in results2}}
+    ids_added = set()
+    response = [hits[doc_id] for doc_id, _ in sorted_results if doc_id in hits and doc_id not in ids_added and not ids_added.add(doc_id)]
+    return response
+
+
+def search_articles(query, index=""):
     query_cleaned = text_processing(query)
-    # Encode the search query into a vector
     query_vector = model.encode(query_cleaned).tolist() 
-    search_results = Search(index="multiple_sclerosis_2024").query(
+    search_results_vector = Search(index=INDEX_NAME).query(
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
     k=20,
     num_candidates=5000
     ).source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
-    # Execute the search
-    response = search_results.execute()
+    response_vector = search_results_vector.execute()
+    search_results_text = Search(index=INDEX_NAME).query(
+    "multi_match",
+    fields=['title^2', 'abstract'],
+    query=query_cleaned,
+    type="best_fields",
+    ).source(['title', 'abstract']) 
+    response_text = search_results_text[0:20].execute()
+    # hybrid search
+    retrieved_docs = reciprocal_rank_fusion(response_vector.hits, response_text.hits, k=60)
     # rerank
-    retrieved_docs = [{"id":hit.meta.id, "title":hit.title, "abstract":hit.abstract} for hit in response.hits]
-    response = rank_doc(query_cleaned, retrieved_docs, 5)
+    response = rank_doc(query_cleaned, retrieved_docs, 3)
     # Prepare results for JSON response
     results = []
     article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query

@@ -163,7 +163,8 @@ def rag_articles(request):
             messages = [{"role":"user", "content":template}]
             chat_response = ollama.chat(
             model=model,
-            messages=messages)
+            messages=messages,
+            options={"temperature": 0})
             pattern = r'\{+.*\}'
             try:
                 match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
