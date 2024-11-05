@@ -136,9 +136,9 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts):
     Your must provide a valid JSON.
     """
     messages = [{"role":"user", "content":template}]
-    chat_response = ollama.chat(
-    model=model,
-    messages=messages)
+    chat_response = ollama.chat(model=model,
+                                messages=messages,
+                                options={"temperature": 0})
     output = chat_response['message']['content']
     pattern = r'\{+.*\}'
     match = re.findall(pattern, output, re.DOTALL)[0]
@@ -167,9 +167,9 @@ def eval_response(query, response):
     Your must provide a valid JSON.
     """
     messages = [{"role":"user", "content":template}]
-    chat_response = ollama.chat(
-    model=model,
-    messages=messages)
+    chat_response = ollama.chat(model=model,
+                                messages=messages,
+                                options={"temperature": 0})
     output = chat_response['message']['content']
     pattern = r'\{+.*\}'
     match = re.findall(pattern, output, re.DOTALL)[0]
