@@ -116,7 +116,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
                 json.dump(articles_data, f, ensure_ascii=False, indent=4)
 
 
-def article_json_to_database(request): 
+def article_json_to_database(): 
     term = "herpes_zoster"
     filter = "2024"
     output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
@@ -148,21 +148,21 @@ def article_json_to_database(request):
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
-def reciprocal_rank_fusion(results1, results2, k=60):
+def reciprocal_rank_fusion(search_vector, search_text, k=60):
     combined_scores = {}
-    for results in [results1, results2]:
+    for results in [search_vector, search_text]:
         for rank, doc in enumerate(results):
             doc_id = doc.meta.id
             score = 1 / (rank + 1 + k)
             combined_scores[doc_id] = combined_scores.get(doc_id, 0) + score
     sorted_results = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
-    hits = {**{hit.meta.id: hit for hit in results1}, **{hit.meta.id: hit for hit in results2}}
+    hits = {**{hit.meta.id: hit for hit in search_vector}, **{hit.meta.id: hit for hit in search_text}}
     ids_added = set()
     response = [hits[doc_id] for doc_id, _ in sorted_results if doc_id in hits and doc_id not in ids_added and not ids_added.add(doc_id)]
     return response
 
 
-def search_articles(query, index=""):
+def search_articles(query, index):
     query_cleaned = text_processing(query)
     query_vector = model.encode(query_cleaned).tolist() 
     search_results_vector = Search(index=INDEX_NAME).query(

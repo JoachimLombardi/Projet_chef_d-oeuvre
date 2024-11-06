@@ -7,16 +7,21 @@
 
 
 import json
+from pathlib import Path
 import re
+
+from django.conf import settings
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm
+from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
 from .business_logic import search_articles
 import ollama
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib import messages
+from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
+from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 
 
 def create_article(request):
@@ -224,6 +229,84 @@ def custom_logout(request):
     return redirect('login')
 
 
+@login_required
+def evaluate_rag(queries=queries, expected_abstracts=expected_abstracts):
+    from pathlib import Path
+import json
+
+
+def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts):
+    if request.method == 'POST':
+        form = EvaluationForm(request.POST)
+        if form.is_valid():
+            research_type = form.cleaned_data['research_type']
+            number_of_results = form.cleaned_data['number_of_results']
+            model = form.cleaned_data['model']
+            number_of_articles = form.cleaned_data['number_of_articles']
+            title_weight = form.cleaned_data['title_weight']
+            abstract_weight = form.cleaned_data['abstract_weight']
+            rank_scaling_factor = form.cleaned_data['rank_scaling_factors']
+            # Définir les chemins de fichiers
+            eval_path = Path(settings.RAG_JSON_DIR) / "eval_rag.json"
+            results_path = Path(settings.RAG_JSON_DIR) / "results_eval_rag.json"
+            # Créer le fichier JSON d'évaluation si nécessaire
+            if not eval_path.exists():
+                for query, expected_abstract in zip(queries, expected_abstracts):
+                    create_eval_rag_json(query, expected_abstract)
+            # Charger les données d'évaluation
+            with eval_path.open('r', encoding='utf-8') as f:
+                evaluation_data = json.load(f)
+            # Initialiser les scores
+            score_retrieval = 0
+            score_generation_list = []
+            eval_rag_list = []
+            # Calculer les scores pour chaque requête
+            for data in evaluation_data:
+                query = data['query']
+                expected_abstract = data['expected_abstract']
+                response, retrieved_documents = rag_articles_for_eval(query,
+                                                                      research_type,
+                                                                      number_of_results,
+                                                                      model,
+                                                                      number_of_articles,
+                                                                      title_weight,
+                                                                      abstract_weight,
+                                                                      rank_scaling_factor)
+                found_abstract = retrieved_documents[0]["abstract"]
+                # Évaluation de la récupération
+                if eval_retrieval(query, found_abstract, expected_abstract) == 1:
+                    score_retrieval += 0.1
+                # Évaluation de la génération
+                score_generation_list.append(eval_response(query, response))
+                # Stocker les résultats
+                eval_rag_list.append({
+                    "query": query,
+                    "expected_abstract": expected_abstract,
+                    "found_abstract": found_abstract,
+                    "response": response
+                })
+            # Calcul des scores finaux
+            score_generation = round(sum(score_generation_list) / len(score_generation_list), 2)
+            eval_rag_list.append({
+                "research_type": research_type,
+                "number_of_results": number_of_results,
+                "model": model,
+                "number_of_articles": number_of_articles,
+                "title_weight": title_weight,
+                "abstract_weight": abstract_weight,
+                "rank_scaling_factor": rank_scaling_factor,
+                "score_retrieval": score_retrieval,
+                "score_generation": score_generation
+            })
+            # Enregistrer les résultats
+            with results_path.open('w', encoding='utf-8') as f:
+                json.dump(eval_rag_list, f, ensure_ascii=False, indent=4)
+            return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': score_retrieval})
+        else:
+            messages.error(request, "Le formulaire n'est pas valide")
+    else:
+        form = EvaluationForm()
+    return render(request, 'polls/evaluate_rag.html', {'form': form})
 
 
 

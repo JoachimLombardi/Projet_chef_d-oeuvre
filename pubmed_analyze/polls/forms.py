@@ -119,6 +119,7 @@ AuthorAffiliationFormSet = forms.formset_factory(AuthorForm, extra=0)
 
 class RAGForm(forms.Form):
     INDEX_CHOICE = [
+        ('', 'All'),
         ('multiple_sclerosis_2024', 'Multiple Sclerosis'),
         ('herpes_zoster_2024', 'Herpes Zoster'),
     ]
@@ -143,3 +144,60 @@ class CustomUserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+
+class EvaluationForm(forms.Form):
+
+    RESEARCH_TYPE_CHOICES = [
+        ('hybrid', 'recherche hybride'),
+        ('text', 'recherche par mot'),
+        ('neural', 'recherche neuronale'),
+    ]
+
+    MODELS = [('mistral', 'Mistral 7B'),
+              ('mistral-nemo', 'Mistral 12B'),
+              ('mistral-small', 'Mistral 22B'),
+            ]
+
+    research_type = forms.ChoiceField(
+        label="Type de recherche",
+        choices=RESEARCH_TYPE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}))
+
+    model = forms.ChoiceField(
+        label="Modele",
+        choices=MODELS,
+        widget=forms.Select(attrs={'class': 'form-select'}))
+    
+    number_of_results = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 100}),
+        min_value=0,
+        max_value=100,
+        label="Number of Results"
+    )
+    number_of_articles = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 50}),
+        min_value=0,
+        max_value=50,
+        label="Number of Articles"
+    )
+    title_weight = forms.FloatField(
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 1, 'step': 0.01}),
+        min_value=0.0,
+        max_value=1.0,
+        label="Title Weight"
+    )
+    abstract_weight = forms.FloatField(
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 1, 'step': 0.01}),
+        min_value=0.0,
+        max_value=1.0,
+        label="Abstract Weight"
+    )
+    rank_scaling_factors = forms.FloatField(
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 5, 'step': 0.1}),
+        min_value=0.0,
+        max_value=5.0,
+        label="Rank Scaling Factors"
+    )
+
+    
