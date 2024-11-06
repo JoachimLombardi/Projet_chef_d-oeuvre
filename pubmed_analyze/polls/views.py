@@ -248,7 +248,6 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
             rank_scaling_factor = form.cleaned_data['rank_scaling_factors']
             # Définir les chemins de fichiers
             eval_path = Path(settings.RAG_JSON_DIR) / "eval_rag.json"
-            results_path = Path(settings.RAG_JSON_DIR) / "results_eval_rag.json"
             # Créer le fichier JSON d'évaluation si nécessaire
             if not eval_path.exists():
                 for query, expected_abstract in zip(queries, expected_abstracts):
@@ -299,6 +298,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                 "score_generation": score_generation
             })
             # Enregistrer les résultats
+            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{research_type}_{number_of_results}_{model}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:
                 json.dump(eval_rag_list, f, ensure_ascii=False, indent=4)
             return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': score_retrieval})

@@ -8,103 +8,79 @@
 <form method="post">
     {% csrf_token %}
 
-    <!-- Research Type -->
+    <!-- Type de recherche -->
     <div class="form-group">
         {{ form.research_type.label_tag }}
         {{ form.research_type }}
     </div>
     
-    <!-- Model Selection -->
+    <!-- Modèle -->
     <div class="form-group field-group" id="model_group">
         {{ form.model.label_tag }}
         {{ form.model }}
     </div>
-    
-    <!-- Sliders with Current Values -->
-    <div class="form-group field-group" id="number_of_results_group">
-        {{ form.number_of_results.label_tag }}
-        <input type="range" id="id_number_of_results" name="number_of_results" min="0" max="100" value="{{ form.number_of_results.value|default:0 }}" oninput="updateSliderValue('number_of_results_value', this.value)">
-        <span id="number_of_results_value">{{ form.number_of_results.value|default:0 }}</span>
-    </div>
-    
-    <div class="form-group field-group" id="number_of_articles_group">
-        {{ form.number_of_articles.label_tag }}
-        <input type="range" id="id_number_of_articles" name="number_of_articles" min="0" max="50" value="{{ form.number_of_articles.value|default:0 }}" oninput="updateSliderValue('number_of_articles_value', this.value)">
-        <span id="number_of_articles_value">{{ form.number_of_articles.value|default:0 }}</span>
-    </div>
-    
-    <div class="form-group field-group" id="title_weight_group">
-        {{ form.title_weight.label_tag }}
-        <input type="range" id="id_title_weight" name="title_weight" min="0" max="1" step="0.01" value="{{ form.title_weight.value|default:0 }}" oninput="updateSliderValue('title_weight_value', this.value)">
-        <span id="title_weight_value">{{ form.title_weight.value|default:0 }}</span>
-    </div>
-    
-    <div class="form-group field-group" id="abstract_weight_group">
-        {{ form.abstract_weight.label_tag }}
-        <input type="range" id="id_abstract_weight" name="abstract_weight" min="0" max="1" step="0.01" value="{{ form.abstract_weight.value|default:0 }}" oninput="updateSliderValue('abstract_weight_value', this.value)">
-        <span id="abstract_weight_value">{{ form.abstract_weight.value|default:0 }}</span>
-    </div>
-    
-    <div class="form-group field-group" id="rank_scaling_factors_group">
-        {{ form.rank_scaling_factors.label_tag }}
-        <input type="range" id="id_rank_scaling_factors" name="rank_scaling_factors" min="0" max="5" step="0.1" value="{{ form.rank_scaling_factors.value|default:0 }}" oninput="updateSliderValue('rank_scaling_factors_value', this.value)">
-        <span id="rank_scaling_factors_value">{{ form.rank_scaling_factors.value|default:0 }}</span>
-    </div>
+
+    <!-- Sliders avec mise à jour dynamique -->
+    {% for field in form %}
+        {% if field.name in "number_of_results number_of_articles title_weight abstract_weight rank_scaling_factors" %}
+            <div class="form-group field-group" id="{{ field.name }}_group">
+                {{ field.label_tag }}
+                {{ field }}
+                <span id="{{ field.name }}_value">{{ field.value|default:0 }}</span>
+            </div>
+        {% endif %}
+    {% endfor %}
 
     <button type="submit" class="btn btn-primary">Lancer l'évaluation</button>
 </form>
 
-<!-- JavaScript for Real-Time Slider Value Updates and Field Visibility -->
+{{ if score_retrieval }}
+    <div class="mt-4"></div>
+    <h2 class="text-center">Score de recherche : {{ score_retrieval }}</h2>
+{% endif %}
+
+{{ if score_generation }}
+    <div class="mt-4"></div>
+    <h2 class="text-center">Score de génération : {{ score_generation }}</h2>
+{% endif %}
+
+<!-- JavaScript pour la mise à jour des valeurs de slider et la visibilité des champs -->
 <script>
-    function updateSliderValue(spanId, value) {
-        document.getElementById(spanId).textContent = value;
+    function updateSliderValue(fieldId) {
+        const slider = document.getElementById(`id_${fieldId}`);
+        const output = document.getElementById(`${fieldId}_value`);
+        slider.addEventListener('input', () => output.textContent = slider.value);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        const sliders = document.querySelectorAll('input[type="range"]');
-        sliders.forEach(slider => {
-            slider.dispatchEvent(new Event('input')); // Initialize display on page load
+        const researchTypeSelect = document.getElementById('id_research_type');
+        
+        // Initialise les valeurs des sliders
+        ['number_of_results', 'number_of_articles', 'title_weight', 'abstract_weight', 'rank_scaling_factors'].forEach(fieldId => {
+            updateSliderValue(fieldId);
         });
         
-        const researchTypeSelect = document.getElementById('id_research_type');
-        const modelGroup = document.getElementById('model_group');
-        const numberOfResultsGroup = document.getElementById('number_of_results_group');
-        const numberOfArticlesGroup = document.getElementById('number_of_articles_group');
-        const titleWeightGroup = document.getElementById('title_weight_group');
-        const abstractWeightGroup = document.getElementById('abstract_weight_group');
-        const rankScalingFactorsGroup = document.getElementById('rank_scaling_factors_group');
+        // Définit les groupes de champs à afficher pour chaque type de recherche
+        const fieldGroups = {
+            'neural': ['model_group', 'number_of_results_group', 'number_of_articles_group'],
+            'text': ['model_group', 'number_of_results_group', 'title_weight_group', 'abstract_weight_group'],
+            'hybrid': ['model_group', 'number_of_results_group', 'number_of_articles_group', 'title_weight_group', 'abstract_weight_group', 'rank_scaling_factors_group']
+        };
 
         function toggleFields() {
+            // Cache tous les groupes de champs
+            document.querySelectorAll('.field-group').forEach(group => group.style.display = 'none');
+            
+            // Affiche les groupes pertinents selon le type de recherche sélectionné
             const selectedType = researchTypeSelect.value;
-            // Hide all fields initially
-            modelGroup.style.display = "none";
-            numberOfResultsGroup.style.display = "none";
-            numberOfArticlesGroup.style.display = "none";
-            titleWeightGroup.style.display = "none";
-            abstractWeightGroup.style.display = "none";
-            rankScalingFactorsGroup.style.display = "none";
-            // Show relevant fields based on selected research type
-            if (selectedType === 'neural') {
-                modelGroup.style.display = "block";
-                numberOfResultsGroup.style.display = "block";
-                numberOfArticlesGroup.style.display = "block";
-            } else if (selectedType === 'text') {
-                titleWeightGroup.style.display = "block";
-                abstractWeightGroup.style.display = "block";
-                numberOfResultsGroup.style.display = "block";
-            } else if (selectedType === 'hybrid') {
-                modelGroup.style.display = "block";
-                numberOfResultsGroup.style.display = "block";
-                numberOfArticlesGroup.style.display = "block";
-                titleWeightGroup.style.display = "block";
-                abstractWeightGroup.style.display = "block";
-                rankScalingFactorsGroup.style.display = "block";
-            }
+            (fieldGroups[selectedType] || []).forEach(fieldId => {
+                document.getElementById(fieldId).style.display = 'block';
+            });
         }
 
-        // Event listener for research type selection
+        // Initialise l'affichage des champs à la sélection du type de recherche
         researchTypeSelect.addEventListener('change', toggleFields);
-        toggleFields(); // Initialize field visibility on page load
+        toggleFields();  // Lance l'initialisation au chargement
     });
 </script>
 

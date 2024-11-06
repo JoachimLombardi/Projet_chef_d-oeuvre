@@ -79,7 +79,7 @@ def search_articles_for_eval(query, research_type, number_of_results, number_of_
     return results, query
 
 
-def rag_articles_for_eval(query, research_type, number_of_results, model, number_of_articles=5000, title_weight=0.5, abstract_weight=0.5, rank_scaling_factor=0.5):
+def rag_articles_for_eval(query, research_type, number_of_results, model, number_of_articles=None, title_weight=None, abstract_weight=None, rank_scaling_factor=None):
     retrieved_documents, query = search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor)
     context = ""
     for i, source in enumerate(retrieved_documents):

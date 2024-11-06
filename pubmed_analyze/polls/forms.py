@@ -171,32 +171,22 @@ class EvaluationForm(forms.Form):
     
     number_of_results = forms.IntegerField(
         widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 100}),
-        min_value=0,
-        max_value=100,
         label="Number of Results"
     )
     number_of_articles = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 50}),
-        min_value=0,
-        max_value=50,
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 5000}),
         label="Number of Articles"
     )
     title_weight = forms.FloatField(
-        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 1, 'step': 0.01}),
-        min_value=0.0,
-        max_value=1.0,
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 10, 'step': 1}),
         label="Title Weight"
     )
     abstract_weight = forms.FloatField(
-        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 1, 'step': 0.01}),
-        min_value=0.0,
-        max_value=1.0,
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 10, 'step': 1}),
         label="Abstract Weight"
     )
     rank_scaling_factors = forms.FloatField(
-        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 5, 'step': 0.1}),
-        min_value=0.0,
-        max_value=5.0,
+        widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 60, 'step': 1}),
         label="Rank Scaling Factors"
     )
 

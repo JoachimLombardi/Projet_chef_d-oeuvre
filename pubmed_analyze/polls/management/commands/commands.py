@@ -1,6 +1,5 @@
 # python manage.py search_index --create 
 # python manage.py commands index_articles  
-# python manage.py commands evaluate_rag_model
 # python manage.py commands scrap_article
 # python manage.py commands article_to_database
 
