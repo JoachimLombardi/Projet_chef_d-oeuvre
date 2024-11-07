@@ -10,5 +10,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.custom_login, name='login'),
     path('logout/', views.custom_logout, name='logout'),
+    path('forbidden/', views.forbidden, name='forbidden'),
     path('evaluate/rag', views.evaluate_rag, name='evaluate_rag'),
+
 ]

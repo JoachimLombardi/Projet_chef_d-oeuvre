@@ -63,3 +63,7 @@ def text_processing(text: str) -> str:
     return text
 
 
+def convert_seconds(seconds):
+    minutes = round(seconds // 60)  
+    remaining_seconds = round(seconds % 60) 
+    return f'{minutes} minutes and {remaining_seconds} seconds'

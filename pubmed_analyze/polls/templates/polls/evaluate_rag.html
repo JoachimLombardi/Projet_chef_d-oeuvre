@@ -33,15 +33,27 @@
 
     <button type="submit" class="btn btn-primary">Lancer l'évaluation</button>
 </form>
-
-{{ if score_retrieval }}
-    <div class="mt-4"></div>
-    <h2 class="text-center">Score de recherche : {{ score_retrieval }}</h2>
+<div class="mt-4"></div>
+{% if score_retrieval %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">Score de recherche :</h2>
+    </div>
+    <div class="card-body">
+        <p class="card-text">{{ score_retrieval }}</p>
+    </div>
+</div>
 {% endif %}
 
-{{ if score_generation }}
-    <div class="mt-4"></div>
-    <h2 class="text-center">Score de génération : {{ score_generation }}</h2>
+{% if score_generation %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Score de generation :</h2>
+    </div>
+    <div class="card-body">
+        <p class="card-text">{{ score_generation |linebreaks }}</p>
+    </div>
+</div>
 {% endif %}
 
 <!-- JavaScript pour la mise à jour des valeurs de slider et la visibilité des champs -->
