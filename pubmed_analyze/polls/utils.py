@@ -1,11 +1,11 @@
 import re
 from dateutil import parser
+from django.conf import settings
 from django.utils import timezone
 import pytz
-import string
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+from django.core.mail import send_mail
+import traceback
+import logging
 
 
 def get_absolute_url(pmid):
@@ -67,3 +67,19 @@ def convert_seconds(seconds):
     minutes = round(seconds // 60)  
     remaining_seconds = round(seconds % 60) 
     return f'{minutes} minutes and {remaining_seconds} seconds'
+
+
+logger = logging.getLogger(__name__)
+
+def handle_error(e):
+    """Gère les erreurs en les loguant et en envoyant un email de notification."""
+    error_message = str(e)
+    # Log de l'erreur avec traceback complet
+    logger.error(f"Une erreur est survenue: {error_message}")
+    logger.error(traceback.format_exc())
+    
+    # Envoi d'un email avec les détails de l'erreur
+    subject = "Erreur dans l'application"
+    message = f"Une erreur s'est produite : {error_message}\n\nTraceback:\n{traceback.format_exc()}"
+    recipient_list = settings.ERROR_NOTIFICATION_EMAIL
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)

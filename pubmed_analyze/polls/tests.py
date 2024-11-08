@@ -87,7 +87,7 @@ class ExtractArticlesTest(TestCase):
         self.assertTrue(output_path.exists(), f"Le fichier {output_path} doit exister pour ce test.")
 
         # Appel direct de la fonction à tester (en utilisant le fichier réel)
-        response = article_json_to_database(request)
+        response = article_json_to_database()
 
         # Vérifie que l'article a été créé
         created_articles = Article.objects.filter(title="Multiple sclerosis")

@@ -154,19 +154,27 @@ class EvaluationForm(forms.Form):
         ('neural', 'recherche neuronale'),
     ]
 
-    MODELS = [('mistral', 'Mistral 7B'),
-              ('mistral-nemo', 'Mistral 12B'),
+    MODELS_GENERATION = [('mistral', 'Mistral 7B'),
               ('mistral-small', 'Mistral 22B'),
             ]
+    
+    MODELS_EVALUATION = [('mistral-small', 'Mistral 22B'),
+                         ('gpt-4o', 'GPT-4')
+                        ]
 
     research_type = forms.ChoiceField(
         label="Type de recherche",
         choices=RESEARCH_TYPE_CHOICES,
         widget=forms.Select(attrs={'class': 'form-select'}))
 
-    model = forms.ChoiceField(
-        label="Modele",
-        choices=MODELS,
+    model_generation = forms.ChoiceField(
+        label="Modele de génération",
+        choices=MODELS_GENERATION,
+        widget=forms.Select(attrs={'class': 'form-select'}))
+    
+    model_evaluation = forms.ChoiceField(
+        label="Modele d'évaluation",
+        choices=MODELS_EVALUATION,
         widget=forms.Select(attrs={'class': 'form-select'}))
     
     number_of_results = forms.IntegerField(

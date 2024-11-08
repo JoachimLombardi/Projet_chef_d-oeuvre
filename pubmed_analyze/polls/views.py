@@ -168,10 +168,14 @@ def rag_articles(request):
                 You must provid a valid JSON with the key "response".
                 """
             messages = [{"role":"user", "content":template}]
-            chat_response = ollama.chat(model=model,
-                                        messages=messages,
-                                        options={"temperature": 0})
-            pattern = r'\{+.*\}'
+            error_llm = None
+            try:
+                chat_response = ollama.chat(model=model,
+                                            messages=messages,
+                                            options={"temperature": 0})
+                pattern = r'\{+.*\}'
+            except Exception as error_llm:
+                error_llm = error_llm
             try:
                 match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
                 match = match.replace("\n", "")
@@ -185,7 +189,7 @@ def rag_articles(request):
                     print("Contenu de match:", repr(match))
                     response = ""
                     message = "Suite à un problème de codage JSON, le résultat de la conversation n'est pas valide."
-            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
+            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context, 'message': message})
         else:
             message = "Le formulaire n'est pas valide."
     else:
@@ -250,7 +254,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
         if form.is_valid():
             research_type = form.cleaned_data['research_type']
             number_of_results = form.cleaned_data['number_of_results']
-            model = form.cleaned_data['model']
+            model_generation = form.cleaned_data['model_generation']
+            model_evaluation = form.cleaned_data['model_evaluation']
             number_of_articles = form.cleaned_data['number_of_articles']
             title_weight = form.cleaned_data['title_weight']
             abstract_weight = form.cleaned_data['abstract_weight']
@@ -289,7 +294,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                 response, retrieved_documents, context, error_find_braces_rag, error_load_json_rag = rag_articles_for_eval(query,
                                                                                                                     research_type,
                                                                                                                     number_of_results,
-                                                                                                                    model,
+                                                                                                                    model_generation,
                                                                                                                     number_of_articles,
                                                                                                                     title_weight,
                                                                                                                     abstract_weight,
@@ -302,7 +307,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     error_load_json_rag_list.append(error_load_json_rag)
                 else:
                     found_abstract = retrieved_documents[0]["abstract"]
-                    number, error_find_braces_retrieval, error_load_json_retrieval = eval_retrieval(query, found_abstract, expected_abstract) 
+                    number, error_find_braces_retrieval, error_load_json_retrieval = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
                     if error_find_braces_retrieval:
                         query_find_braces_retrieval_list.append(query)
                         error_find_braces_retrieval_list.append(error_find_braces_retrieval)
@@ -314,7 +319,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                         if number == 1:
                             score_retrieval += 0.1
                     # Évaluation de la génération
-                    score_generation, scoring_generation_reason, error_find_braces_generation, error_load_json_generation, error_score_generation = eval_response(query, response, context)
+                    score_generation, scoring_generation_reason, error_find_braces_generation, error_load_json_generation, error_score_generation = eval_response(query, response, context, model_evaluation)
                     if error_find_braces_generation:
                         query_find_braces_generation_list.append(query)
                         error_find_braces_generation_list.append(error_find_braces_generation)
@@ -342,7 +347,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "execution_time": convert_seconds(round(end_time - start_time, 2)),  
                     "research_type": research_type,
                     "number_of_results": number_of_results,
-                    "model": model,
+                    "model_generation": model_generation,
+                    "model_evaluation": model_evaluation,
                     "number_of_articles": number_of_articles,
                     "title_weight": title_weight,
                     "abstract_weight": abstract_weight,
@@ -356,7 +362,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "execution_time": convert_seconds(round(end_time - start_time, 2)),  
                     "research_type": research_type,
                     "number_of_results": number_of_results,
-                    "model": model,
+                    "model_generation": model_generation,
+                    "model_evaluation": model_evaluation,
                     "title_weight": title_weight,
                     "abstract_weight": abstract_weight,
                     "score_retrieval": round(score_retrieval, 2),   
@@ -368,7 +375,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "execution_time": convert_seconds(round(end_time - start_time, 2)),  
                     "research_type": research_type,
                     "number_of_results": number_of_results,
-                    "model": model,
+                    "model_generation": model_generation,
+                    "model_evaluation": model_evaluation,
                     "number_of_articles": number_of_articles,
                     "score_retrieval": round(score_retrieval, 2),
                     "score_generation": round(score_generation, 2),
@@ -395,7 +403,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
             with log_path.open('w', encoding='utf-8') as f:
                 json.dump(log_errors, f, ensure_ascii=False, indent=4)
             # Enregistrer les résultats
-            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{research_type}_{number_of_results}_{model}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
+            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{research_type}_{number_of_results}_{model_generation}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:
                 json.dump(eval_rag_list, f, ensure_ascii=False, indent=4)
             return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': round(score_retrieval, 2)})

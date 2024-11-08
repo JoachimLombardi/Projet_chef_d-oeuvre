@@ -175,13 +175,13 @@ def search_articles(query, index):
     response_vector = search_results_vector.execute()
     search_results_text = Search(index=INDEX_NAME).query(
     "multi_match",
-    fields=['title^2', 'abstract'],
+    fields=['title^2', 'abstract^5'],
     query=query_cleaned,
     type="best_fields",
     ).source(['title', 'abstract']) 
     response_text = search_results_text[0:20].execute()
     # hybrid search
-    retrieved_docs = reciprocal_rank_fusion(response_vector.hits, response_text.hits, k=60)
+    retrieved_docs = reciprocal_rank_fusion(response_vector.hits, response_text.hits, k=5)
     # rerank
     response = rank_doc(query_cleaned, retrieved_docs, 3)
     # Prepare results for JSON response
