@@ -31,12 +31,6 @@ RAG_JSON_DIR = os.path.join(BASE_DIR, 'polls/rag_evaluation/data/json')
 if not os.path.exists(RAG_JSON_DIR):
     os.makedirs(RAG_JSON_DIR)
 
-ERROR_JSON_DIR = os.path.join(BASE_DIR, 'polls/logs_errors')
-
-if not os.path.exists(ERROR_JSON_DIR):
-    os.makedirs(ERROR_JSON_DIR)
-
-
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'rag_articles'  # Redirect to RAG homepage after login
 LOGOUT_REDIRECT_URL = 'login'  # Redirect to login page after logout

@@ -12,10 +12,11 @@ from pathlib import Path
 from django.http import HttpResponse
 from .models import Authors, Affiliations, Article, Authorship
 from django.conf import settings
-from .utils import format_date, get_absolute_url
+from .utils import format_date, get_absolute_url, error_handling_decorator
 from polls.es_config import INDEX_NAME
 
 
+@error_handling_decorator
 def init_soup(url):
     # Envoyer une requête GET pour récupérer le contenu de la page
     response = requests.get(url)
@@ -27,6 +28,7 @@ def init_soup(url):
     return None
 
 
+@error_handling_decorator
 def extract_pubmed_url(base_url, term, filter):
     links = []
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
@@ -42,6 +44,7 @@ def extract_pubmed_url(base_url, term, filter):
     return links
 
 
+@error_handling_decorator
 def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False):
     articles_data = []
     term = "multiple_sclerosis"
@@ -116,6 +119,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
                 json.dump(articles_data, f, ensure_ascii=False, indent=4)
 
 
+@error_handling_decorator
 def article_json_to_database(): 
     term = "herpes_zoster"
     filter = "2024"
@@ -148,6 +152,7 @@ def article_json_to_database():
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
+@error_handling_decorator
 def reciprocal_rank_fusion(search_vector, search_text, k=60):
     combined_scores = {}
     for results in [search_vector, search_text]:
@@ -162,6 +167,7 @@ def reciprocal_rank_fusion(search_vector, search_text, k=60):
     return response
 
 
+@error_handling_decorator
 def search_articles(query, index):
     query_cleaned = text_processing(query)
     query_vector = model.encode(query_cleaned).tolist() 
@@ -227,6 +233,7 @@ def search_articles(query, index):
     return results, query
 
 
+@error_handling_decorator
 def rank_doc(query, retrieved_docs, topN):
     text = [{"id":hit.meta.id, "title":hit.title, "abstract":hit.abstract} for hit in retrieved_docs]
     # Initialize the CrossEncoder model with the specified model name

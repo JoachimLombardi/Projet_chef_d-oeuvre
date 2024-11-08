@@ -23,9 +23,10 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
-from polls.utils import convert_seconds
+from polls.utils import convert_seconds, error_handling_decorator
 
 
+@error_handling_decorator
 def create_article(request):
     message = ''
     if request.method == 'POST':
@@ -54,6 +55,7 @@ def create_article(request):
     return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
+@error_handling_decorator
 @login_required
 def article_list(request):
     articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation')
@@ -75,6 +77,7 @@ def article_list(request):
     return render(request, 'polls/article_list.html', context)
 
 
+@error_handling_decorator
 def update_article(request, id):
     message = ''
     article = get_object_or_404(Article, id=id)
@@ -121,6 +124,7 @@ def update_article(request, id):
     return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
+@error_handling_decorator
 def delete_article(request, id):
     message = ''
     article = get_object_or_404(Article, id=id)
@@ -135,6 +139,7 @@ def delete_article(request, id):
     return render(request, 'polls/article_confirm_delete.html', {'article': article, 'message': message})
 
 
+@error_handling_decorator
 @login_required
 def rag_articles(request):
     message = ''
@@ -168,28 +173,15 @@ def rag_articles(request):
                 You must provid a valid JSON with the key "response".
                 """
             messages = [{"role":"user", "content":template}]
-            error_llm = None
-            try:
-                chat_response = ollama.chat(model=model,
-                                            messages=messages,
-                                            options={"temperature": 0})
-                pattern = r'\{+.*\}'
-            except Exception as error_llm:
-                error_llm = error_llm
-            try:
-                match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
-                match = match.replace("\n", "")
-            except:
-                match = ""
+            chat_response = ollama.chat(model=model,
+                                        messages=messages,
+                                        options={"temperature": 0})
+            pattern = r'\{+.*\}'
+            match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
+            match = match.replace("\n", "")
             if match:
-                try:
-                    response = json.loads(match)['response']
-                except json.JSONDecodeError as e:
-                    print("Erreur JSON:", e)
-                    print("Contenu de match:", repr(match))
-                    response = ""
-                    message = "Suite à un problème de codage JSON, le résultat de la conversation n'est pas valide."
-            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context, 'message': message})
+                response = json.loads(match)['response']
+            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:
             message = "Le formulaire n'est pas valide."
     else:
@@ -197,6 +189,7 @@ def rag_articles(request):
     return render(request, 'polls/rag.html', {'form': form, 'message': message})
 
 
+@error_handling_decorator
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -211,6 +204,7 @@ def register(request):
     return render(request, 'polls/register.html', {'form': form})
 
 
+@error_handling_decorator
 def custom_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -235,17 +229,21 @@ def custom_login(request):
     return render(request, 'polls/login.html', {'form': form})
 
 
+@error_handling_decorator
 def custom_logout(request):
     auth_logout(request)
     messages.info(request, "Vous avez bien été déconnecté")
     return redirect('login')
 
+
+@error_handling_decorator
 def forbidden(request):
     return render(request, 'polls/forbidden.html')
 
 
 @login_required
 @user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
+@error_handling_decorator
 def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts):
     if request.method == 'POST':
         # Calculate time execution
@@ -271,67 +269,29 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                 evaluation_data = json.load(f)
             # Initialiser les scores
             score_retrieval = 0
-            query_find_braces_rag_list = []
-            query_load_json_rag_list = []
-            error_find_braces_rag_list = []
-            error_load_json_rag_list = []
-            query_find_braces_retrieval_list = []
-            query_load_json_retrieval_list = []
-            error_find_braces_retrieval_list = []
-            error_load_json_retrieval_list = []
-            query_find_braces_generation_list = []
-            query_load_json_generation_list = []
-            error_find_braces_generation_list = []
-            error_load_json_generation_list = []
-            query_error_score_generation_list = []
-            error_score_generation_list = []
             score_generation_list = []
             eval_rag_list = []
             # Calculer les scores pour chaque requête
             for data in evaluation_data:
                 query = data['query']
                 expected_abstract = data['expected_abstract']
-                response, retrieved_documents, context, error_find_braces_rag, error_load_json_rag = rag_articles_for_eval(query,
-                                                                                                                    research_type,
-                                                                                                                    number_of_results,
-                                                                                                                    model_generation,
-                                                                                                                    number_of_articles,
-                                                                                                                    title_weight,
-                                                                                                                    abstract_weight,
-                                                                                                                    rank_scaling_factor)
-                if error_find_braces_rag:
-                    query_find_braces_rag_list.append(query)
-                    error_find_braces_rag_list.append(error_find_braces_rag)
-                elif error_load_json_rag:
-                    query_load_json_rag_list.append(query)
-                    error_load_json_rag_list.append(error_load_json_rag)
-                else:
-                    found_abstract = retrieved_documents[0]["abstract"]
-                    number, error_find_braces_retrieval, error_load_json_retrieval = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
-                    if error_find_braces_retrieval:
-                        query_find_braces_retrieval_list.append(query)
-                        error_find_braces_retrieval_list.append(error_find_braces_retrieval)
-                    elif error_load_json_retrieval:
-                        query_load_json_retrieval_list.append(query)    
-                        error_load_json_retrieval_list.append(error_load_json_retrieval)
-                    else:
-                        # Évaluation de la récupération
-                        if number == 1:
-                            score_retrieval += 0.1
+                response, retrieved_documents, context = rag_articles_for_eval(query,
+                                                                               research_type,
+                                                                               number_of_results,
+                                                                               model_generation,
+                                                                               number_of_articles,
+                                                                               title_weight,
+                                                                               abstract_weight,
+                                                                               rank_scaling_factor)
+                found_abstract = retrieved_documents[0]["abstract"]
+                number = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
+                # Évaluation de la récupération
+                if number == 1:
+                    score_retrieval += 0.1
                     # Évaluation de la génération
-                    score_generation, scoring_generation_reason, error_find_braces_generation, error_load_json_generation, error_score_generation = eval_response(query, response, context, model_evaluation)
-                    if error_find_braces_generation:
-                        query_find_braces_generation_list.append(query)
-                        error_find_braces_generation_list.append(error_find_braces_generation)
-                    elif error_load_json_generation:
-                        query_load_json_generation_list.append(query)
-                        error_load_json_generation_list.append(error_load_json_generation)
-                    elif error_score_generation:
-                        query_error_score_generation_list.append(query)
-                        error_score_generation_list.append(error_score_generation)
-                    else:
-                        score_generation = (score_generation - 1)/4
-                        score_generation_list.append(score_generation)
+                    score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
+                    score_generation = (score_generation - 1)/4
+                    score_generation_list.append(score_generation)
                     # Stocker les résultats
                     eval_rag_list.append({
                         "query": query,
@@ -382,26 +342,6 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "score_generation": round(score_generation, 2),
                     "scoring_generation_reason": scoring_generation_reason
                 })
-            # Save log errors
-            log_path = Path(settings.ERROR_JSON_DIR) / "log_errors.json"
-            log_errors = {
-                "query_find_braces_list": query_find_braces_rag_list,
-                "error_find_braces_list": error_find_braces_rag_list,
-                "query_load_json_list": query_load_json_rag_list,
-                "error_load_json_list": error_load_json_rag_list,
-                "query_find_braces_list": query_find_braces_retrieval_list,
-                "error_find_braces_list": error_find_braces_retrieval_list,
-                "query_load_json_list": query_load_json_retrieval_list,
-                "error_load_json_list": error_load_json_retrieval_list,
-                "query_find_braces_list": query_find_braces_generation_list,
-                "error_find_braces_list": error_find_braces_generation_list,
-                "query_load_json_list": query_load_json_generation_list,
-                "error_load_json_list": error_load_json_generation_list,
-                "query_error_score_generation_list": query_error_score_generation_list,
-                "error_score_generation_list": error_score_generation_list
-            }
-            with log_path.open('w', encoding='utf-8') as f:
-                json.dump(log_errors, f, ensure_ascii=False, indent=4)
             # Enregistrer les résultats
             results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{research_type}_{number_of_results}_{model_generation}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:

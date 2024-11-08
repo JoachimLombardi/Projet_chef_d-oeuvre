@@ -1,3 +1,4 @@
+from functools import wraps
 import re
 from dateutil import parser
 from django.conf import settings
@@ -8,22 +9,43 @@ import traceback
 import logging
 
 
+def handle_error(e):
+    error_message = str(e)
+    # Log de l'erreur avec traceback complet
+    logger.error(f"Une erreur est survenue: {error_message}")
+    logger.error(traceback.format_exc())
+    
+    # Envoi d'un email avec les détails de l'erreur
+    subject = "Erreur dans l'application"
+    message = f"Une erreur s'est produite : {error_message}\n\nTraceback:\n{traceback.format_exc()}"
+    recipient_list = settings.ERROR_NOTIFICATION_EMAIL
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
+
+
+def error_handling_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            handle_error(e)
+    return wrapper
+
+
 def get_absolute_url(pmid):
     return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
 
 
+@error_handling_decorator
 def format_date(date):
     if date is None:
-        return None  # Gérer le cas où l'entrée est None
-    try:
-        date_obj = parser.parse(date, fuzzy=True)
-        if timezone.is_naive(date_obj):
-            return timezone.make_aware(date_obj, timezone=timezone.utc).date()
-         # Assurez-vous que le fuseau horaire est valide
-        if date_obj.tzinfo:
-            return date_obj.astimezone(pytz.UTC).date()
-    except (ValueError, OverflowError, pytz.UnknownTimeZoneError):
-        return None
+        return None  
+    date_obj = parser.parse(date, fuzzy=True)
+    if timezone.is_naive(date_obj):
+        return timezone.make_aware(date_obj, timezone=timezone.utc).date()
+    if date_obj.tzinfo:
+        return date_obj.astimezone(pytz.UTC).date()
+
 
 
 def clean_whitespace(text: str) -> str:
@@ -71,15 +93,3 @@ def convert_seconds(seconds):
 
 logger = logging.getLogger(__name__)
 
-def handle_error(e):
-    """Gère les erreurs en les loguant et en envoyant un email de notification."""
-    error_message = str(e)
-    # Log de l'erreur avec traceback complet
-    logger.error(f"Une erreur est survenue: {error_message}")
-    logger.error(traceback.format_exc())
-    
-    # Envoi d'un email avec les détails de l'erreur
-    subject = "Erreur dans l'application"
-    message = f"Une erreur s'est produite : {error_message}\n\nTraceback:\n{traceback.format_exc()}"
-    recipient_list = settings.ERROR_NOTIFICATION_EMAIL
-    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)

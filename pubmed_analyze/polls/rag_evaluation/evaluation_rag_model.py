@@ -11,10 +11,11 @@ from django.conf import settings
 from polls.es_config import INDEX_NAME
 from openai import OpenAI
 from dotenv import load_dotenv
+from polls.utils import error_handling_decorator
 
 load_dotenv()
 
-
+@error_handling_decorator
 def create_eval_rag_json(query, expected_abstract):
     output_path = Path(settings.RAG_JSON_DIR + "/" + "eval_rag.json")
     evaluation_data = {
@@ -35,6 +36,7 @@ def create_eval_rag_json(query, expected_abstract):
     print(f"Saved evaluation to {output_path}")
 
 
+@error_handling_decorator
 def search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor):
     query_cleaned = text_processing(query)
     query_vector = model.encode(query_cleaned).tolist() 
@@ -84,13 +86,14 @@ def search_articles_for_eval(query, research_type, number_of_results, number_of_
     return results, query
 
 
+@error_handling_decorator
 def rag_articles_for_eval(query, research_type, number_of_results, model, number_of_articles=None, title_weight=None, abstract_weight=None, rank_scaling_factor=None):
     retrieved_documents, query = search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor)
     context = ""
     for i, source in enumerate(retrieved_documents):
         context += f"Abstract n°{i+1}:" + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
     template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
-    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
+    If you don't know or if the answer is not in the provided context just return: "response": "I can't answer with the provide context".
 
         ## Instruction:\n
         1. Read carefully the query and look in all extract for the answer.
@@ -109,32 +112,20 @@ def rag_articles_for_eval(query, research_type, number_of_results, model, number
         You must provid a valid JSON with the key "response".
         """
     messages = [{"role":"user", "content":template}]
-    try:
-        chat_response = ollama.chat(model=model,
-                                    messages=messages,
-                                    options={"temperature": 0})
-        output = chat_response['message']['content']
-    except Exception as e:
-        output = ""
+    chat_response = ollama.chat(model=model,
+                                messages=messages,
+                                options={"temperature": 0})
+    output = chat_response['message']['content']
+    print(output)
     pattern = r'\{+.*\}'
-    error_find_braces = None
-    error_load_json = None
-    try:
-        match = re.findall(pattern, output, re.DOTALL)[0]
-        match = match.replace("\n", '')
-    except Exception as e:
-        match = ""
-        error_find_braces = str(e)
-        response = ""
+    match = re.findall(pattern, output, re.DOTALL)[0]
+    match = match.replace("\n", '')
     if match:
-        try:
-            response = json.loads(match)['response']
-        except json.JSONDecodeError as e:
-            response = ""
-            error_load_json = str(e)
-    return response, retrieved_documents, context, error_find_braces, error_load_json
+        response = json.loads(match)['response']
+    return response, retrieved_documents, context
 
 
+@error_handling_decorator
 def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     template = """You are an expert in medical abstracts. 
     You will receive two medical abstracts and a query. Your task is to determine which of these abstracts contains the most pertinent information to answer the query.     
@@ -156,44 +147,26 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     Your must provide a valid JSON with the key "number".
     """
     messages = [{"role":"user", "content":template}]
-    error_llm = None
     if model == "mistral-small":
-        try:
-            chat_response = ollama.chat(model=model,
-                                        messages=messages,
-                                        options={"temperature": 0})
-            output = chat_response['message']['content']
-        except Exception as e:
-            error_llm = str(e)
-            output = ""
+        chat_response = ollama.chat(model=model,
+                                    messages=messages,
+                                    options={"temperature": 0})
+        output = chat_response['message']['content']
     else:
-        try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            completion = client.chat.completions.create(model=model,
-                                                        messages=messages,
-                                                        temperature=0)
-            output = completion.choices[0].message.content
-        except Exception as e:
-            error_llm = str(e)
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        completion = client.chat.completions.create(model=model,
+                                                    messages=messages,
+                                                    temperature=0)
+        output = completion.choices[0].message.content
     pattern = r'\{+.*\}'
-    error_find_braces = None
-    error_load_json = None
-    try:
-        match = re.findall(pattern, output, re.DOTALL)[0]
-        match = match.replace("\n", '')
-    except:
-        match = ""
-        error_find_braces = output
-        number = None
+    match = re.findall(pattern, output, re.DOTALL)[0]
+    match = match.replace("\n", '')
     if match:
-        try:
-            number = json.loads(match)['number']
-        except json.JSONDecodeError as e:
-            number = None
-            error_load_json = str(e)
-    return number, error_find_braces, error_load_json
+        number = json.loads(match)['number']
+    return number
 
 
+@error_handling_decorator
 def eval_response(query, response, retrieval, model):
     template = """Your task is to score the relevance between a generated answer and the query based on the ground truth answer in the range between 1 and 5, and please also provide the scoring reason.  
     Your primary focus should be on determining whether the generated answer contains sufficient information to address the given query according to the ground truth answer.    
@@ -227,50 +200,28 @@ def eval_response(query, response, retrieval, model):
     Your must provide a valid JSON with the keys "score" and "scoring_reason". The value of score must be an integer between 1 and 5.
     """
     messages = [{"role":"user", "content":template}]
-    error_llm = None
     if model == "mistral-small":
-        try:
-            chat_response = ollama.chat(model=model,
-                                        messages=messages,
-                                        options={"temperature": 0})
-            output = chat_response['message']['content']
-        except Exception as e:
-            error_llm = str(e)
-            output = ""
+        chat_response = ollama.chat(model=model,
+                                    messages=messages,
+                                    options={"temperature": 0})
+        output = chat_response['message']['content']
     else:
-        try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            completion = client.chat.completions.create(model=model,
-                                                        messages=messages,
-                                                        temperature=0)
-            output = completion.choices[0].message.content
-        except Exception as e:
-            error_llm = str(e)
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        completion = client.chat.completions.create(model=model,
+                                                    messages=messages,
+                                                    temperature=0)
+        output = completion.choices[0].message.content
     pattern = r'\{+.*\}'
-    error_find_braces = None
-    error_load_json = None
-    error_score = None
-    try:
-        match = re.findall(pattern, output, re.DOTALL)[0]
-        match = match.replace("\n", '')
-    except Exception as e:
-        match = ""
-        error_find_braces = str(e)
-        score = None
-        scoring_reason = None
+    match = re.findall(pattern, output, re.DOTALL)[0]
+    match = match.replace("\n", '')
     if match:
-        try:
-            score_data = json.loads(match)
-            score = score_data.get('score', None)
-            # Validation du score entre 1 et 5
-            if score < 1 or score > 5:
-                error_score = score
-            scoring_reason = score_data.get('scoring_reason', 'No scoring reason provided')
-        except json.JSONDecodeError as e:
+        score_data = json.loads(match)
+        score = score_data.get('score', None)
+        # Validation du score entre 1 et 5
+        if score < 1 or score > 5:
             score = None
-            scoring_reason = None
-            error_load_json = str(e)
-    return float(score), scoring_reason, error_find_braces, error_load_json, error_score
+        scoring_reason = score_data.get('scoring_reason', 'No scoring reason provided')
+    return float(score), scoring_reason
 
 
     
