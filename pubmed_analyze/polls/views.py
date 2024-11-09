@@ -23,10 +23,10 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
-from polls.utils import convert_seconds, error_handling_decorator
+from polls.utils import convert_seconds, error_handling
 
 
-@error_handling_decorator
+@error_handling
 def create_article(request):
     message = ''
     if request.method == 'POST':
@@ -55,7 +55,7 @@ def create_article(request):
     return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
-@error_handling_decorator
+@error_handling
 @login_required
 def article_list(request):
     articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation')
@@ -77,7 +77,7 @@ def article_list(request):
     return render(request, 'polls/article_list.html', context)
 
 
-@error_handling_decorator
+@error_handling
 def update_article(request, id):
     message = ''
     article = get_object_or_404(Article, id=id)
@@ -124,7 +124,7 @@ def update_article(request, id):
     return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
 
 
-@error_handling_decorator
+@error_handling
 def delete_article(request, id):
     message = ''
     article = get_object_or_404(Article, id=id)
@@ -139,8 +139,8 @@ def delete_article(request, id):
     return render(request, 'polls/article_confirm_delete.html', {'article': article, 'message': message})
 
 
-@error_handling_decorator
 @login_required
+@error_handling
 def rag_articles(request):
     message = ''
     if request.method == 'POST':
@@ -189,7 +189,7 @@ def rag_articles(request):
     return render(request, 'polls/rag.html', {'form': form, 'message': message})
 
 
-@error_handling_decorator
+@error_handling
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
@@ -204,7 +204,7 @@ def register(request):
     return render(request, 'polls/register.html', {'form': form})
 
 
-@error_handling_decorator
+@error_handling
 def custom_login(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -229,21 +229,21 @@ def custom_login(request):
     return render(request, 'polls/login.html', {'form': form})
 
 
-@error_handling_decorator
+@error_handling
 def custom_logout(request):
     auth_logout(request)
     messages.info(request, "Vous avez bien été déconnecté")
     return redirect('login')
 
 
-@error_handling_decorator
+@error_handling
 def forbidden(request):
     return render(request, 'polls/forbidden.html')
 
 
 @login_required
 @user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
-@error_handling_decorator
+@error_handling
 def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts):
     if request.method == 'POST':
         # Calculate time execution

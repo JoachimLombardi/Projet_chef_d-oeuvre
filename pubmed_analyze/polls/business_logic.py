@@ -12,11 +12,11 @@ from pathlib import Path
 from django.http import HttpResponse
 from .models import Authors, Affiliations, Article, Authorship
 from django.conf import settings
-from .utils import format_date, get_absolute_url, error_handling_decorator
+from .utils import format_date, get_absolute_url, error_handling
 from polls.es_config import INDEX_NAME
 
 
-@error_handling_decorator
+@error_handling
 def init_soup(url):
     # Envoyer une requête GET pour récupérer le contenu de la page
     response = requests.get(url)
@@ -28,7 +28,7 @@ def init_soup(url):
     return None
 
 
-@error_handling_decorator
+@error_handling
 def extract_pubmed_url(base_url, term, filter):
     links = []
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
@@ -44,7 +44,7 @@ def extract_pubmed_url(base_url, term, filter):
     return links
 
 
-@error_handling_decorator
+@error_handling
 def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False):
     articles_data = []
     term = "multiple_sclerosis"
@@ -119,7 +119,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
                 json.dump(articles_data, f, ensure_ascii=False, indent=4)
 
 
-@error_handling_decorator
+@error_handling
 def article_json_to_database(): 
     term = "herpes_zoster"
     filter = "2024"
@@ -140,7 +140,14 @@ def article_json_to_database():
             title_review = article['title_review']
             authors_affiliations = article['authors_affiliations']
             if not Article.objects.filter(doi=doi).exists():
-                article = Article.objects.create(title=title, abstract=abstract, date=date, url=url, pmid=pmid, doi=doi, mesh_terms=mesh_terms, disclosure=disclosure, title_review=title_review, term=term + "_" + filter)
+                article = Article.objects.create(title=title, 
+                                                 abstract=abstract, 
+                                                 date=date, url=url, 
+                                                 pmid=pmid, doi=doi, 
+                                                 mesh_terms=mesh_terms, 
+                                                 disclosure=disclosure, 
+                                                 title_review=title_review, 
+                                                 term=term + "_" + filter)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation['author_name']
                     affiliations = author_affiliation['affiliations']
@@ -152,7 +159,7 @@ def article_json_to_database():
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
-@error_handling_decorator
+@error_handling
 def reciprocal_rank_fusion(search_vector, search_text, k=60):
     combined_scores = {}
     for results in [search_vector, search_text]:
@@ -167,7 +174,7 @@ def reciprocal_rank_fusion(search_vector, search_text, k=60):
     return response
 
 
-@error_handling_decorator
+@error_handling
 def search_articles(query, index):
     query_cleaned = text_processing(query)
     query_vector = model.encode(query_cleaned).tolist() 
@@ -175,7 +182,7 @@ def search_articles(query, index):
     "knn",
     field="title_abstract_vector",
     query_vector=query_vector,
-    k=20,
+    k=10,
     num_candidates=5000
     ).source(['title', 'abstract']) # Include the 'title' and 'abstract' fields in the response
     response_vector = search_results_vector.execute()
@@ -233,7 +240,7 @@ def search_articles(query, index):
     return results, query
 
 
-@error_handling_decorator
+@error_handling
 def rank_doc(query, retrieved_docs, topN):
     text = [{"id":hit.meta.id, "title":hit.title, "abstract":hit.abstract} for hit in retrieved_docs]
     # Initialize the CrossEncoder model with the specified model name

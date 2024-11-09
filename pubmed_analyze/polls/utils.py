@@ -14,15 +14,14 @@ def handle_error(e):
     # Log de l'erreur avec traceback complet
     logger.error(f"Une erreur est survenue: {error_message}")
     logger.error(traceback.format_exc())
-    
     # Envoi d'un email avec les détails de l'erreur
     subject = "Erreur dans l'application"
-    message = f"Une erreur s'est produite : {error_message}\n\nTraceback:\n{traceback.format_exc()}"
+    message = f"Une erreur s'est produite : {error_message}\n\n{traceback.format_exc()}"
     recipient_list = settings.ERROR_NOTIFICATION_EMAIL
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)
 
 
-def error_handling_decorator(func):
+def error_handling(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -36,7 +35,7 @@ def get_absolute_url(pmid):
     return "https://pubmed.ncbi.nlm.nih.gov/"+str(pmid)
 
 
-@error_handling_decorator
+@error_handling
 def format_date(date):
     if date is None:
         return None  

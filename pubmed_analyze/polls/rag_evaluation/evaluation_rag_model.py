@@ -2,6 +2,7 @@ import json
 import os
 import re
 from elasticsearch_dsl import Search
+import numpy as np
 from polls.models import Article
 from polls.utils import text_processing
 from polls.business_logic import model, rank_doc, reciprocal_rank_fusion
@@ -11,11 +12,12 @@ from django.conf import settings
 from polls.es_config import INDEX_NAME
 from openai import OpenAI
 from dotenv import load_dotenv
-from polls.utils import error_handling_decorator
+from polls.utils import error_handling
+import matplotlib.pyplot as plt
 
 load_dotenv()
 
-@error_handling_decorator
+@error_handling
 def create_eval_rag_json(query, expected_abstract):
     output_path = Path(settings.RAG_JSON_DIR + "/" + "eval_rag.json")
     evaluation_data = {
@@ -36,7 +38,7 @@ def create_eval_rag_json(query, expected_abstract):
     print(f"Saved evaluation to {output_path}")
 
 
-@error_handling_decorator
+@error_handling
 def search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor):
     query_cleaned = text_processing(query)
     query_vector = model.encode(query_cleaned).tolist() 
@@ -86,7 +88,7 @@ def search_articles_for_eval(query, research_type, number_of_results, number_of_
     return results, query
 
 
-@error_handling_decorator
+@error_handling
 def rag_articles_for_eval(query, research_type, number_of_results, model, number_of_articles=None, title_weight=None, abstract_weight=None, rank_scaling_factor=None):
     retrieved_documents, query = search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor)
     context = ""
@@ -125,7 +127,7 @@ def rag_articles_for_eval(query, research_type, number_of_results, model, number
     return response, retrieved_documents, context
 
 
-@error_handling_decorator
+@error_handling
 def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     template = """You are an expert in medical abstracts. 
     You will receive two medical abstracts and a query. Your task is to determine which of these abstracts contains the most pertinent information to answer the query.     
@@ -166,7 +168,7 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     return number
 
 
-@error_handling_decorator
+@error_handling
 def eval_response(query, response, retrieval, model):
     template = """Your task is to score the relevance between a generated answer and the query based on the ground truth answer in the range between 1 and 5, and please also provide the scoring reason.  
     Your primary focus should be on determining whether the generated answer contains sufficient information to address the given query according to the ground truth answer.    
@@ -223,5 +225,38 @@ def eval_response(query, response, retrieval, model):
         scoring_reason = score_data.get('scoring_reason', 'No scoring reason provided')
     return float(score), scoring_reason
 
+
+@error_handling
+def plot_scores():
+    # Charger les données depuis le fichier JSON
+    results_file = 'polls\\rag_evaluation\data\json'
+    results_plot = 'polls\\rag_evaluation\data\png'
+    data_list = []
+    for filename in os.listdir(results_file):
+        with open(f'{results_file}/{filename}') as f:
+            data = json.load(f)
+            data_list.append(data[-1])
+    # Extraire les scores et les paramètres pour les légendes
+    score_retrieval = [item["score_retrieval"] for item in data]
+    score_generation = [item["score_generation"] for item in data]
+    parameters = [f"research_type={item['research_type']}" for item in data ]
+    # Configurer le graphique en barres
+    x = np.arange(len(parameters))  # Position de chaque barre
+    width = 0.35  # Largeur des barres
+    fig, ax = plt.subplots(figsize=(10, 6))
+    bars1 = ax.bar(x - width/2, score_retrieval, width, label='Score Retrieval')
+    bars2 = ax.bar(x + width/2, score_generation, width, label='Score Generation')
+    # Ajouter les paramètres comme labels sur l'axe des x
+    ax.set_xticks(x)
+    ax.set_xticklabels(parameters, rotation=45, ha='right')
+    # Configurer les étiquettes et le titre
+    ax.set_xlabel('Metrics')
+    ax.set_ylabel('Values')
+    ax.set_title('Performance du RAG')
+    ax.legend()
+    image_path = os.path.join(results_plot, 'scores_plot.png')
+    # Sauvegarder le graphique dans le fichier
+    plt.savefig(image_path, format='png')
+    plt.close(fig)
 
     
