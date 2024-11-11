@@ -1,12 +1,30 @@
+
 # docker-compose up --build
 
-version: "3"
-
 services:
+  # Service pour Django
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile.django  # Assurez-vous d'avoir un Dockerfile spécifique pour Django
+    container_name: django
+    ports:
+      - "8000:8000"  # Accès à Django sur le port 8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
+      - DATABASE_URL=DATABASE_URL  # Connexion à la base de données via les variables d'environnement
+    volumes:
+      - ..:/app  # Monte le code source local dans le conteneur
+    depends_on:
+      - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
+      - prometheus
+      - db  # Ajout de la dépendance à la base de données
+
+  # Service pour Elasticsearch
   elasticsearch:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.elasticsearch
     container_name: elasticsearch
     ports:
       - "9200:9200"
@@ -17,3 +35,40 @@ services:
       - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     volumes:
       - ./_data/elasticsearch_data:/usr/share/elasticsearch/data
+
+  # Service pour PostgreSQL
+  db:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+    networks:
+      - default
+
+  # Service pour Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Assurez-vous d'avoir un fichier de configuration Prometheus
+    ports:
+      - "9090:9090"  # Accès à Prometheus sur le port 9090
+
+  # Service pour Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Accès à Grafana sur le port 3000
+    depends_on:
+      - prometheus
+
+networks:
+  default:
+    name: django_network

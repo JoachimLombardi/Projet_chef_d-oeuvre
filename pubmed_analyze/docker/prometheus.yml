@@ -1,0 +1,16 @@
+# prometheus.yml
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'django'
+    static_configs:
+      - targets: ['django:8000']  # Nom du conteneur Django et son port
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'elasticsearch'
+    metrics_path: "/_prometheus/metrics"
+    static_configs:
+      - targets: ['elasticsearch:9200']

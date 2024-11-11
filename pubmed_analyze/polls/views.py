@@ -10,7 +10,6 @@ import json
 from pathlib import Path
 import re
 import time
-
 from django.conf import settings
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
@@ -152,7 +151,7 @@ def rag_articles(request):
             context = ""
             for i, source in enumerate(retrieved_documents):
                 context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-            model = "mistral"
+            model = "gpt-4o"
             template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
             If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
@@ -219,7 +218,7 @@ def custom_login(request):
                 if next_url:
                     return redirect(next_url)
                 else:
-                    return redirect('list_articles')
+                    return redirect('article_list')
             else:
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect")
         else:

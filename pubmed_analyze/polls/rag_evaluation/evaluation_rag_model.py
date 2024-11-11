@@ -11,11 +11,12 @@ from pathlib import Path
 from django.conf import settings
 from polls.es_config import INDEX_NAME
 from openai import OpenAI
-from dotenv import load_dotenv
 from polls.utils import error_handling
 import matplotlib.pyplot as plt
+import environ
 
-load_dotenv()
+env = environ.Env() 
+environ.Env.read_env()
 
 @error_handling
 def create_eval_rag_json(query, expected_abstract):
@@ -237,23 +238,26 @@ def plot_scores():
             data = json.load(f)
             data_list.append(data[-1])
     # Extraire les scores et les paramètres pour les légendes
-    score_retrieval = [item["score_retrieval"] for item in data]
-    score_generation = [item["score_generation"] for item in data]
-    parameters = [f"research_type={item['research_type']}" for item in data ]
+    metrics = ["score_retrieval", "score_generation"]
     # Configurer le graphique en barres
-    x = np.arange(len(parameters))  # Position de chaque barre
-    width = 0.35  # Largeur des barres
+    x = np.arange(len(metrics))
+    width = 0.8 / len(data_list)
+     # Position de chaque barre
     fig, ax = plt.subplots(figsize=(10, 6))
-    bars1 = ax.bar(x - width/2, score_retrieval, width, label='Score Retrieval')
-    bars2 = ax.bar(x + width/2, score_generation, width, label='Score Generation')
+    for i, data in enumerate(data_list):
+        score_metrics = [data[metric] for metric in metrics]
+        ax.bar(x + i * width, score_metrics, width, label=f'Research_type: {data["research_type"]}')
     # Ajouter les paramètres comme labels sur l'axe des x
     ax.set_xticks(x)
-    ax.set_xticklabels(parameters, rotation=45, ha='right')
+    ax.set_xticklabels(metrics, rotation=45, ha='right')
     # Configurer les étiquettes et le titre
     ax.set_xlabel('Metrics')
     ax.set_ylabel('Values')
     ax.set_title('Performance du RAG')
-    ax.legend()
+    # Placer la légende à l'extérieur du graphique
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    # Ajuster les marges pour éviter que le bas soit coupé
+    plt.tight_layout(rect=[0, 0, 0.85, 1])  # ajouter de l'espace sur la droite pour la légende
     image_path = os.path.join(results_plot, 'scores_plot.png')
     # Sauvegarder le graphique dans le fichier
     plt.savefig(image_path, format='png')
