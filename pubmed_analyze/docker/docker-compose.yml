@@ -1,6 +1,7 @@
 
 # docker-compose up --build
 
+
 services:
   # Service pour Django
   django:
@@ -13,6 +14,8 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
       - DATABASE_URL=DATABASE_URL  # Connexion à la base de données via les variables d'environnement
+    env_file:
+      - .env
     volumes:
       - ..:/app  # Monte le code source local dans le conteneur
     depends_on:
