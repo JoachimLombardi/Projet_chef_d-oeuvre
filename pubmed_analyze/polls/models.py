@@ -1,5 +1,7 @@
 # python manage.py makemigrations polls
 # python manage.py migrate
+# python manage.py createsuperuser
+
 # To empty the database:
 # python manage.py flush
 # Important changes in models: 

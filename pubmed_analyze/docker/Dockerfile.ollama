@@ -1,0 +1,19 @@
+# Dockerfile.ollama
+
+# Étape 1 : Utiliser une image Python comme base
+FROM python:3.11.8
+
+# Étape 2 : Définir le répertoire de travail
+WORKDIR /app
+
+# Étape 3 : Copier le fichier requirements.txt d'Ollama et installer les dépendances
+COPY ./ollama/requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Étape 4 : Copier les fichiers spécifiques à Ollama dans le conteneur
+COPY ./ollama/ /app/
+
+
+# Étape 6 : Commande par défaut (adapter selon le rôle d’Ollama)
+CMD ["bash", "-c", \
+    "python model.py"]

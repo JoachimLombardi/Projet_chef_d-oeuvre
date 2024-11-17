@@ -11,11 +11,11 @@ from pathlib import Path
 import re
 import time
 from django.conf import settings
+import requests
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
 from .business_logic import search_articles
-import ollama
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -171,11 +171,19 @@ def rag_articles(request):
 
                 You must provid a valid JSON with the key "response".
                 """
-            messages = [{"role":"user", "content":template}]
-            chat_response = ollama.chat(model=model,
-                                        messages=messages,
-                                        options={"temperature": 0})
+            data = {
+            "model": model,
+            "messages": [{"role": "user", "content": template}],
+            "stream": False,
+            "format": "json",
+            "options": {
+                "seed": 101,
+                "temperature": 0
+            }
+        }
+            chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
             pattern = r'\{+.*\}'
+            print(chat_response)
             match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
             match = match.replace("\n", "")
             if match:

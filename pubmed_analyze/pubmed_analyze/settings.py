@@ -150,7 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ELASTICSEARCH_DSL = {
     'default': {
-        'hosts': 'http://localhost:9200'
+        'hosts': 'http://elasticsearch:9200'
     },
 }
 

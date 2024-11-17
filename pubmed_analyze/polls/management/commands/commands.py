@@ -20,18 +20,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('operation', type=str, help="Specify the operation")
-        parser.add_argument('--request', type=str, help="Optional request data") 
 
 
     def handle(self, *args, **kwargs):
         self.operation = kwargs['operation']
-        request_data = kwargs.get('request')
         if self.operation == 'index_articles':
             self.index_articles()
         elif self.operation == 'scrap_article':
-            self.scrap_article(request_data)
+            self.scrap_article()
         elif self.operation == 'article_to_database':
-            self.article_to_database(request_data)
+            self.article_to_database()
         elif self.operation == 'plot_scores':
             plot_scores()
         else:

@@ -119,7 +119,7 @@ AuthorAffiliationFormSet = forms.formset_factory(AuthorForm, extra=0)
 
 class RAGForm(forms.Form):
     INDEX_CHOICE = [
-        ('', 'All'),
+        ('all', 'All'),
         ('multiple_sclerosis_2024', 'Multiple Sclerosis'),
         ('herpes_zoster_2024', 'Herpes Zoster'),
     ]
@@ -154,13 +154,9 @@ class EvaluationForm(forms.Form):
         ('neural', 'recherche neuronale'),
     ]
 
-    MODELS_GENERATION = [('mistral', 'Mistral 7B'),
-              ('mistral-small', 'Mistral 22B'),
-            ]
+    MODELS_GENERATION = [('mixtral:8x7b', 'Mixtral 8x7B')]
     
-    MODELS_EVALUATION = [('mistral-small', 'Mistral 22B'),
-                         ('gpt-4o', 'GPT-4')
-                        ]
+    MODELS_EVALUATION = [('gpt-4o', 'GPT-4')]
 
     research_type = forms.ChoiceField(
         label="Type de recherche",
@@ -198,4 +194,3 @@ class EvaluationForm(forms.Form):
         label="Rank Scaling Factors"
     )
 
-    

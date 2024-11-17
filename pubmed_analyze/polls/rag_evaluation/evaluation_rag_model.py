@@ -3,10 +3,10 @@ import os
 import re
 from elasticsearch_dsl import Search
 import numpy as np
+import requests
 from polls.models import Article
 from polls.utils import text_processing
 from polls.business_logic import model, rank_doc, reciprocal_rank_fusion
-import ollama
 from pathlib import Path
 from django.conf import settings
 from polls.es_config import INDEX_NAME
@@ -113,11 +113,18 @@ def rag_articles_for_eval(query, research_type, number_of_results, model, number
             }
 
         You must provid a valid JSON with the key "response".
-        """
-    messages = [{"role":"user", "content":template}]
-    chat_response = ollama.chat(model=model,
-                                messages=messages,
-                                options={"temperature": 0})
+    """
+    data = {
+        "model": model,
+        "messages": [{"role": "user", "content": template}],
+        "stream": False,
+        "format": "json",
+        "options": {
+            "seed": 101,
+            "temperature": 0
+        }
+    }
+    chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
     output = chat_response['message']['content']
     print(output)
     pattern = r'\{+.*\}'
@@ -149,14 +156,22 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     }
     Your must provide a valid JSON with the key "number".
     """
-    messages = [{"role":"user", "content":template}]
-    if model == "mistral-small":
-        chat_response = ollama.chat(model=model,
-                                    messages=messages,
-                                    options={"temperature": 0})
+    if model == "Mixtral 8x7B":
+        data = {
+        "model": model,
+        "messages": [{"role": "user", "content": template}],
+        "stream": False,
+        "format": "json",
+        "options": {
+            "seed": 101,
+            "temperature": 0
+        }
+    }
+        chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
         output = chat_response['message']['content']
     else:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        messages = [{"role":"user", "content":template}]
         completion = client.chat.completions.create(model=model,
                                                     messages=messages,
                                                     temperature=0)
@@ -202,14 +217,22 @@ def eval_response(query, response, retrieval, model):
     }
     Your must provide a valid JSON with the keys "score" and "scoring_reason". The value of score must be an integer between 1 and 5.
     """
-    messages = [{"role":"user", "content":template}]
-    if model == "mistral-small":
-        chat_response = ollama.chat(model=model,
-                                    messages=messages,
-                                    options={"temperature": 0})
+    if model == "Mixtral 8x7B":
+        data = {
+        "model": model,
+        "messages": [{"role": "user", "content": template}],
+        "stream": False,
+        "format": "json",
+        "options": {
+            "seed": 101,
+            "temperature": 0
+        }
+    }
+        chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
         output = chat_response['message']['content']
     else:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        messages = [{"role":"user", "content":template}]
         completion = client.chat.completions.create(model=model,
                                                     messages=messages,
                                                     temperature=0)

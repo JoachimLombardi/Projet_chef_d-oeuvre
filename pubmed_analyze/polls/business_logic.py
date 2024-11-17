@@ -121,41 +121,42 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
 
 @error_handling
 def article_json_to_database(): 
-    term = "herpes_zoster"
-    filter = "2024"
-    output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
-    with output_path.open('r', encoding='utf-8') as f:
-        articles = json.load(f)
-        for article in articles:
-            title = article['title']
-            abstract = article['abstract']
-            date = article['date']
-            if date == "None":
-                date = None
-            url = article['url']
-            pmid = article['pmid']
-            doi = article['doi']
-            mesh_terms = article['mesh_terms']
-            disclosure = article['disclosure']
-            title_review = article['title_review']
-            authors_affiliations = article['authors_affiliations']
-            if not Article.objects.filter(doi=doi).exists():
-                article = Article.objects.create(title=title, 
-                                                 abstract=abstract, 
-                                                 date=date, url=url, 
-                                                 pmid=pmid, doi=doi, 
-                                                 mesh_terms=mesh_terms, 
-                                                 disclosure=disclosure, 
-                                                 title_review=title_review, 
-                                                 term=term + "_" + filter)
-                for author_affiliation in authors_affiliations:
-                    author_name = author_affiliation['author_name']
-                    affiliations = author_affiliation['affiliations']
-                    author, created = Authors.objects.get_or_create(name=author_name)
-                    for affiliation in affiliations:
-                        affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
-                        if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
-                            Authorship.objects.create(article=article, author=author, affiliation=affiliation)
+    term_list = ["muliple_sclerosis", "herpes_zoster"]
+    for term in term_list:
+        filter = "2024"
+        output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
+        with output_path.open('r', encoding='utf-8') as f:
+            articles = json.load(f)
+            for article in articles:
+                title = article['title']
+                abstract = article['abstract']
+                date = article['date']
+                if date == "None":
+                    date = None
+                url = article['url']
+                pmid = article['pmid']
+                doi = article['doi']
+                mesh_terms = article['mesh_terms']
+                disclosure = article['disclosure']
+                title_review = article['title_review']
+                authors_affiliations = article['authors_affiliations']
+                if not Article.objects.filter(doi=doi).exists():
+                    article = Article.objects.create(title=title, 
+                                                    abstract=abstract, 
+                                                    date=date, url=url, 
+                                                    pmid=pmid, doi=doi, 
+                                                    mesh_terms=mesh_terms, 
+                                                    disclosure=disclosure, 
+                                                    title_review=title_review, 
+                                                    term=term + "_" + filter)
+                    for author_affiliation in authors_affiliations:
+                        author_name = author_affiliation['author_name']
+                        affiliations = author_affiliation['affiliations']
+                        author, created = Authors.objects.get_or_create(name=author_name)
+                        for affiliation in affiliations:
+                            affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
+                            if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
+                                Authorship.objects.create(article=article, author=author, affiliation=affiliation)
     return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
@@ -201,7 +202,7 @@ def search_articles(query, index):
     results = []
     article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
-    if index:
+    if index != "all":
         articles = articles.filter(term=index)
     # Process the search hits and build the results list
     for res in response:

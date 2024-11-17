@@ -22,6 +22,7 @@ services:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus
       - db  # Ajout de la dépendance à la base de données
+      - ollama 
 
   # Service pour Elasticsearch
   elasticsearch:
@@ -53,6 +54,18 @@ services:
       - ./data/postgresql:/var/lib/postgresql/data
     networks:
       - default
+
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"  # Port par défaut pour le serveur Ollama
+    volumes:
+      - ./ollama_data:/ollama  # Montez les données locales pour persister les modèles
+    restart: always
 
   # Service pour Prometheus
   prometheus:
