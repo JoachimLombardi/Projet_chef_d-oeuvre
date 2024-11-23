@@ -56,15 +56,12 @@ services:
       - default
 
   ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile.ollama
     image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
     container_name: ollama
     ports:
       - "11434:11434"  # Port par défaut pour le serveur Ollama
-    volumes:
-      - ./ollama_data:/ollama  # Montez les données locales pour persister les modèles
+    # volumes:
+    #   - ./ollama_models:/ollama  # Montez les données locales pour persister les modèles
     restart: always
 
   # Service pour Prometheus

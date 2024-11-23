@@ -19,6 +19,7 @@ EXPOSE 8000
 # Exécuter lors de la construction de l'image
 RUN bash -c "python manage.py makemigrations && \
              python manage.py migrate && \
+             python manage.py create_superuser && \
              python manage.py commands article_to_database && \
              python manage.py commands index_articles"
 
