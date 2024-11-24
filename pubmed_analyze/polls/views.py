@@ -151,7 +151,7 @@ def rag_articles(request):
             context = ""
             for i, source in enumerate(retrieved_documents):
                 context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-            model = "gpt-4o"
+            model = "mistrallite"
             template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
             If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
@@ -183,7 +183,7 @@ def rag_articles(request):
         }
             chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
             pattern = r'\{+.*\}'
-            print(chat_response)
+            print(chat_response, flush=True)
             match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
             match = match.replace("\n", "")
             if match:

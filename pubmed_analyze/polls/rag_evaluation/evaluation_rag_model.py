@@ -126,7 +126,7 @@ def rag_articles_for_eval(query, research_type, number_of_results, model, number
     }
     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
     output = chat_response['message']['content']
-    print(output)
+    print(output, flush=True)
     pattern = r'\{+.*\}'
     match = re.findall(pattern, output, re.DOTALL)[0]
     match = match.replace("\n", '')
