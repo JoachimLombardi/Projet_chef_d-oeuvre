@@ -22,7 +22,7 @@ services:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus
       - db  # Ajout de la dépendance à la base de données
-      - ollama 
+      # - ollama 
       - vllm
 
   # Service pour Elasticsearch
@@ -68,24 +68,28 @@ services:
   #     - OLLAMA_NUM_PARALLEL=1
 
     # Service pour vLLM
+
+
   vllm:
     image: vllm/vllm-openai:latest
     container_name: vllm
-    runtime: nvidia  # Permet d'utiliser le GPU
+    runtime: nvidia
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=your_huggingface_token
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
               capabilities: [gpu]
-    environment:
-      - HUGGING_FACE_HUB_TOKEN=HUGGING_FACE_HUB_TOKEN  # Ajoutez votre token Hugging Face
     volumes:
-      - ~/.cache/huggingface:/root/.cache/huggingface  # Monte le cache Hugging Face local
+      - ../../mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned:/root/.cache/huggingface  # Montez le dossier du modèle local
     ports:
-      - "8001:8000"  # Expose le serveur vLLM sur le port 8001
+      - "8001:8000"  # Expose l'API sur le port 8001
     command: >
-      --model mtc/mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned
+      --model /root/.cache/huggingface  
+
+
 
 
   # Service pour Prometheus
