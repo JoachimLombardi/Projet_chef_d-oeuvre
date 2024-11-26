@@ -83,7 +83,7 @@ services:
             - driver: nvidia
               capabilities: [gpu]
     volumes:
-      - ../../mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned:/root/.cache/huggingface  # Montez le dossier du modèle local
+      - ../../vllm_models/mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned:/root/.cache/huggingface  # Montez le dossier du modèle local
     ports:
       - "8001:8000"  # Expose l'API sur le port 8001
     command: >
