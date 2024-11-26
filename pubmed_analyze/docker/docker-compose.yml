@@ -23,6 +23,7 @@ services:
       - prometheus
       - db  # Ajout de la dépendance à la base de données
       - ollama 
+      - vllm
 
   # Service pour Elasticsearch
   elasticsearch:
@@ -55,16 +56,37 @@ services:
     networks:
       - default
 
-  ollama:
-    image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
-    container_name: ollama
-    ports:
-      - "11434:11434"  # Port par défaut pour le serveur Ollama
-    volumes:
-      - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
-    restart: always
+  # ollama:
+  #   image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
+  #   container_name: ollama
+  #   ports:
+  #     - "11434:11434"  # Port par défaut pour le serveur Ollama
+  #   volumes:
+  #     - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
+  #   restart: always
+  #   environment:
+  #     - OLLAMA_NUM_PARALLEL=1
+
+    # Service pour vLLM
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: vllm
+    runtime: nvidia  # Permet d'utiliser le GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
     environment:
-      - OLLAMA_NUM_PARALLEL=1
+      - HUGGING_FACE_HUB_TOKEN=HUGGING_FACE_HUB_TOKEN  # Ajoutez votre token Hugging Face
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface  # Monte le cache Hugging Face local
+    ports:
+      - "8001:8000"  # Expose le serveur vLLM sur le port 8001
+    command: >
+      --model mtc/mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned
+
 
   # Service pour Prometheus
   prometheus:

@@ -151,7 +151,7 @@ def rag_articles(request):
             context = ""
             for i, source in enumerate(retrieved_documents):
                 context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-            model = "mistrallite"
+            model = "mistralai/Mixtral-8x7B-Instruct-v0.1"
             template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
             If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
 
@@ -171,17 +171,23 @@ def rag_articles(request):
 
                 You must provid a valid JSON with the key "response".
                 """
+        #     data = {
+        #     "model": model,
+        #     "messages": [{"role": "user", "content": template}],
+        #     "stream": False,
+        #     "format": "json",
+        #     "options": {
+        #         "seed": 101,
+        #         "temperature": 0
+        #     }
+        # }
+        #     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
             data = {
-            "model": model,
-            "messages": [{"role": "user", "content": template}],
-            "stream": False,
-            "format": "json",
-            "options": {
-                "seed": 101,
-                "temperature": 0
+                "model": model,
+                "messages": [{"role": "user", "content": template}],
+                "temperature": 0,
             }
-        }
-            chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+            chat_response = requests.post('http://vllm:8001/v1/chat/completions', json=data).json()
             pattern = r'\{+.*\}'
             print(chat_response, flush=True)
             match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]

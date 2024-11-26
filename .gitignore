@@ -166,3 +166,8 @@ ollama_models/
 *.bin
 *.pt
 *.h5
+
+vllm_models/
+*.bin
+*.pt
+*.h5
