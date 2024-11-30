@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.urls import path, include
 
 urlpatterns = [
     path('article/create/', views.create_article, name='create_article'),
@@ -12,5 +13,5 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('forbidden/', views.forbidden, name='forbidden'),
     path('evaluate/rag', views.evaluate_rag, name='evaluate_rag'),
-
+    path('metrics/', include('django_prometheus.urls')),
 ]

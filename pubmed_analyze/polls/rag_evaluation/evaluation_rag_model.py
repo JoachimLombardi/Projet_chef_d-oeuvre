@@ -157,25 +157,18 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     Your must provide a valid JSON with the key "number".
     """
     if model == "Mixtral 8x7B":
-    #     data = {
-    #     "model": model,
-    #     "messages": [{"role": "user", "content": template}],
-    #     "stream": False,
-    #     "format": "json",
-    #     "options": {
-    #         "seed": 101,
-    #         "temperature": 0
-    #     }
-    # }
-    #     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
-    #     output = chat_response['message']['content']
         data = {
-            "model": model,
-            "messages": [{"role": "user", "content": template}],
-            "temperature": 0,
-            }
-        chat_response = requests.post('http://vllm:8001/v1/chat/completions', json=data).json()
-        output = chat_response
+        "model": model,
+        "messages": [{"role": "user", "content": template}],
+        "stream": False,
+        "format": "json",
+        "options": {
+            "seed": 101,
+            "temperature": 0
+        }
+    }
+        chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+        output = chat_response['message']['content']
     else:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         messages = [{"role":"user", "content":template}]
@@ -225,25 +218,19 @@ def eval_response(query, response, retrieval, model):
     Your must provide a valid JSON with the keys "score" and "scoring_reason". The value of score must be an integer between 1 and 5.
     """
     if model == "Mixtral 8x7B":
-    #     data = {
-    #     "model": model,
-    #     "messages": [{"role": "user", "content": template}],
-    #     "stream": False,
-    #     "format": "json",
-    #     "options": {
-    #         "seed": 101,
-    #         "temperature": 0
-    #     }
-    # }
-    #     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
-        # output = chat_response['message']['content']
         data = {
         "model": model,
         "messages": [{"role": "user", "content": template}],
-        "temperature": 0,
+        "stream": False,
+        "format": "json",
+        "options": {
+            "seed": 101,
+            "temperature": 0
         }
-        chat_response = requests.post('http://vllm:8001/v1/chat/completions', json=data).json()
-        output = chat_response
+    }
+        chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+        output = chat_response['message']['content']
+      
     else:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         messages = [{"role":"user", "content":template}]

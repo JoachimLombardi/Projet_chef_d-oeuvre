@@ -14,3 +14,10 @@ scrape_configs:
     metrics_path: "/_prometheus/metrics"
     static_configs:
       - targets: ['elasticsearch:9200']
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['ollama:11434']
+  - job_name: 'db'
+    static_configs:
+      - targets: ['db:5432']  
+

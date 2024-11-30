@@ -18,6 +18,10 @@ echo "Exécution des migrations Django..."
 python manage.py makemigrations
 python manage.py migrate
 
+# Create a superuser
+echo "Création du superutilisateur..."
+python manage.py createsuperuser
+
 # Ajouter des commandes spécifiques si nécessaire
 echo "Exécution des commandes personnalisées..."
 python manage.py commands article_to_database

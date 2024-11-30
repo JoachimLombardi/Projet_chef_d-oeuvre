@@ -22,8 +22,8 @@ services:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus
       - db  # Ajout de la dépendance à la base de données
-      # - ollama 
-      - vllm
+      - ollama 
+
 
   # Service pour Elasticsearch
   elasticsearch:
@@ -41,6 +41,7 @@ services:
     volumes:
       - ./_data/elasticsearch_data:/usr/share/elasticsearch/data
 
+
   # Service pour PostgreSQL
   db:
     image: postgres:16
@@ -56,40 +57,17 @@ services:
     networks:
       - default
 
-  # ollama:
-  #   image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
-  #   container_name: ollama
-  #   ports:
-  #     - "11434:11434"  # Port par défaut pour le serveur Ollama
-  #   volumes:
-  #     - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
-  #   restart: always
-  #   environment:
-  #     - OLLAMA_NUM_PARALLEL=1
 
-    # Service pour vLLM
-
-
-  vllm:
-    image: vllm/vllm-openai:latest
-    container_name: vllm
-    runtime: nvidia
-    environment:
-      - HUGGING_FACE_HUB_TOKEN=your_huggingface_token
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              capabilities: [gpu]
-    volumes:
-      - ../../vllm_models/mistralai-Mistral-7B-v0.1-pubmed-summarization-5000-finetuned:/root/.cache/huggingface  # Montez le dossier du modèle local
+  ollama:
+    image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
+    container_name: ollama
     ports:
-      - "8001:8000"  # Expose l'API sur le port 8001
-    command: >
-      --model /root/.cache/huggingface  
-
-
+      - "11434:11434"  # Port par défaut pour le serveur Ollama
+    volumes:
+      - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
+    restart: always
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
 
 
   # Service pour Prometheus
@@ -98,13 +76,17 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Assurez-vous d'avoir un fichier de configuration Prometheus
+      - ./data/prometheus:/prometheus
     ports:
       - "9090:9090"  # Accès à Prometheus sur le port 9090
+
 
   # Service pour Grafana
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    volumes:
+    - ./data/grafana:/var/lib/grafana
     ports:
       - "3000:3000"  # Accès à Grafana sur le port 3000
     depends_on:
