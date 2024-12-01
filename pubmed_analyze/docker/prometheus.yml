@@ -6,18 +6,17 @@ global:
 scrape_configs:
   - job_name: 'django'
     static_configs:
-      - targets: ['django:8000']  # Nom du conteneur Django et son port
+      - targets: ['django:8000']  
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
   - job_name: 'elasticsearch'
-    metrics_path: "/_prometheus/metrics"
     static_configs:
-      - targets: ['elasticsearch:9200']
-  - job_name: 'ollama'
-    static_configs:
-      - targets: ['ollama:11434']
+      - targets: ['elasticsearch_exporter:9114']
+  # - job_name: 'ollama'
+  #   static_configs:
+  #     - targets: ['ollama:11434']
   - job_name: 'db'
     static_configs:
-      - targets: ['db:5432']  
+      - targets: ['postgres_exporter:9187']  
 

@@ -11,11 +11,12 @@ from pathlib import Path
 import re
 import time
 from django.conf import settings
+from django.http import HttpResponse
 import requests
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
-from .business_logic import search_articles
+from .business_logic import generation, search_articles
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -23,6 +24,7 @@ from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
+import prometheus_client
 
 
 @error_handling
@@ -147,47 +149,7 @@ def rag_articles(request):
         if form.is_valid():
             query = form.cleaned_data.get('query')
             index = form.cleaned_data.get('index_choice')
-            retrieved_documents, query = search_articles(query, index)
-            context = ""
-            for i, source in enumerate(retrieved_documents):
-                context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-            model = "mistrallite"
-            template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
-            If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
-
-                ## Instruction:\n
-                1. Read carefully the query and look in all extract for the answer.
-                
-                ## Query:\n
-                '"""+query+"""'
-
-                ## Context:\n
-                '"""+context+"""'
-
-                ## Expected Answer:\n
-                {
-                    "response": str
-                }
-
-                You must provid a valid JSON with the key "response".
-                """
-            data = {
-            "model": model,
-            "messages": [{"role": "user", "content": template}],
-            "stream": False,
-            "format": "json",
-            "options": {
-                "seed": 101,
-                "temperature": 0
-            }
-        }
-            chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
-            pattern = r'\{+.*\}'
-            print(chat_response, flush=True)
-            match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
-            match = match.replace("\n", "")
-            if match:
-                response = json.loads(match)['response']
+            response, context = generation(query, index)
             return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:
             message = "Le formulaire n'est pas valide."
@@ -360,6 +322,10 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
         form = EvaluationForm()
     return render(request, 'polls/evaluate_rag.html', {'form': form})
 
+
+def metrics(request):
+    response = HttpResponse(prometheus_client.generate_latest(), content_type=prometheus_client.CONTENT_TYPE_LATEST)
+    return response
 
 
 

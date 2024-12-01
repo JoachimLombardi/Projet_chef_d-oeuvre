@@ -1,4 +1,5 @@
 
+import re
 from elasticsearch_dsl import Search
 import numpy as np
 from sentence_transformers import CrossEncoder
@@ -239,6 +240,53 @@ def search_articles(query, index):
                 'authors_affiliations': authors_affiliations
             })
     return results, query
+
+
+def generation(query, index="all"):
+    retrieved_documents, query = search_articles(query, index)
+    context = ""
+    for i, source in enumerate(retrieved_documents):
+        context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
+    model = "mistrallite"
+    template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
+    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
+
+        ## Instruction:\n
+        1. Read carefully the query and look in all extract for the answer.
+        
+        ## Query:\n
+        '"""+query+"""'
+
+        ## Context:\n
+        '"""+context+"""'
+
+        ## Expected Answer:\n
+        {
+            "response": str
+        }
+
+        You must provid a valid JSON with the key "response".
+        """
+    data = {
+    "model": model,
+    "messages": [{"role": "user", "content": template}],
+    "stream": False,
+    "format": "json",
+    "options": {
+        "seed": 101,
+        "temperature": 0
+        }
+    }
+    chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+    pattern = r'\{+.*\}'
+    print(chat_response, flush=True)
+    match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
+    match = match.replace("\n", "")
+    if match:
+        response = json.loads(match)['response']
+    else:
+        response = "I can't answer with the provide context"
+    return response, context
 
 
 @error_handling

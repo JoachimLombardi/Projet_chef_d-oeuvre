@@ -1,5 +1,6 @@
 
 # docker-compose up --build
+# docker exec -it django bash
 
 
 services:
@@ -23,7 +24,7 @@ services:
       - prometheus
       - db  # Ajout de la dépendance à la base de données
       - ollama 
-
+  
 
   # Service pour Elasticsearch
   elasticsearch:
@@ -42,6 +43,17 @@ services:
       - ./_data/elasticsearch_data:/usr/share/elasticsearch/data
 
 
+  elasticsearch_exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+    container_name: elasticsearch_exporter
+    ports:
+      - "9114:9114"
+    command:
+      - '--es.uri=http://elasticsearch:9200'
+    depends_on:
+      - elasticsearch
+  
+
   # Service pour PostgreSQL
   db:
     image: postgres:16
@@ -56,6 +68,17 @@ services:
       - ./data/postgresql:/var/lib/postgresql/data
     networks:
       - default
+
+
+  postgres_exporter:
+    image: wrouesnel/postgres_exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
+    depends_on:
+      - db
 
 
   ollama:
