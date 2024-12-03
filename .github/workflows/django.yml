@@ -28,7 +28,7 @@ jobs:
 
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
-      working-directory: $GITHUB_WORKSPACE/pubmed_analyze
+      working-directory: /pubmed_analyze
       run: |
         docker-compose --env-file ./docker/.env up --build -d
 
