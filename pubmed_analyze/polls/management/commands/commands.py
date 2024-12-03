@@ -3,15 +3,16 @@
 # python manage.py commands scrap_article
 # python manage.py commands article_to_database
 # python manage.py commands plot_scores
-# python manage.py commands add_metrics
 
 
 from django.core.management.base import BaseCommand
+from django_elasticsearch_dsl.registries import registry
 from polls.models import Article
 from polls.documents import ArticleDocument
+from polls.documents import index
+from polls.es_config import INDEX_NAME
 from polls.business_logic import scrap_article_to_json, article_json_to_database
 from polls.rag_evaluation.evaluation_rag_model import plot_scores
-from polls.monitoring.monitor_rag import handle_rag_pipeline
 
 
 class Command(BaseCommand):
@@ -31,8 +32,6 @@ class Command(BaseCommand):
             self.article_to_database()
         elif self.operation == 'plot_scores':
             plot_scores()
-        elif self.operation == 'add_metrics':
-            self.add_metrics()
         else:
             self.stdout.write(self.style.ERROR('Invalid operation'))
 
@@ -66,9 +65,4 @@ class Command(BaseCommand):
     def plot_scores(self):
         plot_scores()
         self.stdout.write(self.style.SUCCESS('Successfully plotted scores'))
-    
-
-    def add_metrics(self):
-        handle_rag_pipeline()
-        self.stdout.write(self.style.SUCCESS('Successfully added metrics'))
 

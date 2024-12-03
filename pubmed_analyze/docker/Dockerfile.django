@@ -26,6 +26,6 @@ RUN chmod +x /app/entrypoint.sh
 # ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Commande par défaut (lancée par ENTRYPOINT)
-CMD ["python", "manage.py", "commands", "add_metrics", "&&", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 

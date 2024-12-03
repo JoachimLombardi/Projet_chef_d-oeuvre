@@ -26,7 +26,7 @@ from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
-import prometheus_client
+from polls.monitoring.monitor_rag import handle_rag_pipeline
 
 
 @error_handling
@@ -151,6 +151,7 @@ def rag_articles(request):
         if form.is_valid():
             query = form.cleaned_data.get('query')
             index = form.cleaned_data.get('index_choice')
+            handle_rag_pipeline(query, index)
             response, context = generation(query, index)
             return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:

@@ -11,18 +11,15 @@ rag_errors_total = prometheus_client.Counter('rag_errors_total', 'Total number o
 
 # Vue pour gérer le pipeline RAG
 @rag_pipeline_latency.time()
-def handle_rag_pipeline(request):
+def handle_rag_pipeline(query, index):
     try:
-        query = request.GET.get('query')
-        if not query:
-            return JsonResponse({'error': 'Missing query parameters'}, status=400)
         rag_requests_total.inc()  # Incrémenter le compteur de requêtes RAG
         # Mesurer la latence de la recherche
         with search_latency.time():
-            documents = search_articles(request.GET.get('query'), request.GET.get('index_choice'))
+            documents = search_articles(query, index)
         # Mesurer la latence de la génération LLM
         with llm_latency.time():
-            response = generation(request.GET.get('query'), request.GET.get('index_choice'))
+            response = generation(query, index)
         return JsonResponse({
             'documents': documents,
             'response': response,
