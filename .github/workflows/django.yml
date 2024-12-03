@@ -1,9 +1,9 @@
-name: Django CI
+name: Django CI/CD with Docker Compose
 
 on:
   push:
     branches:
-      - master  # ou une branche spécifique
+      - master  # ou une branche principale spécifique
   pull_request:
     branches:
       - master
@@ -12,52 +12,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-          POSTGRES_NAME: ${{ secrets.DATABASE_NAME }}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U POSTGRES_USER -d POSTGRES_NAME"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set environment variables
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build and start services with Docker Compose
       run: |
-        echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
-        echo "DATABASE_USER=${{ secrets.DATABASE_USER }}" >> $GITHUB_ENV
-        echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> $GITHUB_ENV
-        echo "DATABASE_HOST=localhost" >> $GITHUB_ENV  # Par défaut dans l'environnement de CI
-        echo "DATABASE_PORT=5432" >> $GITHUB_ENV
-
-    - name: Set up Python 3.x
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt  # Installe les dépendances du projet
-
-    - name: Wait for PostgreSQL to be ready
-      run: |
-        until pg_isready -h localhost -p 5432 -U ${{ secrets.DATABASE_USER }}; do
-          sleep 1
-        done
-
-    - name: Run migrations
-      run: python pubmed_analyze/manage.py migrate
-
+        docker-compose up --build -d
+    
     - name: Run tests
-      run: python pubmed_analyze/manage.py test pubmed_analyze/polls  # Exécute vos tests unitaires
+      run: docker-compose exec django python manage.py test
+
+    - name: Stop services
+      run: docker-compose down

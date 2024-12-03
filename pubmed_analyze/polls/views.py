@@ -325,18 +325,19 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
     return render(request, 'polls/evaluate_rag.html', {'form': form})
 
 
-
+@login_required
+@user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
 @error_handling
-def metrics(request):
-    handle_rag_pipeline(request)
-    return HttpResponse(prometheus_client.generate_latest(), content_type="text/plain")
+def grafana(request):
+    return redirect('http://127.0.0.1:3000')
 
 
 @login_required
 @user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
 @error_handling
-def grafana(request):
-    return render(request, 'polls/grafana.html')
+def uptime_kuma(request):
+    return redirect('http://127.0.0.1:3001')
+
 
 
 

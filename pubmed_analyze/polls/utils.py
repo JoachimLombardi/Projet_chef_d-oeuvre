@@ -46,7 +46,6 @@ def format_date(date):
         return date_obj.astimezone(pytz.UTC).date()
 
 
-
 def clean_whitespace(text: str) -> str:
     """
     Normalizes whitespace by removing excessive spaces, tabs, and newlines.
@@ -91,4 +90,5 @@ def convert_seconds(seconds):
 
 
 logger = logging.getLogger(__name__)
+
 
