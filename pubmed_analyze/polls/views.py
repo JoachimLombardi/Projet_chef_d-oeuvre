@@ -13,6 +13,8 @@ import time
 from django.conf import settings
 from django.http import HttpResponse
 import requests
+
+from polls.monitoring.monitor_rag import handle_rag_pipeline
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
@@ -323,9 +325,18 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
     return render(request, 'polls/evaluate_rag.html', {'form': form})
 
 
+
+@error_handling
 def metrics(request):
-    response = HttpResponse(prometheus_client.generate_latest(), content_type=prometheus_client.CONTENT_TYPE_LATEST)
-    return response
+    handle_rag_pipeline(request)
+    return HttpResponse(prometheus_client.generate_latest(), content_type="text/plain")
+
+
+@login_required
+@user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
+@error_handling
+def grafana(request):
+    return render(request, 'polls/grafana.html')
 
 
 

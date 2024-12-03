@@ -13,5 +13,6 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('forbidden/', views.forbidden, name='forbidden'),
     path('evaluate/rag', views.evaluate_rag, name='evaluate_rag'),
-    path('', include('django_prometheus.urls')),
+    path('metrics/', views.metrics, name='metrics'),
+    path('grafana/', views.grafana, name='grafana'),
 ]

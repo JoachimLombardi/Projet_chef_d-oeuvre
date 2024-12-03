@@ -104,16 +104,47 @@ services:
       - "9090:9090"  # Accès à Prometheus sur le port 9090
 
 
-  # Service pour Grafana
+    # Service pour Grafana
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     volumes:
-    - ./data/grafana:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana
     ports:
-      - "3000:3000"  # Accès à Grafana sur le port 3000
+      - "3000:3000"
+    environment:
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA}
     depends_on:
       - prometheus
+      - renderer
+
+
+  # Service pour Grafana Image Renderer
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: renderer
+    ports:
+      - "8081:8081"
+
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime_kuma
+    ports:
+      - "3001:3001"  # Port par défaut pour Uptime Kuma
+    volumes:
+      - ./data/uptime-kuma:/app/data  
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    depends_on:
+      - prometheus  
+
 
 networks:
   default:

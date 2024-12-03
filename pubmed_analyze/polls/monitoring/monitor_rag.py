@@ -13,6 +13,9 @@ rag_errors_total = prometheus_client.Counter('rag_errors_total', 'Total number o
 @rag_pipeline_latency.time()
 def handle_rag_pipeline(request):
     try:
+        query = request.GET.get('query')
+        if not query:
+            return JsonResponse({'error': 'Missing query parameters'}, status=400)
         rag_requests_total.inc()  # Incrémenter le compteur de requêtes RAG
         # Mesurer la latence de la recherche
         with search_latency.time():

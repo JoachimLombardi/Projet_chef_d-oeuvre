@@ -5,6 +5,7 @@ global:
 
 scrape_configs:
   - job_name: 'django'
+    metrics_path: /metrics
     static_configs:
       - targets: ['django:8000']  
   - job_name: 'prometheus'
@@ -13,10 +14,16 @@ scrape_configs:
   - job_name: 'elasticsearch'
     static_configs:
       - targets: ['elasticsearch_exporter:9114']
-  # - job_name: 'ollama'
-  #   static_configs:
-  #     - targets: ['ollama:11434']
+  - job_name: 'ollama'
+    static_configs:
+      - targets: ['ollama:11434']
   - job_name: 'db'
     static_configs:
-      - targets: ['postgres_exporter:9187']  
+      - targets: ['postgres_exporter:9187'] 
+  - job_name: 'uptime_kuma'
+    static_configs:
+      - targets: ['uptime-kuma:3001']
+    basic_auth:
+      username: Joachim
+      password: JsbhUgmGY7GRpzW
 
