@@ -33,12 +33,11 @@ jobs:
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-
       run: python pubmed_analyze/manage.py test pubmed_analyze/polls || (echo "Tests failed, check logs"; docker-compose logs django)
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
-      run: docker-compose down
+      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml down
 
 
 
