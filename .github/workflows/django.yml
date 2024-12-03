@@ -26,24 +26,15 @@ jobs:
     - name: Check Docker Compose version
       run: docker-compose --version
 
-    # Vérification du fichier .env
-    - name: Verify .env file
-      run: |
-        if [ ! -f "$GITHUB_WORKSPACE/app/docker/.env" ]; then
-          echo "The .env file was not found at $GITHUB_WORKSPACE/app/docker/.env"
-          exit 1
-        else
-          echo "Found the .env file at $GITHUB_WORKSPACE/app/docker/.env"
-        fi
 
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
       run: |
-        docker-compose --env-file $GITHUB_WORKSPACE/app/docker/.env -f $GITHUB_WORKSPACE/pubmed_analyze/docker/docker-compose.yml up --build -d
+        docker-compose --env-file $GITHUB_WORKSPACE/pubmed_analyze/docker/.env -f $GITHUB_WORKSPACE/pubmed_analyze/docker/docker-compose.yml up --build -d
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: docker-compose exec django python pubmed_analyze/manage.py test pubmed_analyze/polls
+      run: docker-compose exec django python $GITHUB_WORKSPACE/pubmed_analyze/manage.py test $GITHUB_WORKSPACE/pubmed_analyze/polls
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
