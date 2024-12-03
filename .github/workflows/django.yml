@@ -16,15 +16,25 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v2
+    # Étape pour installer Docker Compose
+    - name: Set up Docker Compose
+      run: |
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
 
+    # Vérification de l'installation de Docker Compose
+    - name: Check Docker Compose version
+      run: docker-compose --version
+
+    # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
       run: |
         docker-compose up --build -d
-    
+
+    # Exécuter les tests avec Docker Compose
     - name: Run tests
       run: docker-compose exec django python manage.py test
 
+    # Étape pour arrêter les services après les tests
     - name: Stop services
       run: docker-compose down
