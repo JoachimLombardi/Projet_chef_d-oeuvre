@@ -18,7 +18,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
+      - ..:/home/runner/work/Projet_chef_d-oeuvre/Projet_chef_d-oeuvre/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus
