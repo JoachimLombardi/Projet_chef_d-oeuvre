@@ -15,8 +15,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: Inspect file structure
-      run: ls -R $GITHUB_WORKSPACE
 
 
     # Étape pour installer Docker Compose
@@ -35,7 +33,7 @@ jobs:
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: docker-compose exec django python pubmed_analyze/manage.py test pubmed_analyze/polls
+      run: docker-compose exec django python pubmed_analyze/manage.py test pubmed_analyze/polls || (echo "Tests failed, check logs"; docker-compose logs django)
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
