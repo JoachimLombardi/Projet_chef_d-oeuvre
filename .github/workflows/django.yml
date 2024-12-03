@@ -26,6 +26,16 @@ jobs:
     - name: Check Docker Compose version
       run: docker-compose --version
 
+    # Vérification du fichier .env
+    - name: Verify .env file
+      run: |
+        if [ ! -f "$GITHUB_WORKSPACE/app/docker/.env" ]; then
+          echo "The .env file was not found at $GITHUB_WORKSPACE/app/docker/.env"
+          exit 1
+        else
+          echo "Found the .env file at $GITHUB_WORKSPACE/app/docker/.env"
+        fi
+
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
       run: |
