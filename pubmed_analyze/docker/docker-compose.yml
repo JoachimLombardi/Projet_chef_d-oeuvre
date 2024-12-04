@@ -133,7 +133,7 @@ services:
     ports:
       - "3001:3001"  # Port par défaut pour Uptime Kuma
     volumes:
-      - ./data/uptime-kuma:/app/data  
+      - ./data/uptime-kuma:/pubmed_analyze/data  
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
     depends_on:
