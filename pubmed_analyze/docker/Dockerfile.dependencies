@@ -1,0 +1,11 @@
+# Dockerfile.dependencies
+
+FROM python:3.11.8
+
+WORKDIR /pubmed_analyze
+
+# Copier uniquement le fichier requirements.txt
+COPY ./requirements.txt /pubmed_analyze/requirements.txt
+
+# Installer les dépendances
+RUN pip install --no-cache-dir -r requirements.txt

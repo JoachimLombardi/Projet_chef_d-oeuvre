@@ -1,7 +1,7 @@
 # Dockerfile.django
 
 # Utiliser une image Python comme base
-FROM python:3.11.8
+FROM joachimlombardi/pubmed_dependencies:latest
 
 ARG ALLOWED_HOSTS
 
@@ -9,10 +9,6 @@ ENV ALLOWED_HOSTS=${ALLOWED_HOSTS}
 
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /pubmed_analyze
-
-# Copier le fichier requirements.txt et installer les dépendances
-COPY ./requirements.txt /pubmed_analyze//
-RUN pip install --no-cache-dir -r requirements.txt
 
 # Copier le reste de l'application
 COPY ../ /pubmed_analyze/
