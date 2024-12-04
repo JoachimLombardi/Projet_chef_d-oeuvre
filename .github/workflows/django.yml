@@ -34,6 +34,13 @@ jobs:
     - name: Limit resources for Django container
       run: |
         docker container update --memory 4g --memory-swap 4g django
+    
+    - name: Wait for Django container to be ready
+      run: |
+        while ! docker ps | grep -q 'django'; do
+          echo "Attente du démarrage du conteneur Django..."
+          sleep 5
+        done
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
