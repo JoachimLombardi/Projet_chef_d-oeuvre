@@ -17,6 +17,8 @@ services:
       - DATABASE_URL=DATABASE_URL  # Connexion à la base de données via les variables d'environnement
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
+    env:
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     depends_on:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus

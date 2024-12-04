@@ -3,6 +3,10 @@
 # Utiliser une image Python comme base
 FROM python:3.11.8
 
+ARG ALLOWED_HOSTS
+
+ENV ALLOWED_HOSTS=${ALLOWED_HOSTS}
+
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /pubmed_analyze
 
