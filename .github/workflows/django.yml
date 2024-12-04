@@ -28,7 +28,9 @@ jobs:
 
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
-      run: ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+      env:
+          ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
 
     - name: Limit resources for Django container
       run: |
