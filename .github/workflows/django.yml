@@ -11,6 +11,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: python:3.11.8
+      options: --memory=4g --cpus=2
 
     steps:
     - name: Checkout code
