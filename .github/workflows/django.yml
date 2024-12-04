@@ -33,7 +33,7 @@ jobs:
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: docker exec django python manage.py test polls 
+      run: docker exec django python manage.py test polls --pattern="test_*.py"
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
