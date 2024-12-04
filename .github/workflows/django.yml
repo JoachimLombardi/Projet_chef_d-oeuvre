@@ -11,9 +11,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container:
-      image: python:3.11.8
-      options: --memory=4g --cpus=2
 
     steps:
     - name: Checkout code
@@ -33,6 +30,10 @@ jobs:
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
       run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+
+    - name: Limit resources for Django container
+      run: |
+        docker container update --memory 4g --cpus 2 django
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
