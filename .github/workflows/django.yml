@@ -33,7 +33,9 @@ jobs:
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: docker exec django python pubmed_analyze/manage.py test pubmed_analyze/polls || (echo "Tests failed, check logs"; docker-compose logs django)
+      run: |
+        sleep 10  # Donne le temps aux conteneurs de démarrer
+        docker-compose exec django python pubmed_analyze/manage.py test pubmed_analyze/polls
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
