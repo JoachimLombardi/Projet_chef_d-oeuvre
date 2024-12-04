@@ -22,10 +22,6 @@ services:
       - prometheus
       - db  # Ajout de la dépendance à la base de données
       - ollama 
-    deploy:
-      resources:
-        limits:
-          memory: 4g
   
 
   # Service pour Elasticsearch

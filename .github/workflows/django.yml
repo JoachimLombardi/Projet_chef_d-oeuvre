@@ -12,6 +12,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      DATABASE_USER: ${{ secrets.DATABASE_USER }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -30,6 +38,10 @@ jobs:
     # Étape pour construire et démarrer les services avec Docker Compose
     - name: Build and start services with Docker Compose
       run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+
+    - name: Limit resources for Django container
+      run: |
+        docker container update --memory 4g --memory-swap 4g django
       
     # Exécuter les tests avec Docker Compose
     - name: Run tests
