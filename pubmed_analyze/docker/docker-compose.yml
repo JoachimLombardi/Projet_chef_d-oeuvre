@@ -16,6 +16,12 @@ services:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
       - DATABASE_URL=DATABASE_URL  # Connexion à la base de données via les variables d'environnement
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_USER= ${DATABASE_USER}
+      - DATABASE_PASSWORD= ${DATABASE_PASSWORD}
+      - DATABASE_NAME= ${DATABASE_NAME}
+      - DATABASE_PORT= ${DATABASE_PORT}
+      - EMAIL_HOST_USER= ${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD= ${EMAIL_HOST_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:
