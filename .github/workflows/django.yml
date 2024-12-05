@@ -38,9 +38,26 @@ jobs:
 
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
-      
-    - name: Print environment variables
-      run: echo $DB_HOST | echo $DB_USER | echo $DB_PASSWORD  
+
+    - name: Wait for DB to be ready
+      run: |
+        # Attendre que la base de données soit prête à accepter les connexions
+        for i in {1..30}; do
+          if docker-compose exec django bash -c "pg_isready -h db -p 5432 -U $DATABASE_USER"; then
+            echo "Database is ready!"
+            break
+          else
+            echo "Waiting for database to be ready..."
+            sleep 5
+          fi
+        done
+    
+    - name: Test DB connection
+      run: |
+        # Test de la connexion à la base de données via ping ou netcat (nc)
+        docker-compose exec django bash -c "ping -c 4 db"  # Ping du service db
+        # Vous pouvez aussi utiliser nc pour tester si le port est ouvert
+        # docker-compose exec django bash -c "nc -zv db 5432"
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
