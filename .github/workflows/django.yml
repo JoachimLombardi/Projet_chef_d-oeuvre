@@ -41,7 +41,7 @@ jobs:
       run: docker container update --memory 4g --memory-swap 4g django
     
     - name: Run migrations
-      run: docker exec django python manage.py migrate
+      run: docker exec django python manage.py makemigrations && docker exec django python manage.py migrate
 
     # Exécuter les tests avec Docker Compose
     - name: Run tests
