@@ -14,9 +14,9 @@ services:
       - "8000:8000"  # Accès à Django sur le port 8000
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=postgres://postgres:simplon2024@db:5432/pubmed  # Connexion à la base de données via les variables d'environnement
+      - DATABASE_URL=postgres://postgres:simplon2024@fabien:5432/pubmed  # Connexion à la base de données via les variables d'environnement
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - DATABASE_HOST=db
+      - DATABASE_HOST=fabien
       - DATABASE_USER=postgres
       - DATABASE_PASSWORD=simplon2024
       - DATABASE_NAME=pubmed
@@ -28,7 +28,7 @@ services:
     depends_on:
       # - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       # - prometheus
-      - db  # Ajout de la dépendance à la base de données
+      - fabien  # Ajout de la dépendance à la base de données
       # - ollama 
 
   # Service pour Elasticsearch
@@ -60,9 +60,9 @@ services:
   
 
   # Service pour PostgreSQL
-  db:
+  fabien:
     image: postgres:16
-    container_name: postgres
+    container_name: fabien
     environment:
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
