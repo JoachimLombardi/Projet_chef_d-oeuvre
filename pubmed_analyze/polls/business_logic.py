@@ -122,7 +122,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
 
 @error_handling
 def article_json_to_database(): 
-    term_list = ["muliple_sclerosis", "herpes_zoster"]
+    term_list = ["multiple_sclerosis", "herpes_zoster"]
     for term in term_list:
         filter = "2024"
         output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
