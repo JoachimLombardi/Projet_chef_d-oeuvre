@@ -1,5 +1,5 @@
 
-# docker-compose up --build
+# docker-compose --env-file .env up --build
 # docker exec -it django bash
 
 
@@ -24,8 +24,6 @@ services:
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
-    env_file:
-      - .env
     depends_on:
       - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
       - prometheus

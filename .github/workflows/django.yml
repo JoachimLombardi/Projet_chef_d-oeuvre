@@ -32,8 +32,8 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     # Étape pour construire et démarrer les services avec Docker Compose
-    - name: Build and start services with Docker Compose
-      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+    - name: Run Docker Compose with start.sh
+      run: start.sh
 
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
