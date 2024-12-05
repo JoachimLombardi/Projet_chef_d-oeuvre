@@ -42,6 +42,9 @@ jobs:
     # Exécuter les tests avec Docker Compose
     - name: Run tests
       run: docker exec django python manage.py test polls 
+    
+    - name: Print environment variables
+      run: echo $DB_HOST | echo $DB_USER | echo $DB_PASSWORD
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
