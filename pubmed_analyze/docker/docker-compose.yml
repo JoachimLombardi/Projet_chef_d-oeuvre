@@ -14,7 +14,7 @@ services:
       - "8000:8000"  # Accès à Django sur le port 8000
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=DATABASE_URL  # Connexion à la base de données via les variables d'environnement
+      - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_USER=${DATABASE_USER}
