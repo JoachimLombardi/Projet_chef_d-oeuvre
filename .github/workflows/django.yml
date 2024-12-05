@@ -14,6 +14,7 @@ jobs:
 
     env:
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
@@ -32,8 +33,8 @@ jobs:
         sudo chmod +x /usr/local/bin/docker-compose
 
     # Étape pour construire et démarrer les services avec Docker Compose
-    - name: Run Docker Compose with start.sh
-      run: bash pubmed_analyze/docker/start.sh 
+    - name: Build and start services with Docker Compose
+      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
 
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
