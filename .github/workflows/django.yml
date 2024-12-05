@@ -43,7 +43,7 @@ jobs:
       run: |
         # Attendre que la base de données soit prête à accepter les connexions
         for i in {1..30}; do
-          if docker-compose exec django bash -c "pg_isready -h db -p 5432 -U $DATABASE_USER"; then
+          if docker-compose exec django bash -c "pg_isready -h db -p 5432 -U ${{ secrets.DATABASE_USER }}"; then
             echo "Database is ready!"
             break
           else
