@@ -30,6 +30,8 @@ services:
       - prometheus
       - db  # Ajout de la dépendance à la base de données
       - ollama 
+    networks:
+      - default
 
   # Service pour Elasticsearch
   elasticsearch:
