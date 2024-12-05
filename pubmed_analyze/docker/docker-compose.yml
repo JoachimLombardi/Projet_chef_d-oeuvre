@@ -14,13 +14,13 @@ services:
       - "8000:8000"  # Accès à Django sur le port 8000
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
+      - DATABASE_URL=postgres://postgres:simplon2024@db:5432/pubmed  # Connexion à la base de données via les variables d'environnement
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - DATABASE_HOST=${DATABASE_HOST}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
-      - DATABASE_NAME=${DATABASE_NAME}
-      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_HOST=db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=simplon2024
+      - DATABASE_NAME=pubmed
+      - DATABASE_PORT=5432
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     volumes:
