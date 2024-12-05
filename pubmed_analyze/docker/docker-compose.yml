@@ -30,8 +30,6 @@ services:
       # - prometheus
       - db  # Ajout de la dépendance à la base de données
       # - ollama 
-    networks:
-      - default
 
   # Service pour Elasticsearch
   # elasticsearch:
@@ -73,8 +71,6 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
-    networks:
-      - default
 
 
   # postgres_exporter:
@@ -147,7 +143,3 @@ services:
   #   restart: always
   #   depends_on:
   #     - prometheus  
-
-networks:
-  default:
-    name: django_network
