@@ -46,7 +46,7 @@ jobs:
     
     # Check if database container is running
     - name: Check if database container is running
-      run: docker container inspect -f '{{.State.Running}}' db
+      run: docker container inspect -f '{{.State.Running}}' postgres
     
     # Exécuter les tests avec Docker Compose
     - name: Run tests
