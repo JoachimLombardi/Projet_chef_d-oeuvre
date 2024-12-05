@@ -64,9 +64,9 @@ services:
     image: postgres:16
     container_name: fabien
     environment:
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=simplon2024
+      - POSTGRES_DB=pubmed
     ports:
       - "5432:5432"
     volumes:
