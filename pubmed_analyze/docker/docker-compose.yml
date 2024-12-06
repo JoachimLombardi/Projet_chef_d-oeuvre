@@ -14,132 +14,139 @@ services:
       - "8000:8000"  # Accès à Django sur le port 8000
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=postgres://postgres:simplon2024@fabien:5432/pubmed  # Connexion à la base de données via les variables d'environnement
+      - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - DATABASE_HOST=fabien
-      - DATABASE_USER=postgres
-      - DATABASE_PASSWORD=simplon2024
-      - DATABASE_NAME=pubmed
-      - DATABASE_PORT=5432
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_PORT=${DATABASE_PORT}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:
-      # - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
-      # - prometheus
-      - fabien  # Ajout de la dépendance à la base de données
-      # - ollama 
+      - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
+      - prometheus
+      - db  # Ajout de la dépendance à la base de données
+      - ollama 
 
   # Service pour Elasticsearch
-  # elasticsearch:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.elasticsearch
-  #   container_name: elasticsearch
-  #   ports:
-  #     - "9200:9200"
-  #     - "9300:9300"
-  #   environment:
-  #     - discovery.type=single-node
-  #     - xpack.security.enabled=false
-  #     - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-  #   volumes:
-  #     - ./_data/elasticsearch_data:/usr/share/elasticsearch/data
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    volumes:
+      - ./_data/elasticsearch_data:/usr/share/elasticsearch/data
 
 
-  # elasticsearch_exporter:
-  #   image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
-  #   container_name: elasticsearch_exporter
-  #   ports:
-  #     - "9114:9114"
-  #   command:
-  #     - '--es.uri=http://elasticsearch:9200'
-  #   depends_on:
-  #     - elasticsearch
+  elasticsearch_exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+    container_name: elasticsearch_exporter
+    ports:
+      - "9114:9114"
+    command:
+      - '--es.uri=http://elasticsearch:9200'
+    depends_on:
+      - elasticsearch
   
 
   # Service pour PostgreSQL
-  fabien:
+  db:
     image: postgres:16
-    container_name: fabien
+    container_name: postgres
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=simplon2024
-      - POSTGRES_DB=pubmed
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
     ports:
       - "5432:5432"
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
+    networks:
+      - default
 
 
-  # postgres_exporter:
-  #   image: wrouesnel/postgres_exporter:latest
-  #   container_name: postgres_exporter
-  #   ports:
-  #     - "9187:9187"
-  #   environment:
-  #     - DATA_SOURCE_NAME=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
-  #   depends_on:
-  #     - db
+  postgres_exporter:
+    image: wrouesnel/postgres_exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
+    depends_on:
+      - db
 
 
-  # ollama:
-  #   image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
-  #   container_name: ollama
-  #   ports:
-  #     - "11434:11434"  # Port par défaut pour le serveur Ollama
-  #   volumes:
-  #     - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
-  #   restart: always
-  #   environment:
-  #     - OLLAMA_NUM_PARALLEL=1
+  ollama:
+    image: ollama/ollama:latest  # Vérifiez que l'image existe ou téléchargez l'outil Docker Ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"  # Port par défaut pour le serveur Ollama
+    volumes:
+      - ../../ollama_models:/root/.ollama/models  # Montez les données locales pour persister les modèles
+    restart: always
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
 
 
-  # # Service pour Prometheus
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: prometheus
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Assurez-vous d'avoir un fichier de configuration Prometheus
-  #     - ./data/prometheus:/prometheus
-  #   ports:
-  #     - "9090:9090"  # Accès à Prometheus sur le port 9090
+  # Service pour Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Assurez-vous d'avoir un fichier de configuration Prometheus
+      - ./data/prometheus:/prometheus
+    ports:
+      - "9090:9090"  # Accès à Prometheus sur le port 9090
 
 
-  #   # Service pour Grafana
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: grafana
-  #   volumes:
-  #     - ./data/grafana:/var/lib/grafana
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - GF_RENDERING_SERVER_URL=http://renderer:8081/render
-  #     - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
-  #     - GF_LOG_FILTERS=rendering:debug
-  #   depends_on:
-  #     - prometheus
-  #     - renderer
+    # Service pour Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+    depends_on:
+      - prometheus
+      - renderer
 
 
-  # # Service pour Grafana Image Renderer
-  # renderer:
-  #   image: grafana/grafana-image-renderer:latest
-  #   container_name: renderer
-  #   ports:
-  #     - "8081:8081"
+  # Service pour Grafana Image Renderer
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: renderer
+    ports:
+      - "8081:8081"
 
 
-  # uptime-kuma:
-  #   image: louislam/uptime-kuma:latest
-  #   container_name: uptime_kuma
-  #   ports:
-  #     - "3001:3001"  # Port par défaut pour Uptime Kuma
-  #   volumes:
-  #     - ./data/uptime-kuma:/pubmed_analyze/data  
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   restart: always
-  #   depends_on:
-  #     - prometheus  
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime_kuma
+    ports:
+      - "3001:3001"  # Port par défaut pour Uptime Kuma
+    volumes:
+      - ./data/uptime-kuma:/pubmed_analyze/data  
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    depends_on:
+      - prometheus  
+
+
+networks:
+  default:
+    name: django_network

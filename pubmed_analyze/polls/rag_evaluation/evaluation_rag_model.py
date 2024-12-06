@@ -92,6 +92,7 @@ def search_articles_for_eval(query, research_type, number_of_results, number_of_
 @error_handling
 def rag_articles_for_eval(query, research_type, number_of_results, model, number_of_articles=None, title_weight=None, abstract_weight=None, rank_scaling_factor=None):
     retrieved_documents, query = search_articles_for_eval(query, research_type, number_of_results, number_of_articles, title_weight, abstract_weight, rank_scaling_factor)
+    print(retrieved_documents)
     context = ""
     for i, source in enumerate(retrieved_documents):
         context += f"Abstract n°{i+1}:" + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
@@ -140,6 +141,7 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     template = """You are an expert in medical abstracts. 
     You will receive two medical abstracts and a query. Your task is to determine which of these abstracts contains the most pertinent information to answer the query.     
     You must return the number of the abstract containing the most relevant information. If the two abstracts contain the same information, return number 1.
+    Please provide a clear reason for your decision.
 
     ## Query:\n
     '"""+query+"""'
@@ -152,9 +154,10 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
      
     ## Expected output:\n
     {
-    "number": int
+    "number": int,
+    "reason": str
     }
-    Your must provide a valid JSON with the key "number".
+    Your must provide a valid JSON with the key "number" and "reason".
     """
     if model == "Mixtral 8x7B":
         data = {
@@ -186,20 +189,20 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
 
 @error_handling
 def eval_response(query, response, retrieval, model):
-    template = """Your task is to score the relevance between a generated answer and the query based on the ground truth answer in the range between 1 and 5, and please also provide the scoring reason.  
-    Your primary focus should be on determining whether the generated answer contains sufficient information to address the given query according to the ground truth answer.    
+    template = """Your task is to score the relevance between a generated answer and the query based on the retrieval in the range between 1 and 5, and please also provide the scoring reason.  
+    Your primary focus should be on determining whether the generated answer contains sufficient information to address the given query according to the retrieval.    
     If the generated answer fails to provide enough relevant information or contains excessive extraneous information, then you should reduce the score accordingly.  
-    If the generated answer contradicts the ground truth answer, it will receive a low score of 1-2.   
-    For example, for query "Is the sky blue?", the ground truth answer is "Yes, the sky is blue." and the generated answer is "No, the sky is not blue.".   
-    In this example, the generated answer contradicts the ground truth answer by stating that the sky is not blue, when in fact it is blue.   
-    This inconsistency would result in a low score of 1-2, and the reason for the low score would reflect the contradiction between the generated answer and the ground truth answer.  
-    Please provide a clear reason for the low score, explaining how the generated answer contradicts the ground truth answer.  
+    If the generated answer contradicts the retrieval, it will receive a low score of 1-2.   
+    For example, for query "Is the sky blue?", the retrieval is "the sky is blue." and the generated answer is "No, the sky is not blue.".   
+    In this example, the generated answer contradicts the retrieval by stating that the sky is not blue, when in fact it is blue.   
+    This inconsistency would result in a low score of 1-2, and the reason for the low score would reflect the contradiction between the generated answer and the retrieval.  
+    Please provide a clear reason for the low score, explaining how the generated answer contradicts the retrieval.  
     Labeling standards are as following:  
-    5 - ideal, should include all information to answer the query comparing to the ground truth answer， and the generated answer is consistent with the ground truth answer  
-    4 - mostly relevant, although it might be a little too narrow or too broad comparing to the ground truth answer, and the generated answer is consistent with the ground truth answer  
-    3 - somewhat relevant, might be partly helpful but might be hard to read or contain other irrelevant content comparing to the ground truth answer, and the generated answer is consistent with the ground truth answer  
-    2 - barely relevant, perhaps shown as a last resort comparing to the ground truth answer, and the generated answer contradicts with the ground truth answer  
-    1 - completely irrelevant, should never be used for answering this query comparing to the ground truth answer, and the generated answer contradicts with the ground truth answer
+    5 - ideal, should include all information to answer the query comparing to the retrieval， and the generated answer is consistent with the retrieval  
+    4 - mostly relevant, although it might be a little too narrow or too broad comparing to the retrieval, and the generated answer is consistent with the retrieval  
+    3 - somewhat relevant, might be partly helpful but might be hard to read or contain other irrelevant content comparing to the retrieval, and the generated answer is consistent with the retrieval  
+    2 - barely relevant, perhaps shown as a last resort comparing to the retrieval, and the generated answer contradicts with the retrieval  
+    1 - completely irrelevant, should never be used for answering this query comparing to the retrieval, and the generated answer contradicts with the retrieval
 
     ## Query:\n
     '"""+query+"""'
@@ -207,7 +210,7 @@ def eval_response(query, response, retrieval, model):
     ## Answer:\n
     '"""+response+"""'
 
-    ## Ground truth:\n
+    ## Retrieval:\n
     '"""+retrieval+"""'
 
     ## Expected output:\n

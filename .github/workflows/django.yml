@@ -39,6 +39,10 @@ jobs:
 
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
+
+    # Check with docker ps
+    - name: Check Docker containers
+      run: docker ps
     
     # Check if the container is running
     - name: Check if Django container is running
@@ -46,7 +50,7 @@ jobs:
     
     # Check if database container is running
     - name: Check if database container is running
-      run: docker container inspect -f '{{.State.Running}}' fabien
+      run: docker container inspect -f '{{.State.Running}}' postgres
     
     # Exécuter les tests avec Docker Compose
     - name: Run tests

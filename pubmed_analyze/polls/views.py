@@ -27,7 +27,13 @@ from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
 from polls.monitoring.monitor_rag import handle_rag_pipeline
+from deepeval.metrics import FaithfulnessMetric, ContextualRelevancyMetric
+from deepeval.test_case import LLMTestCase
+import os
 
+openai_key = os.getenv("OPENAI_API_KEY")
+# # Configurez l'authentification globalement si nécessaire
+os.environ["OPENAI_API_KEY"] = openai_key
 
 @error_handling
 def create_article(request):
@@ -220,6 +226,10 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
     if request.method == 'POST':
         # Calculate time execution
         start_time = time.time()
+        # Initialiser les scores
+        score_retrieval_list = []
+        score_generation_list = []
+        eval_rag_list = []
         form = EvaluationForm(request.POST)
         if form.is_valid():
             research_type = form.cleaned_data['research_type']
@@ -230,6 +240,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
             title_weight = form.cleaned_data['title_weight']
             abstract_weight = form.cleaned_data['abstract_weight']
             rank_scaling_factor = form.cleaned_data['rank_scaling_factors']
+            choose_eval_method = form.cleaned_data['choose_eval_method']
             # Définir les chemins de fichiers
             eval_path = Path(settings.RAG_JSON_DIR) / "eval_rag.json"
             # Créer le fichier JSON d'évaluation si nécessaire
@@ -239,10 +250,6 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
             # Charger les données d'évaluation
             with eval_path.open('r', encoding='utf-8') as f:
                 evaluation_data = json.load(f)
-            # Initialiser les scores
-            score_retrieval = 0
-            score_generation_list = []
-            eval_rag_list = []
             # Calculer les scores pour chaque requête
             for data in evaluation_data:
                 query = data['query']
@@ -256,10 +263,41 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                                                                                abstract_weight,
                                                                                rank_scaling_factor)
                 found_abstract = retrieved_documents[0]["abstract"]
-                number = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
-                # Évaluation de la récupération
-                if number == 1:
-                    score_retrieval += 0.1
+                print(context, flush=True)
+                print(type(context), flush=True)
+                if choose_eval_method == "deep_eval":
+                    metric = FaithfulnessMetric(
+                        threshold=0.7,
+                        model=model_evaluation,
+                        include_reason=True
+                    )
+                    test_case = LLMTestCase(
+                        input=query,
+                        actual_output=response,
+                        retrieval_context=list(context)
+                    )
+                    metric.measure(test_case)
+                    score_generation = metric.score
+                    score_generation_list.append(score_generation)
+                    scoring_generation_reason = metric.reason
+                    metric = ContextualRelevancyMetric(
+                    threshold=0.7,
+                    model=model_evaluation,
+                    include_reason=True
+                    )
+                    test_case = LLMTestCase(
+                        input=query,
+                        actual_output=response,
+                        retrieval_context=list(context)
+                    )
+                    metric.measure(test_case)
+                    score_retrieval = metric.score
+                    score_retrieval_list.append(score_retrieval)
+                    scoring_retrieval_reason = metric.reason
+                else:
+                    number = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
+                    # Évaluation de la récupération
+                    score_retrieval_list.append(number)
                     # Évaluation de la génération
                     score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
                     score_generation = (score_generation - 1)/4
@@ -271,8 +309,9 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                         "found_abstract": found_abstract,
                         "response": response
                     })
-            # Calcul des scores finaux
-            score_generation = round(sum(score_generation_list) / len(score_generation_list), 2)
+                    # Calcul des scores finaux
+                score_retrieval = round(sum(score_retrieval_list) / len(score_retrieval_list), 2)
+                score_generation = round(sum(score_generation_list) / len(score_generation_list), 2)
             end_time = time.time()
             if research_type == "hybrid":
                 eval_rag_list.append({
@@ -287,6 +326,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "rank_scaling_factor": rank_scaling_factor,
                     "score_retrieval": round(score_retrieval, 2),
                     "score_generation": round(score_generation, 2),
+                    "scoring_retrieval_reason": scoring_retrieval_reason,
                     "scoring_generation_reason": scoring_generation_reason
                 })
             elif research_type == "text":
@@ -299,7 +339,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "title_weight": title_weight,
                     "abstract_weight": abstract_weight,
                     "score_retrieval": round(score_retrieval, 2),   
-                    "score_generation": round(score_generation, 2), 
+                    "score_generation": round(score_generation, 2),
+                    "scoring_generation_reason": scoring_generation_reason,
                     "scoring_generation_reason": scoring_generation_reason
                 })
             else:
@@ -312,10 +353,11 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "number_of_articles": number_of_articles,
                     "score_retrieval": round(score_retrieval, 2),
                     "score_generation": round(score_generation, 2),
+                    "scoring_retrieval_reason": scoring_retrieval_reason,
                     "scoring_generation_reason": scoring_generation_reason
                 })
             # Enregistrer les résultats
-            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{research_type}_{number_of_results}_{model_generation}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
+            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{choose_eval_method}_{research_type}_{number_of_results}_{model_generation}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:
                 json.dump(eval_rag_list, f, ensure_ascii=False, indent=4)
             return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': round(score_retrieval, 2)})
@@ -325,7 +367,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
         form = EvaluationForm()
     return render(request, 'polls/evaluate_rag.html', {'form': form})
 
-
+        
 @login_required
 @user_passes_test(lambda user: user.is_staff, login_url='/forbidden/')
 @error_handling

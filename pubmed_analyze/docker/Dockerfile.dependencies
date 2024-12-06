@@ -1,4 +1,7 @@
 # Dockerfile.dependencies
+# docker login
+# docker build -f Dockerfile.dependencies -t joachimlombardi/pubmed_dependencies:latest .
+# docker push joachimlombardi/pubmed_dependencies:latest
 
 FROM python:3.11.8
 

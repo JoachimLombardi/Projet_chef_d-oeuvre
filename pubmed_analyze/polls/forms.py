@@ -158,6 +158,11 @@ class EvaluationForm(forms.Form):
     
     MODELS_EVALUATION = [('gpt-4o', 'GPT-4')]
 
+    METHOD_CHOICES = [
+        ('hand_made', 'Custom'),
+        ('deep_eval', 'Deep Eval'),
+    ]
+
     research_type = forms.ChoiceField(
         label="Type de recherche",
         choices=RESEARCH_TYPE_CHOICES,
@@ -172,6 +177,12 @@ class EvaluationForm(forms.Form):
         label="Modele d'évaluation",
         choices=MODELS_EVALUATION,
         widget=forms.Select(attrs={'class': 'form-select'}))
+
+    choose_eval_method = forms.ChoiceField(
+        label="Choose Evaluation Method",
+        choices=METHOD_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     
     number_of_results = forms.IntegerField(
         widget=forms.NumberInput(attrs={'type': 'range', 'min': 0, 'max': 100}),
