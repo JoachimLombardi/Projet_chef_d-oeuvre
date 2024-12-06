@@ -42,7 +42,7 @@ jobs:
 
     # Check with docker ps
     - name: Check Docker containers
-      run: docker ps
+      run: docker ps -a
     
     # Check if the container is running
     - name: Check if Django container is running
