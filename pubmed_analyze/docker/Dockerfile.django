@@ -36,10 +36,10 @@ COPY ../ /pubmed_analyze/
 EXPOSE 8000
 
 # Copier le script entrypoint
-COPY ./entrypoint.sh /pubmed_analyze/entrypoint.sh
+# COPY ./entrypoint.sh /pubmed_analyze/entrypoint.sh
 
 # Donner les droits d'exécution
-RUN chmod +x /pubmed_analyze/entrypoint.sh
+# RUN chmod +x /pubmed_analyze/entrypoint.sh
 
 # Spécifier le script d'entrée
 # ENTRYPOINT ["/pubmed_analyze/entrypoint.sh"]

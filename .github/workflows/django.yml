@@ -55,7 +55,7 @@ jobs:
     
     # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: docker exec django python manage.py migrate 
+      run: docker exec django python manage.py test 
 
     # Étape pour arrêter les services après les tests
     - name: Stop services
