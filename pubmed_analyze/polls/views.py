@@ -295,7 +295,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     score_retrieval_list.append(score_retrieval)
                     scoring_retrieval_reason = metric.reason
                 else:
-                    number = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
+                    number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
                     # Évaluation de la récupération
                     score_retrieval_list.append(number)
                     # Évaluation de la génération
@@ -357,10 +357,10 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "scoring_generation_reason": scoring_generation_reason
                 })
             # Enregistrer les résultats
-            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{choose_eval_method}_{research_type}_{number_of_results}_{model_generation}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
+            results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{model_generation}_{choose_eval_method}_{research_type}_{number_of_results}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:
                 json.dump(eval_rag_list, f, ensure_ascii=False, indent=4)
-            return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': round(score_retrieval, 2)})
+            return render(request, 'polls/evaluate_rag.html', {'form': form, 'score_generation': score_generation, 'score_retrieval': score_retrieval})
         else:
             messages.error(request, "Le formulaire n'est pas valide")
     else:

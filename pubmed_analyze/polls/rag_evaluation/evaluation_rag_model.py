@@ -126,6 +126,7 @@ def rag_articles_for_eval(query, research_type, number_of_results, model, number
         }
     }
     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+    print("Chat response:", chat_response, flush=True)
     output = chat_response['message']['content']
     print(output, flush=True)
     pattern = r'\{+.*\}'
@@ -154,8 +155,8 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
      
     ## Expected output:\n
     {
-    "number": int,
-    "reason": str
+    "score": int,
+    "scoring_reason": str
     }
     Your must provide a valid JSON with the key "number" and "reason".
     """
@@ -182,9 +183,13 @@ def eval_retrieval(query, retrieved_documents, expected_abstracts, model):
     pattern = r'\{+.*\}'
     match = re.findall(pattern, output, re.DOTALL)[0]
     match = match.replace("\n", '')
+    score = 0
+    scoring_reason = None
     if match:
-        number = json.loads(match)['number']
-    return number
+        score_data = json.loads(match)
+        score = score_data.get('score', 0)
+        scoring_reason = score_data.get('scoring_reason', 'No scoring reason provided')
+    return score, scoring_reason
 
 
 @error_handling
@@ -244,9 +249,11 @@ def eval_response(query, response, retrieval, model):
     pattern = r'\{+.*\}'
     match = re.findall(pattern, output, re.DOTALL)[0]
     match = match.replace("\n", '')
+    score = 0
+    scoring_reason = None
     if match:
         score_data = json.loads(match)
-        score = score_data.get('score', None)
+        score = score_data.get('score', 0)
         # Validation du score entre 1 et 5
         if score < 1 or score > 5:
             score = None
@@ -255,39 +262,54 @@ def eval_response(query, response, retrieval, model):
 
 
 @error_handling
+
 def plot_scores():
-    # Charger les données depuis le fichier JSON
-    results_file = 'polls\\rag_evaluation\data\json'
-    results_plot = 'polls\\rag_evaluation\data\png'
+    # Répertoires des résultats et des graphiques
+    results_file = 'polls/rag_evaluation/data/json/test'
+    results_plot = 'polls/rag_evaluation/data/png'
+
+    # Vérifier si le répertoire existe
+    if not os.path.exists(results_file):
+        print(f"Le répertoire {results_file} n'existe pas.")
+        return
+    if not os.listdir(results_file):
+        print(f"Le répertoire {results_file} est vide.")
+        return
+
+    # Charger les données depuis les fichiers JSON
     data_list = []
     for filename in os.listdir(results_file):
-        with open(f'{results_file}/{filename}') as f:
+        filepath = os.path.join(results_file, filename)
+        with open(filepath) as f:
+            print(f"Lecture du fichier : {filepath}")
             data = json.load(f)
             data_list.append(data[-1])
-    # Extraire les scores et les paramètres pour les légendes
-    metrics = ["score_retrieval", "score_generation"]
-    # Configurer le graphique en barres
-    x = np.arange(len(metrics))
-    width = 0.8 / len(data_list)
-     # Position de chaque barre
+
+    # Configurer les scores et les légendes
+    x_labels = [f"{data['research_type']}" for data in data_list]  # Noms des modèles
+    scores = [data["score_retrieval"] for data in data_list]         # Scores associés
+    x = np.arange(len(x_labels))  # Position des barres
+
+    # Configurer le graphique
     fig, ax = plt.subplots(figsize=(10, 6))
-    for i, data in enumerate(data_list):
-        score_metrics = [data[metric] for metric in metrics]
-        ax.bar(x + i * width, score_metrics, width, label=f'Research_type: {data["research_type"]}')
-    # Ajouter les paramètres comme labels sur l'axe des x
+    ax.bar(x, scores, color='skyblue', width=0.6)  # Ajouter des couleurs pour plus de lisibilité
+
+    # Ajouter des étiquettes et un titre
     ax.set_xticks(x)
-    ax.set_xticklabels(metrics, rotation=45, ha='right')
-    # Configurer les étiquettes et le titre
-    ax.set_xlabel('Metrics')
-    ax.set_ylabel('Values')
-    ax.set_title('Performance du RAG')
-    # Placer la légende à l'extérieur du graphique
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    # Ajuster les marges pour éviter que le bas soit coupé
-    plt.tight_layout(rect=[0, 0, 0.85, 1])  # ajouter de l'espace sur la droite pour la légende
-    image_path = os.path.join(results_plot, 'scores_plot.png')
-    # Sauvegarder le graphique dans le fichier
+    ax.set_xticklabels(x_labels, rotation=45, ha='right')  # Noms des modèles
+    ax.set_xlabel('Modèles')
+    ax.set_ylabel('Scores')
+    ax.set_title('Performance des modèles de recherche')
+
+    # Ajuster les marges pour éviter que les étiquettes soient coupées
+    plt.tight_layout()
+
+    # Sauvegarder le graphique
+    os.makedirs(results_plot, exist_ok=True)
+    image_path = os.path.join(results_plot, 'scores_plot_retrieval.png')
     plt.savefig(image_path, format='png')
     plt.close(fig)
+
+    print(f"Graphique sauvegardé dans : {image_path}")
 
     

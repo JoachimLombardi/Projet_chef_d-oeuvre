@@ -154,7 +154,11 @@ class EvaluationForm(forms.Form):
         ('neural', 'recherche neuronale'),
     ]
 
-    MODELS_GENERATION = [('mistrallite', 'Mistrallite')]
+    MODELS_GENERATION = [('mistrallite', 'Mistrallite'),
+                         ('mistral-nemo', 'Mistral Némo'),
+                         ('mistral', 'Mistral 7B'),
+                         ('mixtral:8x7b', 'Mixtral 8x7B'),
+                         ('mistral-small', 'Mistral small')]
     
     MODELS_EVALUATION = [('gpt-4o', 'GPT-4')]
 

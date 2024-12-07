@@ -6,7 +6,6 @@
 
 
 from django.core.management.base import BaseCommand
-from django_elasticsearch_dsl.registries import registry
 from polls.models import Article
 from polls.documents import ArticleDocument
 from polls.documents import index

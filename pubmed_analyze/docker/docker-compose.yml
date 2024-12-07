@@ -96,7 +96,7 @@ services:
     restart: always
     environment:
       - OLLAMA_NUM_PARALLEL=1
-
+      
 
   # Service pour Prometheus
   prometheus:
