@@ -23,6 +23,7 @@ services:
       - DATABASE_PORT=${DATABASE_PORT}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:
@@ -96,7 +97,7 @@ services:
     restart: always
     environment:
       - OLLAMA_NUM_PARALLEL=1
-      
+
 
   # Service pour Prometheus
   prometheus:

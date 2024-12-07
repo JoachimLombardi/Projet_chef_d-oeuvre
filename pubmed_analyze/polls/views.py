@@ -32,7 +32,6 @@ from deepeval.test_case import LLMTestCase
 import os
 
 openai_key = os.getenv("OPENAI_API_KEY")
-# # Configurez l'authentification globalement si nécessaire
 os.environ["OPENAI_API_KEY"] = openai_key
 
 @error_handling
