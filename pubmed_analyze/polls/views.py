@@ -5,7 +5,6 @@
 # http://localhost:9200/_cat/indices?v
 # Remove indices: curl -X DELETE "http://localhost:9200/articles" in bash
 
-
 import json
 from pathlib import Path
 import re
