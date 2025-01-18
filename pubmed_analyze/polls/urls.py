@@ -3,9 +3,8 @@ from . import views
 from django.urls import path, include
 
 urlpatterns = [
-    path('article/create/', views.create_article, name='create_article'),
+    path('article/<int:id>/create_update/', views.create_or_update_article, name='create_update_article'),
     path('article/read/', views.article_list, name='article_list'), 
-    path('article/<int:id>/update/', views.update_article, name='update_article'),  
     path('article/<int:id>/delete/', views.delete_article, name='delete_article'), 
     path('articles/rag/', views.rag_articles, name='rag_articles'),
     path('register/', views.register, name='register'),

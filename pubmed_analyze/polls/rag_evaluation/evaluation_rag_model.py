@@ -13,10 +13,7 @@ from polls.es_config import INDEX_NAME
 from openai import OpenAI
 from polls.utils import error_handling
 import matplotlib.pyplot as plt
-import environ
 
-env = environ.Env() 
-environ.Env.read_env()
 
 @error_handling
 def create_eval_rag_json(query, expected_abstract):

@@ -16,10 +16,10 @@ def handle_rag_pipeline(query, index):
         rag_requests_total.inc()  # Incrémenter le compteur de requêtes RAG
         # Mesurer la latence de la recherche
         with search_latency.time():
-            documents = search_articles(query, index)
+            documents, query = search_articles(query, index)
         # Mesurer la latence de la génération LLM
         with llm_latency.time():
-            response = generation(query, index)
+            response = generation(query, documents, index)
         return JsonResponse({
             'documents': documents,
             'response': response,

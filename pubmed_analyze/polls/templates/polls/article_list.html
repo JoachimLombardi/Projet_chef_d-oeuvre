@@ -9,13 +9,6 @@
 </div>
 
 {% block content %}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-info">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
 
     <div class="col-12 d-flex justify-content-end mb-3">
         <a href="{% url 'create_article' %}" class="btn btn-primary">Créer un article</a>

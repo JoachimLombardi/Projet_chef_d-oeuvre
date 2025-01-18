@@ -1,4 +1,4 @@
-from elasticsearch_dsl import Document, Text, DenseVector, Index, Mapping
+from elasticsearch_dsl import Document, DenseVector, Index
 from .models import Article
 from polls.es_config import INDEX_NAME
 

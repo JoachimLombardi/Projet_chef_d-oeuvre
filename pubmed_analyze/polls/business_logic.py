@@ -122,6 +122,42 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
 
 @error_handling
 def article_json_to_database(): 
+    """
+    Read JSON files of articles scraped from PubMed and save them to the database
+    
+    This function reads JSON files that were created by the article_scraper function, 
+    and save the articles to the database. 
+
+    The function is decorated with the @error_handling decorator, so it will log
+    and email the error if there is one.
+
+    The JSON files are located in the EXPORT_JSON_DIR directory, and are named 
+    after the term and filter used to search PubMed (e.g. "multiple_sclerosis_2024.json").
+
+    The function creates an Article instance for each article in the JSON file, 
+    and saves it to the database. It also creates Author and Affiliation instances 
+    as needed, and creates Authorship instances to link authors to their affiliations.
+
+    The function does not create duplicate articles if they already exist in the database.
+
+    The function does not create duplicate authors, affiliations or authorships if they already exist in the database.
+
+    The function is meant to be called as a management command, and should be called once
+    after the article_scraper function has finished.
+
+    Decorator:
+
+    @error_handling: Captures and manages errors during execution.
+    Models Used:
+
+    Article: Stores metadata for articles.
+    Authors: Stores information about authors.
+    Affiliations: Stores information about affiliations.
+    Authorship: Establishes relationships between articles, authors, and their affiliations.
+
+    The function does not return anything.
+
+    """
     term_list = ["multiple_sclerosis", "herpes_zoster"]
     for term in term_list:
         filter = "2024"
@@ -158,7 +194,6 @@ def article_json_to_database():
                             affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
                             if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
                                 Authorship.objects.create(article=article, author=author, affiliation=affiliation)
-    return HttpResponse("Article, authors and affiliations added to database with success.")
 
 
 @error_handling
@@ -194,7 +229,7 @@ def search_articles(query, index):
     query=query_cleaned,
     type="best_fields",
     ).source(['title', 'abstract']) 
-    response_text = search_results_text[0:20].execute()
+    response_text = search_results_text[0:10].execute()
     # hybrid search
     retrieved_docs = reciprocal_rank_fusion(response_vector.hits, response_text.hits, k=5)
     # rerank
@@ -202,6 +237,10 @@ def search_articles(query, index):
     # Prepare results for JSON response
     results = []
     article_ids = [res['id'] for res in response]  # Gather all article IDs for a single query
+    article_dict = {
+        article.id: article
+        for article in Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
+    }
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
     if index != "all":
         articles = articles.filter(term=index)
@@ -212,7 +251,7 @@ def search_articles(query, index):
         title = res['title']
         abstract = res['abstract']
         # Get the article from the pre-fetched queryset
-        article = next((art for art in articles if art.id == article_id), None)
+        article = article_dict.get(article_id, None)
         if article:
             # Retrieve authors and their affiliations
             affiliations_by_author = {}
@@ -220,9 +259,7 @@ def search_articles(query, index):
                 author_name = authorship.author.name
                 affiliation_name = authorship.affiliation.name
                 # Avoid duplicates by using a set
-                if author_name not in affiliations_by_author:
-                    affiliations_by_author[author_name] = set()
-                affiliations_by_author[author_name].add(affiliation_name)
+                affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
             # Prepare data for authors and affiliations
             authors_affiliations = [
                 {
@@ -242,14 +279,13 @@ def search_articles(query, index):
     return results, query
 
 
-def generation(query, index="all"):
-    retrieved_documents, query = search_articles(query, index)
+def generation(query, retrieved_documents, index="all"):
     context = ""
     for i, source in enumerate(retrieved_documents):
         context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
     model = "mistral"
     template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
-    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provide context".
+    If you don't know or if the answer is not in the provided context just say: "I can't answer with the provided context".
 
         ## Instruction:\n
         1. Read carefully the query and look in all extract for the answer.
@@ -279,13 +315,12 @@ def generation(query, index="all"):
     }
     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
     pattern = r'\{+.*\}'
-    print(chat_response, flush=True)
     match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
-    match = match.replace("\n", "")
     if match:
+        match = match.replace("\n", "")
         response = json.loads(match)['response']
     else:
-        response = "I can't answer with the provide context"
+        response = "I can't answer with the provided context"
     return response, context
 
 

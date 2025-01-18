@@ -1,0 +1,17 @@
+{
+	"ulid": "01JH126Q310FJN10MB0A8Q5JW5",
+	"minTime": 1736265600836,
+	"maxTime": 1736272800000,
+	"stats": {
+		"numSamples": 622421,
+		"numSeries": 1661,
+		"numChunks": 5003
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01JH126Q310FJN10MB0A8Q5JW5"
+		]
+	},
+	"version": 1
+}

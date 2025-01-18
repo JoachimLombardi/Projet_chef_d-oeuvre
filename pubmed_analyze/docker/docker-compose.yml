@@ -24,6 +24,8 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
+      - DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:

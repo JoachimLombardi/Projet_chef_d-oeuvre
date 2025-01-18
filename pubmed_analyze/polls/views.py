@@ -13,7 +13,6 @@ import time
 from django.conf import settings
 from django.http import HttpResponse
 import requests
-
 from polls.monitoring.monitor_rag import handle_rag_pipeline
 from .models import Article
 from django.shortcuts import render, redirect, get_object_or_404
@@ -26,7 +25,6 @@ from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
-from polls.monitoring.monitor_rag import handle_rag_pipeline
 from deepeval.metrics import FaithfulnessMetric, ContextualRelevancyMetric
 from deepeval.test_case import LLMTestCase
 import os
@@ -35,11 +33,27 @@ openai_key = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_API_KEY"] = openai_key
 
 @error_handling
-def create_article(request):
-    message = ''
+def create_or_update_article(request, id=None):
+    article = None
+    initial_data = []
+    if id:
+        article = get_object_or_404(Article, id=id)
+        authorships = article.authorships.prefetch_related('author', 'affiliation')
+        affiliations_by_author = {}
+        for authorship in authorships:
+            author_name = authorship.author.name
+            affiliation_name = authorship.affiliation.name
+            affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
+        initial_data = [
+            {
+                'author_name': author,
+                'affiliations': ' | '.join(affiliations)
+            }
+            for author, affiliations in affiliations_by_author.items()
+        ]
     if request.method == 'POST':
-        article_form = ArticleForm(request.POST)
-        formset = AuthorAffiliationFormSet(request.POST)
+        article_form = ArticleForm(request.POST, instance=article)
+        formset = AuthorAffiliationFormSet(request.POST, initial=initial_data)
         if article_form.is_valid() and formset.is_valid():
             author_affiliation_data = [
                 {
@@ -48,36 +62,33 @@ def create_article(request):
                 }
                 for form in formset
             ]
-            # Use the save method from ArticleForm to handle saving the article with authors and affiliations
-            created, updated = article_form.save_article_with_authors(author_affiliation_data)
+            created, updated = article_form.save_article_with_authors(author_affiliation_data, id)
             if created:
-                messages.success(request, "L'article a bien été sauvegardé dans la base de données.")
-                return redirect('article_list') 
+                messages.success(request, "L'article a bien été créé dans la base de données.")
+                return redirect('article_list')
+            elif updated:
+                messages.success(request, "L'article a bien été mis à jour.")
+                return redirect('article_list')
             else:
-                message = "Un article avec les mêmes détails existe déjà dans la base de données."
+                messages.error(request, "Un article avec les mêmes détails existe déjà dans la base de données.")
         else:
-            message = "Le formulaire n'est pas valide."
+            messages.error(request, "Le formulaire n'est pas valide.") 
     else:
-        article_form = ArticleForm()
-        formset = AuthorAffiliationFormSet()
-    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
+        article_form = ArticleForm(instance=article)
+        formset = AuthorAffiliationFormSet(initial=initial_data)
+    return render(request, 'polls/create_update_article.html', {'article_form': article_form,'formset': formset})
 
 
 @error_handling
 @login_required
 def article_list(request):
     articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation')
-    # Regrouper les affiliations par auteur
     for article in articles:
         affiliations_by_author = {}
         for authorship in article.authorships.all():
             author_name = authorship.author.name
             affiliation_name = authorship.affiliation.name    
-            # Utiliser un set pour éviter les doublons
-            if author_name not in affiliations_by_author:
-                affiliations_by_author[author_name] = set()
-            affiliations_by_author[author_name].add(affiliation_name)
-        # Attacher les affiliations regroupées à chaque article
+            affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
         article.affiliations_by_author = {author: list(affs) for author, affs in affiliations_by_author.items()}
     context = {
         'articles': articles,
@@ -86,71 +97,21 @@ def article_list(request):
 
 
 @error_handling
-def update_article(request, id):
-    message = ''
-    article = get_object_or_404(Article, id=id)
-    authorships = article.authorships.prefetch_related('author', 'affiliation')
-    # Regrouper les affiliations par auteur
-    affiliations_by_author = {}
-    for authorship in authorships:
-        author_name = authorship.author.name
-        affiliation_name = authorship.affiliation.name
-        # Utiliser un set pour éviter les doublons
-        if author_name not in affiliations_by_author:
-            affiliations_by_author[author_name] = set()
-        affiliations_by_author[author_name].add(affiliation_name)
-    # Préparer les données initiales pour le formset
-    initial_data = []
-    for author, affiliations in affiliations_by_author.items():
-        initial_data.append({
-            'author_name': author,
-            'affiliations': '| '.join(affiliations)  # Joindre les affiliations en une seule chaîne
-        })
-    if request.method == 'POST':
-        article_form = ArticleForm(request.POST, instance=article)
-        formset = AuthorAffiliationFormSet(request.POST, initial=initial_data)
-        if article_form.is_valid() and formset.is_valid():
-            # Itérer à travers le formset pour mettre à jour les auteurs et affiliations
-            author_affiliation_data = [
-                {
-                    'author_name': form.cleaned_data.get('author_name'),
-                    'affiliations': form.cleaned_data.get('affiliations')
-                }
-                for form in formset
-            ]        
-            created, updated = article_form.save_article_with_authors(author_affiliation_data, id)
-            if updated:
-                messages.success(request, "L'article a bien été mis à jour.")
-                return redirect('article_list')
-            else:    
-                message = "L'article n'a pas été modifié dans la base de données."
-        else:
-            message = "Le formulaire n'est pas valide."
-            
-    article_form = ArticleForm(instance=article)
-    formset = AuthorAffiliationFormSet(initial=initial_data)
-    return render(request, 'polls/create_update_article.html', {'article_form': article_form, 'formset': formset, 'message': message})
-
-
-@error_handling
 def delete_article(request, id):
-    message = ''
     article = get_object_or_404(Article, id=id)
     if request.method == 'POST':
         article.delete()
-        # Check if the article is deleted
         if not Article.objects.filter(id=id).exists():
             messages.success(request, "L'article a bien été supprimé de la base de données.")
             return redirect('article_list')
         else:
-            message = "L'article n'a pas été supprimé de la base de données."
-    return render(request, 'polls/article_confirm_delete.html', {'article': article, 'message': message})
+            messages.error(request, "L'article n'a pas été supprimé de la base de données.")
+    return render(request, 'polls/article_confirm_delete.html', {'article': article})
 
 
 @login_required
 @error_handling
 def rag_articles(request):
-    message = ''
     if request.method == 'POST':
         form = RAGForm(request.POST)
         if form.is_valid():
@@ -160,10 +121,10 @@ def rag_articles(request):
             response, context = generation(query, index)
             return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:
-            message = "Le formulaire n'est pas valide."
+            messages.error(request, "Le formulaire n'est pas valide.")
     else:
         form = RAGForm()
-    return render(request, 'polls/rag.html', {'form': form, 'message': message})
+    return render(request, 'polls/rag.html', {'form': form})
 
 
 @error_handling
@@ -172,7 +133,7 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            auth_login(request, user)  # Log in the user after registration
+            auth_login(request, user)  
             return redirect('rag_articles')
         else:
             messages.error("Le formulaire n'est pas valide")
