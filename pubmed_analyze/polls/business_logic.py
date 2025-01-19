@@ -34,7 +34,6 @@ def extract_pubmed_url(base_url, term, filter):
     links = []
     url = base_url+"/"+"?term="+term+"&filter=years."+filter+"-2025"
     soup = init_soup(url)
-    print(soup)
     page_max = int(soup.select_one('label.of-total-pages').get_text(strip=True).split(" ")[-1]) if soup.select_one('label.of-total-pages') else 1
     for i in range(1, page_max+1, 1):
         list_articles = soup.select('div.search-results-chunk')
@@ -46,14 +45,17 @@ def extract_pubmed_url(base_url, term, filter):
 
 
 @error_handling
-def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False):
+def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, suffix_article=None):
     articles_data = []
     term = "multiple_sclerosis"
     filter = "2024"
-    if not test:
+    suffix = term+"_"+filter
+    if not url:
         links = extract_pubmed_url(base_url, term, filter)
-    else: 
-        links = base_url
+    else:
+        links = url
+    if suffix_article:
+        suffix += suffix_article
     for link in links:
         # Initialize soup
         soup = init_soup(link)
@@ -112,10 +114,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', test=False
             'authors_affiliations': authors_affiliations
         })
             # Save articles data to a JSON file
-            if not test:
-                output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
-            else:
-                output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + "_test.json")
+            output_path = Path(settings.EXPORT_JSON_DIR + "/" + suffix + ".json")
             with output_path.open('w', encoding='utf-8') as f:
                 json.dump(articles_data, f, ensure_ascii=False, indent=4)
 

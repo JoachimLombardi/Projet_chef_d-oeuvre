@@ -1,9 +1,8 @@
-from django.urls import path
 from . import views
-from django.urls import path, include
+from django.urls import path, include, re_path
 
 urlpatterns = [
-    path('article/<int:id>/create_update/', views.create_or_update_article, name='create_update_article'),
+    re_path(r'^article/create_update(?:/(?P<pk>\d+))?/$', views.create_or_update_article, name='create_update_article'),
     path('article/read/', views.article_list, name='article_list'), 
     path('article/<int:id>/delete/', views.delete_article, name='delete_article'), 
     path('articles/rag/', views.rag_articles, name='rag_articles'),

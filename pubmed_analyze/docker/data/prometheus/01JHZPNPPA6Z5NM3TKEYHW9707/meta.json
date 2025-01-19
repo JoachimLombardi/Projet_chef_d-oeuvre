@@ -1,0 +1,17 @@
+{
+	"ulid": "01JHZPNPPA6Z5NM3TKEYHW9707",
+	"minTime": 1736280000000,
+	"maxTime": 1736287200000,
+	"stats": {
+		"numSamples": 770065,
+		"numSeries": 1661,
+		"numChunks": 5066
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01JHZPNPPA6Z5NM3TKEYHW9707"
+		]
+	},
+	"version": 1
+}
