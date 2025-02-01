@@ -47,8 +47,8 @@ def extract_pubmed_url(base_url, term, filter):
 @error_handling
 def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, suffix_article=None):
     articles_data = []
-    term = "multiple_sclerosis"
-    filter = "2024"
+    term = ""
+    filter = "2025"
     suffix = term+"_"+filter
     if not url:
         links = extract_pubmed_url(base_url, term, filter)
