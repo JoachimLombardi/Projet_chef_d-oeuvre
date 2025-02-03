@@ -81,7 +81,7 @@ Vous avez besoin de [`docker`](https://www.docker.com/).
    git clone https://github.com/github_username/repo_name.git](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
    ```
 3. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
-   Créer un fichier .env dans le dossier pubmed_analyze/docker sur le modèle suivant:
+   Créer un fichier .env dans le dossier `pubmed_analyze/docker` sur le modèle suivant:
 ```env
 # Base de données PostgreSQL
 DATABASE_NAME=your_database_name_here  # Remplacez par le nom de votre base de données
