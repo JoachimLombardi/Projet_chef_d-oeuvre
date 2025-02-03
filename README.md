@@ -121,13 +121,21 @@ DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-Poser n'importe quelle question au RAG telles que: 
-* What were the key findings of the qualitative study exploring patients' experiences and understanding of Multiple Sclerosis (MS)?
-* What were the findings regarding newly appearing lesions in Multiple Sclerosis (MS) and their evolution into slowly expanding lesions (SELs) in the context of fingolimod 
-  treatment?
-* How can artificial intelligence (AI) and machine learning (ML) improve the diagnosis and prediction of Multiple Sclerosis (MS), and what challenges are associated 
-  with their implementation ?
-Il va retourner une réponse dans un cadre ainsi que la liste des trois premiers articles utilisés pour la réponse dans le cadre suivant.
+### Poser des questions au RAG (Retrieval-Augmented Generation)
+
+Vous pouvez poser des questions variées à l'application RAG, telles que :
+
+- **Quels ont été les principaux résultats de l'étude qualitative explorant les expériences et la compréhension des patients concernant la sclérose en plaques (SEP) ?**
+- **Quelles sont les conclusions concernant les lésions nouvellement apparues dans la sclérose en plaques (SEP) et leur évolution vers des lésions à expansion lente (SEL) dans le contexte du traitement au fingolimod ?**
+- **Comment l'intelligence artificielle (IA) et l'apprentissage automatique (AA) peuvent-ils améliorer le diagnostic et la prédiction de la sclérose en plaques (SEP), et quels défis sont associés à leur mise en œuvre ?**
+
+Après avoir posé une question, le RAG renverra une **réponse détaillée** dans un **cadre de réponse** ci-dessous, ainsi qu'une liste des **trois premiers articles** utilisés pour générer la réponse, dans un **cadre distinct**.
+
+#### Exemple de réponse :
+
+##### Cadre de réponse :
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
