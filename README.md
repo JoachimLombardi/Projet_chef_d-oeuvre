@@ -4,7 +4,7 @@
 <br />
 <div align="center">
 <a href="https://github.com/JoachimLombardi/Projet_chef_d-oeuvre">
-  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="80" height="80">
+  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="200" height="200">
 </a>
 
 
