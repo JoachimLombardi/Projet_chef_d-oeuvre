@@ -71,37 +71,49 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+Vous avez besoin de [`docker`](https://www.docker.com/).
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Pour réaliser l'évaluation avec GPT4-o, vous avez besoin d'une [clé api](https://platform.openai.com/settings/organization/api-keys).
+2. Cloner le repo
    ```sh
-   git clone https://github.com/github_username/repo_name.git
+   git clone https://github.com/github_username/repo_name.git](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
    ```
-3. Install NPM packages
+3. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
+   Créer un fichier .env dans le dossier pubmed_analyze/docker sur le modèle suivant:
+```env
+# Base de données PostgreSQL
+DATABASE_NAME=your_database_name_here  # Remplacez par le nom de votre base de données
+DATABASE_USER=your_database_user_here  # Remplacez par votre nom d'utilisateur de base de données
+DATABASE_PASSWORD=your_database_password_here  # Remplacez par le mot de passe de votre base de données
+DATABASE_HOST=your_database_host_here  # Remplacez par l'hôte de votre base de données (par exemple 'localhost' ou l'IP de votre serveur)
+DATABASE_PORT=5432  # Laissez tel quel si vous utilisez le port par défaut de PostgreSQL
+
+# Clés API externes
+OPENAI_API_KEY=your_openai_api_key_here  # Remplacez par votre clé API OpenAI
+HUGGING_FACE_HUB_TOKEN=your_hugging_face_token_here  # Remplacez par votre jeton Hugging Face
+
+# Configuration de l'email
+EMAIL_HOST_USER=your_email_address_here  # Remplacez par l'adresse email utilisée pour envoyer les emails via Django
+EMAIL_HOST_PASSWORD=your_email_password_here  # Remplacez par le mot de passe de votre adresse email
+
+# Paramètres de Django
+SECRET_KEY=your_django_secret_key_here  # Remplacez par une clé secrète unique pour votre projet Django
+DEBUG=True  # Laissez à True pour le développement, passez à False pour la production
+ALLOWED_HOSTS=localhost,127.0.0.1,django  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
+
+# URL de connexion à la base de données (si utilisée)
+DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
+
+4. Lancer le client Docker
+
+5. Dans le terminal tapez:
    ```sh
-   npm install
+   docker-compose --env-file .env up --build
    ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-5. Change git remote url to avoid accidental pushes to base project
-   ```sh
-   git remote set-url origin github_username/repo_name
-   git remote -v # confirm the changes
-   ```
+6. Dans un navigateur, tapez l'URL suivante pour accéder à l'application:
+   http://localhost:8000/article/read/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -109,10 +121,13 @@ This is an example of how to list things you need to use the software and how to
 
 <!-- USAGE EXAMPLES -->
 ## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
+Poser n'importe quelle question au RAG telles que: 
+* What were the key findings of the qualitative study exploring patients' experiences and understanding of Multiple Sclerosis (MS)?
+* What were the findings regarding newly appearing lesions in Multiple Sclerosis (MS) and their evolution into slowly expanding lesions (SELs) in the context of fingolimod 
+  treatment?
+* How can artificial intelligence (AI) and machine learning (ML) improve the diagnosis and prediction of Multiple Sclerosis (MS), and what challenges are associated 
+  with their implementation ?
+Il va retourner une réponse dans un cadre ainsi que la liste des trois premiers articles utilisés pour la réponse dans le cadre suivant.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
