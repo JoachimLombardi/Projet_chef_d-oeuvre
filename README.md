@@ -4,7 +4,7 @@
 <br />
 <div align="center">
 <a href="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs">
-  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="500" height="200">
+  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="600" height="300">
 </a>
 
 
