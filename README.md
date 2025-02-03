@@ -46,7 +46,9 @@
 
 ### Built With
 
-* [![Django](https://python.doctor/images/django-python.png)](https://www.djangoproject.com/)
+* <a href="https://www.djangoproject.com/">
+  <img src="https://python.doctor/images/django-python.png" alt="Django" width="100">
+</a>
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
 * [![Angular][Angular.io]][Angular-url]
