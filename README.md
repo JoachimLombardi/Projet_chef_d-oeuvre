@@ -46,7 +46,7 @@
 
 ### Built With
 
-* [![Next][Django]][Django-url]
+* [![Django]((https://python.doctor/images/django-python.png))(https://python.doctor/images/django-python.png)
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
 * [![Angular][Angular.io]][Angular-url]
