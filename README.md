@@ -3,9 +3,10 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="[https://github.com/github_JoachimLombardi/projet_chef_d'oeuvre](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre)">
-    <img src="[images/logo.png](https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs)" alt="Logo" width="80" height="80">
-  </a>
+<a href="https://github.com/JoachimLombardi/Projet_chef_d-oeuvre">
+  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="80" height="80">
+</a>
+
 
 <h3 align="center">project_title</h3>
 
