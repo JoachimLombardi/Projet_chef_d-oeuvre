@@ -29,20 +29,22 @@
 
 ## 🛠️ Built With
 
-- [Django](https://www.djangoproject.com/)
-- [Python](https://www.python.org/)
-- [HTML5](https://developer.mozilla.org/en-US/docs/Web/HTML)
-- [PostgreSQL](https://www.postgresql.org/)
-- [Elasticsearch](https://www.elastic.co/)
-- [Mistral AI](https://mistral.ai/)
-- [GPT](https://openai.com/)
-- [Grafana](https://grafana.com/)
-- [Prometheus](https://prometheus.io/)
-- [Ollama](https://ollama.com/)
-- [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-- [JavaScript](https://developer.mozilla.org/fr/docs/Web/JavaScript)
-- [CSS3](https://developer.mozilla.org/fr/docs/Web/CSS)
-- [Shell](https://www.gnu.org/software/bash/)
+
+* [![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+* [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+* [![HTML](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+* [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+* [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://www.elastic.co/)
+* [![Mistral AI](https://img.shields.io/badge/Mistral_AI-FF6F61?style=for-the-badge&logo=mistral&logoColor=white)](https://mistral.ai/)
+* [![GPT](https://img.shields.io/badge/GPT-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
+* [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
+* [![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
+* [![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge)](https://ollama.com/)
+* [![Uptime Kuma](https://img.shields.io/badge/Uptime%20Kuma-0078D7?style=for-the-badge)](https://github.com/louislam/uptime-kuma)
+* [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/fr/docs/Web/JavaScript)
+* [![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/fr/docs/Web/CSS)
+* [![Shell](https://img.shields.io/badge/Shell-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+
 
 ---
 
