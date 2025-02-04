@@ -174,6 +174,7 @@ Voir les [tâches](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issue
 
 
 
+
 <!-- CONTRIBUTING -->
 ## 🤝 Contributions
 
@@ -204,6 +205,11 @@ N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📄 Licence
+
+Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'informations.
+
 
 ### Top contributors:
 
