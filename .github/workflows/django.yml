@@ -54,7 +54,8 @@ jobs:
     # Check if database container is running
     - name: Check if database container is running
       run: docker container inspect -f '{{.State.Running}}' postgres
-    
+      wait-for: postgres:5432
+      
     # Exécuter les tests avec Docker Compose
     - name: Run tests
       run: docker exec django python manage.py test 
