@@ -1,74 +1,47 @@
-name: Django CI/CD with Docker Compose
-
-on:
-  push:
-    branches:
-      - master  # ou une branche principale spécifique
-  pull_request:
-    branches:
-      - master
+name: PostgreSQL service example
+on: push
 
 jobs:
-  test:
+  # Label of the container job
+  container-job:
+    # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
+    # Docker Hub image that `container-job` executes in
+    container: node:20-bookworm-slim
 
-    env:
-      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-      DATABASE_USER: ${{ secrets.DATABASE_USER }}
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
-      EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
-      DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    # Étape pour installer Docker Compose
-    - name: Set up Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+      # Downloads a copy of the code in your repository before running CI tests
+      - name: Check out repository code
+        uses: actions/checkout@v4
 
-    # Étape pour construire et démarrer les services avec Docker Compose
-    - name: Build and start services with Docker Compose
-      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+      # Performs a clean installation of all dependencies in the `package.json` file
+      # For more information, see https://docs.npmjs.com/cli/ci.html
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Sleep for 30 seconds
-      run: sleep 30s
-      shell: bash
-
-    - name: Limit resources for Django container
-      run: docker container update --memory 4g --memory-swap 4g django
-
-    # Check with docker ps
-    - name: Check Docker containers
-      run: docker ps -a
-    
-    # Check if the container is running
-    - name: Check if Django container is running
-      run: docker container inspect -f '{{.State.Running}}' django
-    
-
-    # Check if database container is running
-    - name: Check if database container is running
-      run: docker container inspect -f '{{.State.Running}}' postgres
-
- 
-
-    # Exécuter les tests avec Docker Compose
-    - name: Run tests
-      run: docker exec django python manage.py test 
-
-    # Étape pour arrêter les services après les tests
-    - name: Stop services
-      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml down
-
-
-
+      - name: Connect to PostgreSQL
+        # Runs a script that creates a PostgreSQL table, populates
+        # the table with data, and then retrieves the data.
+        run: node client.js
+        # Environment variables used by the `client.js` script to create a new PostgreSQL table.
+        env:
+          # The hostname used to communicate with the PostgreSQL service container
+          POSTGRES_HOST: postgres
+          # The default PostgreSQL port
+          POSTGRES_PORT: 5432
