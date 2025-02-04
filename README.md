@@ -144,10 +144,6 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 <!-- ROADMAP -->
 ## Roadmap
 
-## 🛣️ Roadmap
-## Liste des Issues
-
-## Liste des Issues
 
 - [x] [Mettre en place Django](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/1)  
 - [x] [Création de la base de données](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/2)  
