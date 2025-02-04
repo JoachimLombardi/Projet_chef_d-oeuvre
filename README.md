@@ -197,7 +197,7 @@ N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
 4. **Poussez votre branche sur votre fork**
     Pour pousser vos changements sur votre fork, utilisez :
    ```bash
-   git push origin feature/IncroyableFonctionnalité
+   git push origin fonctionnalité/IncroyableFonctionnalité
 5. **Ouvrez une Pull Request**
     Une fois votre branche prête, ouvrez une pull request pour que vos modifications puissent être intégrées au projet principal.
 
@@ -216,7 +216,7 @@ N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
 <!-- LICENSE -->
 ## License
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'informations.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
