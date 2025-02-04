@@ -168,7 +168,7 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 
 
 
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
+Voir les [tâches](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues) pour une liste complète des tâches.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
