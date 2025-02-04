@@ -40,6 +40,10 @@ jobs:
     - name: Build and start services with Docker Compose
       run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
 
+    - name: Sleep for 30 seconds
+      run: sleep 30s
+      shell: bash
+
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
 
@@ -51,11 +55,13 @@ jobs:
     - name: Check if Django container is running
       run: docker container inspect -f '{{.State.Running}}' django
     
+
     # Check if database container is running
     - name: Check if database container is running
       run: docker container inspect -f '{{.State.Running}}' postgres
-      wait-for: postgres:5432
-      
+
+ 
+
     # Exécuter les tests avec Docker Compose
     - name: Run tests
       run: docker exec django python manage.py test 
