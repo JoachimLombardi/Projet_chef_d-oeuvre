@@ -1,85 +1,65 @@
-# Projet_chef_d'oeuvre
+# 🚀 Projet Chef d'Œuvre
 
-<!-- PROJECT LOGO -->
-<br />
 <div align="center">
-<a href="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs">
-  <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="700" height="400">
-</a>
-
-
-<h3 align="center">RAG sur des résumés PubMed</h3>
-
-  <p align="center">
-    Cette application permet de poser des questions sur des résumés PubMed, elle permet également d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Il est également possible de réaliser une évaluation de la qualité de la recherche et de la génération en faisant varié certains paramètres. </p>
+  <a href="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs">
+    <img src="https://media.licdn.com/dms/image/v2/D5612AQGgBoGZVp7XxA/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1705242357114?e=1744243200&v=beta&t=68SvDGLDdBd0EIgvVtvfCbDXlYsybQBweopL5CnMtXs" alt="Logo" width="700" height="400">
+  </a>
+  <h3>RAG sur des Résumés PubMed 📚</h3>
+  <p>
+    Cette application permet de poser des questions sur des résumés PubMed, d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Elle offre également une fonctionnalité pour évaluer la qualité de la recherche et de la génération en faisant varier certains paramètres.
+  </p>
 </div>
 
+---
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+## 📑 Table des matières:
 
+1. [Built With 🛠️](#built-with)
+2. [Getting Started 🚀](#getting-started)
+   - [Prérequis ⚙️](#prérequis)
+   - [Installation 💻](#installation)
+3. [Usage 🎯](#usage)
+4. [Roadmap 🛤️](#roadmap)
+5. [Contributions 🤝](#contributions)
+6. [License 📄](#license)
+7. [Contact 📬](#contact)
+8. [Badges du projet 🏅].(#badges-du-projet)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+---
 
-### Built With
+## 🛠️ Built With
 
-* [![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
-* [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-* [![HTML](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-* [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-* [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://www.elastic.co/)
-* [![Mistral AI](https://img.shields.io/badge/Mistral_AI-FF6F61?style=for-the-badge&logo=mistral&logoColor=white)](https://mistral.ai/)
-* [![GPT](https://img.shields.io/badge/GPT-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com/)
-* [![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
-* [![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
-* [![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge)](https://ollama.com/)
-* [![Uptime Kuma](https://img.shields.io/badge/Uptime%20Kuma-0078D7?style=for-the-badge)](https://github.com/louislam/uptime-kuma)
-* [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/fr/docs/Web/JavaScript)
-* [![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/fr/docs/Web/CSS)
-* [![Shell](https://img.shields.io/badge/Shell-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+- [Django](https://www.djangoproject.com/)
+- [Python](https://www.python.org/)
+- [HTML5](https://developer.mozilla.org/en-US/docs/Web/HTML)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Elasticsearch](https://www.elastic.co/)
+- [Mistral AI](https://mistral.ai/)
+- [GPT](https://openai.com/)
+- [Grafana](https://grafana.com/)
+- [Prometheus](https://prometheus.io/)
+- [Ollama](https://ollama.com/)
+- [Uptime Kuma](https://github.com/louislam/uptime-kuma)
+- [JavaScript](https://developer.mozilla.org/fr/docs/Web/JavaScript)
+- [CSS3](https://developer.mozilla.org/fr/docs/Web/CSS)
+- [Shell](https://www.gnu.org/software/bash/)
 
+---
 
+## 🚀 Démarrer
 
+Assurez-vous de disposer de [Docker](https://www.docker.com/) pour faire fonctionner ce projet.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### ⚙️ Prérequis
 
+Vous aurez besoin d'une clé API pour certains services comme OpenAI.
 
+### 💻 Installation
 
-<!-- GETTING STARTED -->
-## Getting Started
-
-Vous avez besoin de [`docker`](https://www.docker.com/).
-
-### Installation
-
-1. Pour réaliser l'évaluation avec GPT4-o, vous avez besoin d'une [clé api](https://platform.openai.com/settings/organization/api-keys).
-2. Cloner le repo
+1. Clonez le repo avec la commande :
    ```sh
-   git clone https://github.com/github_username/repo_name.git](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
-   ```
+   git clone https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
+
 3. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
    Créer un fichier .env dans le dossier `pubmed_analyze/docker` sur le modèle suivant:
 ```env
@@ -119,8 +99,7 @@ DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your
 
 
 
-<!-- USAGE EXAMPLES -->
-## Usage
+## 🎯 Usage
 ### Poser des questions au RAG (Retrieval-Augmented Generation)
 
 Vous pouvez poser des questions variées à l'application RAG, telles que :
@@ -141,8 +120,7 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 
 
 
-<!-- ROADMAP -->
-## Roadmap
+## 🛤️ Roadmap
 
 
 - [x] [Mettre en place Django](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/1)  
@@ -202,6 +180,11 @@ N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
 5. **Ouvrez une Pull Request**
     Une fois votre branche prête, ouvrez une pull request pour que vos modifications puissent être intégrées au projet principal.
 
+### Top contributors:
+
+<a href="https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=JoachimLombardi/Projet_chef_d-oeuvre" alt="contrib.rocks image" />
+</a>
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -214,20 +197,8 @@ Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Top contributors:
 
-<a href="https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=JoachimLombardi/Projet_chef_d-oeuvre" alt="contrib.rocks image" />
-</a>
-
-
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTACT -->
-## Contact
+## 📬 Contact
 
 Joachim Lombardi - [LinkedIn](https://www.linkedin.com/in/joachim-lombardi-machinelearning-intelligenceartificielle-datascientist/) - lombardi.joachim@gmail.com
 
@@ -238,7 +209,7 @@ Project Link: [https://github.com/JoachimLombardi/Projet_chef_d-oeuvre](https://
 
 
 
-## Badges du projet
+## 🏅 Badges du projet
 
 ![Contributors](https://img.shields.io/github/contributors/JoachimLombardi/Projet_chef_d-oeuvre.svg?style=for-the-badge)
 ![Forks](https://img.shields.io/github/forks/JoachimLombardi/Projet_chef_d-oeuvre.svg?style=for-the-badge)
