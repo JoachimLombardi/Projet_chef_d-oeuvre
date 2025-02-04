@@ -175,18 +175,33 @@ Voir les [tâches](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issue
 
 
 <!-- CONTRIBUTING -->
-## Contributing
+## 🤝 Contributions
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Les contributions sont ce qui fait de la communauté open source un endroit incroyable pour apprendre, s'inspirer et créer. Toute contribution est **grandement appréciée**.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+Si vous avez une suggestion pour améliorer ce projet, n'hésitez pas à **forker le dépôt** et à proposer une pull request. Vous pouvez également ouvrir une issue avec le tag "enhancement".
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
+
+### 🔧 Comment contribuer ?
+
+1. **Forkez le projet**
+2. **Créez une branche pour votre fonctionnalité**  
+   Utilisez la commande suivante pour créer une nouvelle branche pour la fonctionnalité que vous souhaitez ajouter :
+   ```bash
+   git checkout -b fonctionnalité/IncroyableFonctionnalité
+3. **Commitez vos modifications**
+   Après avoir fait les modifications nécessaires, enregistrez-les avec un commit en utilisant la commande :
+    ```bash
+   git commit -m 'Ajout de la fonctionnalité IncroyableFonctionnalité'
+4. **Poussez votre branche sur votre fork**
+    Pour pousser vos changements sur votre fork, utilisez :
+   ```bash
+   git push origin feature/IncroyableFonctionnalité
+5. **Ouvrez une Pull Request**
+    Une fois votre branche prête, ouvrez une pull request pour que vos modifications puissent être intégrées au projet principal.
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
