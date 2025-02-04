@@ -147,25 +147,29 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 ## 🛣️ Roadmap
 ## Liste des Issues
 
-1. [Mettre en place Django](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/1)  
-2. [Création de la base de données](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/2)  
-3. [Scrapping](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/3)  
-4. [Insertion en base de données](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/4)  
-5. [READ](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/5)  
-6. [CREATE AND UPDATE](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/6)  
-7. [DELETE](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/7)  
-8. [RAG: Recherche](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/8)  
-9. [RAG: Génération](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/9)  
-10. [Tests](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/10)  
-11. [Monitoring](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/11)  
-12. [Evaluation du RAG](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/12)  
-13. [Gestion des utilisateurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/13)  
-14. [Gestion des erreurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/14)  
-15. [Optimisation du code](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/15)  
-16. [Conteneurisation](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/16)  
-17. [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
-18. [Déploiements](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/18)  
-19. [Futures améliorations](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/19)  
+## Liste des Issues
+
+- [x] [Mettre en place Django](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/1)  
+- [x] [Création de la base de données](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/2)  
+- [x] [Scrapping](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/3)  
+- [x] [Insertion en base de données](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/4)  
+- [x] [READ](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/5)  
+- [x] [CREATE AND UPDATE](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/6)  
+- [x] [DELETE](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/7)  
+- [x] [RAG: Recherche](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/8)  
+- [x] [RAG: Génération](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/9)  
+- [x] [Tests](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/10)  
+- [x] [Monitoring](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/11)  
+- [x] [Evaluation du RAG](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/12)  
+- [x] [Gestion des utilisateurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/13)  
+- [x] [Gestion des erreurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/14)  
+- [x] [Optimisation du code](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/15)  
+- [x] [Conteneurisation](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/16)  
+- [ ] [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
+- [ ] [Déploiements](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/18)  
+- [ ] [Futures améliorations](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/19)  
+  
+
 
 
 See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
