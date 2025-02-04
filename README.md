@@ -211,6 +211,9 @@ N'oubliez pas de laisser une étoile ⭐ au projet ! Merci encore ! 🚀
 Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'informations.
 
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
 ### Top contributors:
 
 <a href="https://github.com/github_username/repo_name/graphs/contributors">
@@ -218,11 +221,6 @@ Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'
 </a>
 
 
-
-<!-- LICENSE -->
-## License
-
-Distribué sous la licence du projet. Voir le fichier `LICENSE.txt` pour plus d'informations.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
