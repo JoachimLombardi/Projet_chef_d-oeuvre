@@ -23,7 +23,7 @@
 5. [Contributions 🤝](#contributions)
 6. [License 📄](#license)
 7. [Contact 📬](#contact)
-8. [Badges du projet 🏅].(#badges-du-projet)
+8. [Badges du projet 🏅](#badges-du-projet)
 
 ---
 
