@@ -50,7 +50,7 @@ jobs:
     # Check if the container is running
     - name: Check if Django container is running
       run: docker container inspect -f '{{.State.Running}}' django
-    
+     
     # Check if database container is running
     - name: Check if database container is running
       run: docker container inspect -f '{{.State.Running}}' postgres
