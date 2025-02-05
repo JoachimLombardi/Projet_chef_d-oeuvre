@@ -42,7 +42,7 @@ jobs:
 
     - name: Run tests
       run: |
-        python manage.py test polls/tests   
+        python pubmed_analyze/manage.py test pubmed_analyze/polls/tests   
       env:
         DATABASE_URL: ${{secrets.DATABASE_URL}}
-        DJANGO_SETTINGS_MODULE: polls.pubmed_analyze.settings  
+        DJANGO_SETTINGS_MODULE: pubmed_analyze.polls.pubmed_analyze.settings  
