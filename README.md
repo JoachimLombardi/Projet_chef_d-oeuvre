@@ -27,7 +27,7 @@
 
 ---
 
-## 🚀 Démarrer
+## 🚀 Démarrer {#getting-started}
 
 Assurez-vous de disposer de [Docker](https://www.docker.com/) pour faire fonctionner ce projet.
 
@@ -135,7 +135,7 @@ Voir les [tâches](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issue
 
 <p align="left">
   <a href="https://www.djangoproject.com/" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/Django-092E20?logo=django&logoColor=white" alt="Django">
+    <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django">
   </a>
   <a href="https://www.python.org/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
