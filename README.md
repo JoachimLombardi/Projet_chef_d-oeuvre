@@ -14,12 +14,12 @@
 
 ## 📑 Table des matières:
 
-1. [Built With 🛠️](#built-with)
-2. [Getting Started 🚀](#getting-started)
+1. [Getting Started 🚀](#getting-started)
    - [Prérequis ⚙️](#prérequis)
    - [Installation 💻](#installation)
-3. [Usage 🎯](#usage)
-4. [Roadmap 🛤️](#roadmap)
+2. [Usage 🎯](#usage)
+3. [Roadmap 🛤️](#roadmap)
+4. [Built With 🛠️](#built-with)
 5. [Contributions 🤝](#contributions)
 6. [License 📄](#license)
 7. [Contact 📬](#contact)
