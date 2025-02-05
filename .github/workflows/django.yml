@@ -19,7 +19,7 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -40,6 +40,17 @@ jobs:
     - name: Build and start services with Docker Compose
       run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
 
+    # Attendre que la base de données PostgreSQL soit prête
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        echo "Waiting for PostgreSQL to be ready..."
+        until docker exec postgres pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}; do
+          echo "Waiting for database connection..."
+          sleep 5
+        done
+        echo "PostgreSQL is ready!"
+
+    # Limit resources for Django container
     - name: Limit resources for Django container
       run: docker container update --memory 4g --memory-swap 4g django
 
@@ -62,6 +73,3 @@ jobs:
     # Étape pour arrêter les services après les tests
     - name: Stop services
       run: docker-compose -f pubmed_analyze/docker/docker-compose.yml down
-
-
-
