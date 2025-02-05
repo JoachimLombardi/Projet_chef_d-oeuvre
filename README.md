@@ -81,7 +81,7 @@ DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your
 
 
 ## 🎯 Usage
-### Poser des questions au RAG (Retrieval-Augmented Generation)
+### Poser des questions au RAG (Retrieval Augmented Generation)
 
 Vous pouvez poser des questions variées à l'application RAG, telles que :
 
