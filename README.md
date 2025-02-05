@@ -134,46 +134,46 @@ Voir les [tâches](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issue
 ## 🛠️ Built With
 
 <p align="left">
-  <a href="https://www.djangoproject.com/" style="text-decoration: none;>
+  <a href="https://www.djangoproject.com/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white" alt="Django">
   </a>
-  <a href="https://www.python.org/" style="text-decoration: none;>
+  <a href="https://www.python.org/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   </a>
-  <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" style="text-decoration: none;>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML">
   </a>
-  <a href="https://www.postgresql.org/" style="text-decoration: none;>
+  <a href="https://www.postgresql.org/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
   </a>
-  <a href="https://www.elastic.co/" style="text-decoration: none;>
+  <a href="https://www.elastic.co/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white" alt="Elasticsearch">
   </a>
-  <a href="https://mistral.ai/" style="text-decoration: none;>
+  <a href="https://mistral.ai/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Mistral_AI-FF6F61?style=for-the-badge&logo=mistral&logoColor=white" alt="Mistral AI">
   </a>
-  <a href="https://openai.com/" style="text-decoration: none;>
+  <a href="https://openai.com/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/GPT-412991?style=for-the-badge&logo=openai&logoColor=white" alt="GPT">
   </a>
-  <a href="https://grafana.com/" style="text-decoration: none;>
+  <a href="https://grafana.com/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white" alt="Grafana">
   </a>
-  <a href="https://prometheus.io/" style="text-decoration: none;>
+  <a href="https://prometheus.io/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white" alt="Prometheus">
   </a>
-  <a href="https://ollama.com/" style="text-decoration: none;>
+  <a href="https://ollama.com/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Ollama-000000?style=for-the-badge" alt="Ollama">
   </a>
-  <a href="https://github.com/louislam/uptime-kuma" style="text-decoration: none;>
+  <a href="https://github.com/louislam/uptime-kuma" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Uptime%20Kuma-0078D7?style=for-the-badge" alt="Uptime Kuma">
   </a>
-  <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript" style="text-decoration: none;>
+  <a href="https://developer.mozilla.org/fr/docs/Web/JavaScript" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
   </a>
-  <a href="https://developer.mozilla.org/fr/docs/Web/CSS" style="text-decoration: none;>
+  <a href="https://developer.mozilla.org/fr/docs/Web/CSS" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS">
   </a>
-  <a href="https://www.gnu.org/software/bash/" style="text-decoration: none;>
+  <a href="https://www.gnu.org/software/bash/" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Shell-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white" alt="Shell">
   </a>
 </p>
