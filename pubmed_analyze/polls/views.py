@@ -50,9 +50,9 @@ def create_or_update_article(request, id=None):
             }
             for author, affiliations in affiliations_by_author.items()
         ]
+    article_form = ArticleForm(request.POST or None, instance=article)
+    formset = AuthorAffiliationFormSet(request.POST or None, initial=initial_data)
     if request.method == 'POST':
-        article_form = ArticleForm(request.POST, instance=article)
-        formset = AuthorAffiliationFormSet(request.POST, initial=initial_data)
         if article_form.is_valid() and formset.is_valid():
             author_affiliation_data = [
                 {
@@ -72,9 +72,6 @@ def create_or_update_article(request, id=None):
                 messages.error(request, "Un article avec les mêmes détails existe déjà dans la base de données.")
         else:
             messages.error(request, "Le formulaire n'est pas valide.") 
-    else:
-        article_form = ArticleForm(instance=article)
-        formset = AuthorAffiliationFormSet(initial=initial_data)
     return render(request, 'polls/create_update_article.html', {'article_form': article_form,'formset': formset})
 
 
@@ -108,8 +105,8 @@ def delete_article(request, id):
 @login_required
 @error_handling
 def rag_articles(request):
+    form = RAGForm(request.POST or None)
     if request.method == 'POST':
-        form = RAGForm(request.POST)
         if form.is_valid():
             query = form.cleaned_data.get('query')
             index = form.cleaned_data.get('index_choice')
@@ -117,30 +114,26 @@ def rag_articles(request):
             return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:
             messages.error(request, "Le formulaire n'est pas valide.")
-    else:
-        form = RAGForm()
     return render(request, 'polls/rag.html', {'form': form})
 
 
 @error_handling
 def register(request):
+    form = CustomUserCreationForm(request.POST or None)
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             auth_login(request, user)  
             return redirect('rag_articles')
         else:
             messages.error("Le formulaire n'est pas valide")
-    else:
-        form = CustomUserCreationForm()
     return render(request, 'polls/register.html', {'form': form})
 
 
 @error_handling
 def custom_login(request):
+    form = AuthenticationForm(request, data=request.POST or None)
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
         print(form.error_messages)
         if form.is_valid():
             username = form.cleaned_data.get('username')
@@ -157,8 +150,6 @@ def custom_login(request):
                 messages.error(request, "Nom d'utilisateur ou mot de passe incorrect")
         else:
             messages.error(request, "Le formulaire n'est pas valide")
-    else:
-        form = AuthenticationForm()
     return render(request, 'polls/login.html', {'form': form})
 
 

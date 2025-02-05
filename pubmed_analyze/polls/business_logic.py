@@ -278,11 +278,10 @@ def search_articles(query, index):
     return results, query
 
 
-def generation(query, retrieved_documents, index="all"):
+def generation(query, retrieved_documents, model, index="all"):
     context = ""
     for i, source in enumerate(retrieved_documents):
         context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
-    model = "mistral"
     template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
     If you don't know or if the answer is not in the provided context just say: "I can't answer with the provided context".
 

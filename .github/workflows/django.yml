@@ -1,9 +1,9 @@
-name: Django CI/CD Pipeline
+name: Django CI/CD with Docker Compose
 
 on:
   push:
     branches:
-      - master
+      - master  # ou une branche principale spécifique
   pull_request:
     branches:
       - master
@@ -26,37 +26,42 @@ jobs:
       ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: ${{secrets.DATABASE_NAME}}
-          POSTGRES_USER: ${{secrets.DATABASE_USER}}
-          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U test_user -d test_db"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5 
-
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12.7'  
-
-    - name: Install dependencies
+      uses: actions/checkout@v4
+    
+    # Étape pour installer Docker Compose
+    - name: Set up Docker Compose
       run: |
-        pip install -r pubmed_analyze/docker/requirements.txt
+        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
 
+    # Étape pour construire et démarrer les services avec Docker Compose
+    - name: Build and start services with Docker Compose
+      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+
+    - name: Limit resources for Django container
+      run: docker container update --memory 4g --memory-swap 4g django
+
+    # Check with docker ps
+    - name: Check Docker containers
+      run: docker ps -a
+    
+    # Check if the container is running
+    - name: Check if Django container is running
+      run: docker container inspect -f '{{.State.Running}}' django
+    
+    # Check if database container is running
+    - name: Check if database container is running
+      run: docker container inspect -f '{{.State.Running}}' postgres
+    
+    # Exécuter les tests avec Docker Compose
     - name: Run tests
-      run: |
-        python pubmed_analyze/manage.py test polls  
-      env:
-        DATABASE_URL: ${{secrets.DATABASE_URL}}
-        DJANGO_SETTINGS_MODULE: pubmed_analyze.settings  
+      run: docker exec django python manage.py test 
+
+    # Étape pour arrêter les services après les tests
+    - name: Stop services
+      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml down
+
+
+

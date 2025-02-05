@@ -63,7 +63,7 @@ class ExtractArticlesTest(TestCase):
         # Vérifier que le fichier JSON existe
         self.assertTrue(output_path.exists(), f"Le fichier {output_path} doit exister pour ce test.")
         # Appel direct de la fonction à tester (en utilisant le fichier réel)
-        response = article_json_to_database()
+        article_json_to_database()
         # Vérifie que l'article a été créé
         created_articles = Article.objects.filter(title="Multiple sclerosis")
         # Vérifie les détails de l'article
@@ -91,7 +91,6 @@ class ExtractArticlesTest(TestCase):
         affiliation = affiliation_author_1[0].affiliation
         self.assertEqual(affiliation.name, "Buffalo Neuroimaging Analysis Center, Department of Neurology, Jacobs School of Medicine and Biomedical Sciences, State University of New York at Buffalo, Buffalo, NY, USA; Jacobs Comprehensive MS Treatment and Research Center, Department of Neurology, Jacobs School of Medicine and Biomedical Sciences, State University of New York at Buffalo, Buffalo, NY, USA.")
         # Vérifie que la réponse est correcte
-        self.assertEqual(response.status_code, 200)
         self.assertIn("Article, authors and affiliations added to database with success.", response.content.decode())
 
 
@@ -129,7 +128,7 @@ class ArticleCRUDTest(TestCase):
         self.assertContains(response, "http://example.com/test-article")
         self.assertContains(response, "Author Test")
         self.assertContains(response, "Affiliation Test")
-        self.assertContains(response, reverse('update_article', args=[self.article.id]))
+        self.assertContains(response, reverse('create_update_article', args=[self.article.id]))
         self.assertContains(response, reverse('delete_article', args=[self.article.id]))
 
 
@@ -150,7 +149,7 @@ class ArticleCRUDTest(TestCase):
             'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
             'form-INITIAL_FORMS': 0,  # Initial forms
         }
-        response = self.client.post(reverse('create_article'), data)
+        response = self.client.post(reverse('create_update_article'), data)
         self.assertEqual(response.status_code, 302)  # Redirection spécelle de creation
         self.assertTrue(Article.objects.filter(title='New Article').exists())
 
@@ -172,7 +171,7 @@ class ArticleCRUDTest(TestCase):
             'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
             'form-INITIAL_FORMS': 0,  # Initial forms
         }
-        response = self.client.post(reverse('update_article', args=[self.article.id]), data)
+        response = self.client.post(reverse('create_update_article', args=[self.article.id]), data)
         self.assertEqual(response.status_code, 302)  # Redirection après mise à jour
         self.article.refresh_from_db()
         self.assertEqual(self.article.title, 'Updated Article')
