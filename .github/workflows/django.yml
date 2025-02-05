@@ -45,4 +45,4 @@ jobs:
         python pubmed_analyze/manage.py test pubmed_analyze/polls/tests   
       env:
         DATABASE_URL: ${{secrets.DATABASE_URL}}
-        DJANGO_SETTINGS_MODULE: pubmed_analyze.pubmed_analyze.settings  
+        DJANGO_SETTINGS_MODULE: pubmed_analyze.settings  
