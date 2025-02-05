@@ -14,7 +14,7 @@
 
 ## 📑 Table des matières:
 
-1. [Getting Started 🚀](#getting-started)
+1. [Démarrer 🚀](#démarrer)
    - [Prérequis ⚙️](#prérequis)
    - [Installation 💻](#installation)
 2. [Usage 🎯](#usage)
@@ -27,7 +27,7 @@
 
 ---
 
-## 🚀 Démarrer {#getting-started}
+## 🚀 Démarrer 
 
 Assurez-vous de disposer de [Docker](https://www.docker.com/) pour faire fonctionner ce projet.
 
