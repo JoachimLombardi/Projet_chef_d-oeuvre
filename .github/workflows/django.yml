@@ -12,6 +12,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+      DATABASE_USER: ${{ secrets.DATABASE_USER }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
+      EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+      EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+      DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+
     services:
       postgres:
         image: postgres:16
