@@ -19,8 +19,8 @@ def handle_rag_pipeline(query, index):
             documents, query = search_articles(query, index)
         # Mesurer la latence de la génération LLM
         with llm_latency.time():
-            response = generation(query, documents, index)
-        return documents, response
+            response, documents_formated = generation(query, documents, index)
+        return response, documents_formated
     except Exception as e:
         rag_errors_total.inc()  # Incrémenter le compteur d'erreurs RAG
         return JsonResponse({'error': str(e)}, status=500)
