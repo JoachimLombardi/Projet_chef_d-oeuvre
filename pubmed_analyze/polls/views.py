@@ -24,6 +24,7 @@ from django.contrib import messages
 from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
+from django.core.paginator import Paginator
 from deepeval.metrics import FaithfulnessMetric, ContextualRelevancyMetric
 from deepeval.test_case import LLMTestCase
 import os
@@ -86,7 +87,10 @@ def article_list(request):
             affiliation_name = authorship.affiliation.name    
             affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
         article.affiliations_by_author = {author: list(affs) for author, affs in affiliations_by_author.items()}
-    return render(request, 'polls/article_list.html', {'articles': articles})
+    paginator = Paginator(articles, 3)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'polls/article_list.html', {'page_obj': page_obj})
 
 
 @error_handling
@@ -110,7 +114,12 @@ def rag_articles(request):
         if form.is_valid():
             query = form.cleaned_data.get('query')
             index = form.cleaned_data.get('index_choice')
-            response, context = handle_rag_pipeline(query, index)
+            llm = form.cleaned_data.get('llm_choice')
+            response, context = handle_rag_pipeline(query, llm, index)
+            if "error" in response:
+                messages.error(request, response)
+                response = ""
+                context = ""
             return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
         else:
             messages.error(request, "Le formulaire n'est pas valide.")

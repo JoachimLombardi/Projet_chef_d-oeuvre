@@ -15,7 +15,7 @@ def handle_error(e):
     logger.error(f"Une erreur est survenue: {error_message}")
     logger.error(traceback.format_exc())
     # Envoi d'un email avec les détails de l'erreur
-    subject = "Erreur dans l'application"
+    subject = "Erreur dans l'application pubmed analyze"
     message = f"Une erreur s'est produite : {error_message}\n\n{traceback.format_exc()}"
     recipient_list = settings.ERROR_NOTIFICATION_EMAIL
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list)

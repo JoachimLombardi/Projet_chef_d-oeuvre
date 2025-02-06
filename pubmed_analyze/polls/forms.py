@@ -117,8 +117,15 @@ class RAGForm(forms.Form):
         ('herpes_zoster_2024', 'Herpes Zoster'),
     ]
 
+    LLM_CHOICE = [
+        ("mistral", "mistal 7b")
+    ]
+
     query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
     index_choice = forms.ChoiceField(choices=INDEX_CHOICE, label="Choisissez un index", 
+                                   widget=forms.Select(attrs={'class': 'form-select'}), 
+                                   required=True)
+    llm_choice = forms.ChoiceField(choices=LLM_CHOICE, label="Choisissez un llm", 
                                    widget=forms.Select(attrs={'class': 'form-select'}), 
                                    required=True)
 

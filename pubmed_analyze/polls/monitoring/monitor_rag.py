@@ -11,7 +11,7 @@ rag_errors_total = prometheus_client.Counter('rag_errors_total', 'Total number o
 
 # Vue pour gérer le pipeline RAG
 @rag_pipeline_latency.time()
-def handle_rag_pipeline(query, index):
+def handle_rag_pipeline(query, llm, index):
     try:
         rag_requests_total.inc()  # Incrémenter le compteur de requêtes RAG
         # Mesurer la latence de la recherche
@@ -19,8 +19,10 @@ def handle_rag_pipeline(query, index):
             documents, query = search_articles(query, index)
         # Mesurer la latence de la génération LLM
         with llm_latency.time():
-            response, documents_formated = generation(query, documents, index)
+            response, documents_formated = generation(query, documents, llm, index)
         return response, documents_formated
     except Exception as e:
         rag_errors_total.inc()  # Incrémenter le compteur d'erreurs RAG
-        return JsonResponse({'error': str(e)}, status=500)
+        response = f"error: {str(e)}"
+        documents = ""
+        return response, documents

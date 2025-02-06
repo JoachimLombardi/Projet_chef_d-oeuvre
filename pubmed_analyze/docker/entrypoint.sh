@@ -1,32 +1,26 @@
 #!/bin/bash
 
-# Vérification de la disponibilité des dépendances
+# Attente de la base de données
 echo "Attente de la base de données..."
 while ! nc -z db 5432; do
   sleep 1
 done
 echo "Base de données prête."
 
-echo "Attente d'Elasticsearch..."
-while ! nc -z elasticsearch 9200; do
-  sleep 1
-done
-echo "Elasticsearch prêt."
-
 # Appliquer les migrations Django
 echo "Exécution des migrations Django..."
 python manage.py makemigrations
 python manage.py migrate
 
-# Create a superuser
+# Créer un superutilisateur si nécessaire
 echo "Création du superutilisateur..."
-python manage.py createsuperuser
+python manage.py createsuperuser --noinput || echo "Superutilisateur déjà existant"
 
-# Ajouter des commandes spécifiques si nécessaire
+# Exécuter des commandes personnalisées si nécessaire
 echo "Exécution des commandes personnalisées..."
 python manage.py commands article_to_database
 python manage.py commands index_articles
 
 # Lancer le serveur Django
 echo "Démarrage du serveur Django..."
-exec "$@"
+python manage.py runserver 0.0.0.0:8000

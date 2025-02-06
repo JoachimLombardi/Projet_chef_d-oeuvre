@@ -277,7 +277,7 @@ def search_articles(query, index):
             })
     return results, query
 
-
+@error_handling
 def generation(query, retrieved_documents, model, index="all"):
     context = ""
     for i, source in enumerate(retrieved_documents):
@@ -312,6 +312,7 @@ def generation(query, retrieved_documents, model, index="all"):
         }
     }
     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
+    print("voici la rep:", chat_response, flush=True)
     pattern = r'\{+.*\}'
     match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
     if match:
@@ -319,6 +320,7 @@ def generation(query, retrieved_documents, model, index="all"):
         response = json.loads(match)['response']
     else:
         response = "I can't answer with the provided context"
+    print("la réponse est: ", response)
     return response, context
 
 

@@ -34,6 +34,7 @@ services:
       - db  # Ajout de la dépendance à la base de données
       - ollama 
 
+
   # Service pour Elasticsearch
   elasticsearch:
     build:
@@ -65,7 +66,7 @@ services:
   # Service pour PostgreSQL
   db:
     image: postgres:16
-    container_name: postgres
+    container_name: db
     environment:
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
@@ -74,8 +75,8 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
-    # networks:
-    #   - default
+    networks:
+      - default
 
 
   postgres_exporter:

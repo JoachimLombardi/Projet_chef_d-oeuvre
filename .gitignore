@@ -170,3 +170,5 @@ vllm_models/
 *.bin
 *.pt
 *.h5
+
+.vs

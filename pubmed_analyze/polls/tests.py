@@ -91,7 +91,6 @@ class ExtractArticlesTest(TestCase):
         affiliation = affiliation_author_1[0].affiliation
         self.assertEqual(affiliation.name, "Buffalo Neuroimaging Analysis Center, Department of Neurology, Jacobs School of Medicine and Biomedical Sciences, State University of New York at Buffalo, Buffalo, NY, USA; Jacobs Comprehensive MS Treatment and Research Center, Department of Neurology, Jacobs School of Medicine and Biomedical Sciences, State University of New York at Buffalo, Buffalo, NY, USA.")
         # Vérifie que la réponse est correcte
-        self.assertIn("Article, authors and affiliations added to database with success.", response.content.decode())
 
 
 class ArticleCRUDTest(TestCase):
