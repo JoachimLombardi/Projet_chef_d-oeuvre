@@ -9,63 +9,9 @@ on:
       - master
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-
-    # env:
-    #   ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
-    #   DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
-    #   DATABASE_USER: ${{ secrets.DATABASE_USER }}
-    #   DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-    #   DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-    #   DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-    #   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-    #   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-    #   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-    #   ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
-    #   DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
-    #   REGISTRY_SERVER: ${{ secrets.REGISTRY_SERVER }}
-    #   REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-    #   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-
-    # services:
-    #   postgres:
-    #     image: postgres:16
-    #     env:
-    #       POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-    #       POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-    #       POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-    #     ports:
-    #       - 5432:5432
-    #     options: >-
-    #       --health-cmd="pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}"
-    #       --health-interval=10s
-    #       --health-timeout=5s
-    #       --health-retries=5 
-
-    # steps:
-    # - name: Checkout code
-    #   uses: actions/checkout@v2
-
-    # - name: Set up Python
-    #   uses: actions/setup-python@v2
-    #   with:
-    #     python-version: '3.12.7'
-
-    # - name: Install dependencies
-    #   run: |
-    #     pip install -r pubmed_analyze/docker/requirements.txt
-
-    # - name: Run tests
-    #   run: |
-    #     python pubmed_analyze/manage.py test polls
-    #   env:
-    #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
-    #     DJANGO_SETTINGS_MODULE: pubmed_analyze.settings
-
-  deploy:
+  test:
     runs-on: ubuntu-latest
+
     env:
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -73,104 +19,44 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
-      REGISTRY_SERVER: ${{ secrets.REGISTRY_SERVER }}
-      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
-      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}  
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ${{secrets.DATABASE_NAME}}
+          POSTGRES_USER: ${{secrets.DATABASE_USER}}
+          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U test_user -d test_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5 
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Azure Login
-      uses: azure/login@v1
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        python-version: '3.12.7'  
 
-
-    - name: Deploy to Azure Container Instance
+    - name: Install dependencies
       run: |
-        az container create \
-          --resource-group devia_25 \
-          --name pubmed-container-group \
-          --location francecentral \
-          --image pubmedregistry.azurecr.io/django:latest \
-          --cpu 0.5 \
-          --memory 1 \
-          --ports 8000 \
-          --environment-variables \
-            DJANGO_SETTINGS_MODULE=${{ secrets.DJANGO_SETTINGS_MODULE }} \
-            ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }} \
-            DATABASE_HOST=${{ secrets.DATABASE_HOST }} \
-            DATABASE_PORT=${{ secrets.DATABASE_PORT }} \
-            DATABASE_USER=${{ secrets.DATABASE_USER }} \
-            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
-            DATABASE_NAME=${{ secrets.DATABASE_NAME }} \
-            EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }} \
-            EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }} \
-            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-          --dns-name-label pubmed-containers \
-          --restart-policy Always
+        pip install -r pubmed_analyze/docker/requirements.txt
 
-    - name: Configure additional containers (Postgres, Elasticsearch, etc.)
+    - name: Run tests
       run: |
-        az container create \
-          --resource-group devia_25 \
-          --name postgres \
-          --image pubmedregistry.azurecr.io/postgres:16 \
-          --cpu 0.5 \
-          --memory 1 \
-          --ports 5432 \
-          --environment-variables \
-            DATABASE_USER=${{ secrets.DATABASE_USER }} \
-            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
-            DATABASE_NAME=${{ secrets.DATABASE_NAME }} \
-          --dns-name-label postgres
-
-        az container create \
-          --resource-group devia_25 \
-          --name elasticsearch \
-          --image pubmedregistry.azurecr.io/elasticsearch:latest \
-          --cpu 1 \
-          --memory 2 \
-          --ports 9200 \
-          --dns-name-label elasticsearch
-
-        az container create \
-          --resource-group devia_25 \
-          --name grafana \
-          --image pubmedregistry.azurecr.io/grafana:latest \
-          --cpu 0.25 \
-          --memory 0.5 \
-          --ports 3000 \
-          --dns-name-label grafana
-
-        az container create \
-          --resource-group devia_25 \
-          --name prometheus \
-          --image pubmedregistry.azurecr.io/prometheus:latest \
-          --cpu 0.25 \
-          --memory 0.5 \
-          --ports 9090 \
-          --dns-name-label prometheus
-
-        az container create \
-          --resource-group devia_25 \
-          --name ollama \
-          --image pubmedregistry.azurecr.io/ollama:latest \
-          --cpu 1 \
-          --memory 2 \
-          --ports 11434 \
-          --dns-name-label ollama
-
-    - name: Notify via email (if needed)
-      run: |
-        echo "Deployment to Azure Container Instances complete" | mail -s "Deployment Status" ${{ secrets.ERROR_NOTIFICATION_EMAIL }}
-
-
+        python pubmed_analyze/manage.py test polls  
+      env:
+        DATABASE_URL: ${{secrets.DATABASE_URL}}
+        DJANGO_SETTINGS_MODULE: pubmed_analyze.settings  
