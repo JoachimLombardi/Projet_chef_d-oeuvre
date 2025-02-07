@@ -131,9 +131,8 @@ class ArticleCRUDTest(TestCase):
         self.assertContains(response, reverse('delete_article', args=[self.article.id]))
 
 
-    def test_article_create_view(self):
-        # Test de la création d'un nouvel article (CREATE)
-        data = {
+    def test_article_create_or_update_view(self):
+        data_create = {
             'title_review': 'New Review Title',
             'date': '2024-01-13',
             'title': 'New Article',
@@ -148,32 +147,38 @@ class ArticleCRUDTest(TestCase):
             'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
             'form-INITIAL_FORMS': 0,  # Initial forms
         }
-        response = self.client.post(reverse('create_update_article'), data)
-        self.assertEqual(response.status_code, 302)  # Redirection spécelle de creation
+        response_create = self.client.post(reverse('create_update_article'), data_create)
+        self.assertEqual(response_create.status_code, 302)  
         self.assertTrue(Article.objects.filter(title='New Article').exists())
+        article = Article.objects.get(title='New Article')
+        self.assertEqual(article.authorships.count(), 1)  
+        authorship = article.authorships.first()
+        self.assertEqual(authorship.author.name, 'Author Test')
+        self.assertEqual(authorship.affiliation.name, 'Affiliation Test')
 
-
-    def test_article_update_view(self):
-        # Test de la mise à jour d'un article (UPDATE)
-        data = {
+        data_update = {
             'title_review': 'Updated Review Title',
             'date': '2024-07-01',
             'title': 'Updated Article',
             'abstract': 'This is an updated abstract.',
-            'pmid': self.article.pmid,
-            'doi': self.article.doi,
-            'disclosure': self.article.disclosure,
-            'mesh_terms': self.article.mesh_terms,
-            'url': self.article.url,
-            'form-0-author_name': 'Author Test',  # Auteur
-            'form-0-affiliations': 'Affiliation Test',  # Affiliations
+            'pmid': article.pmid,
+            'doi': article.doi,
+            'disclosure': article.disclosure,
+            'mesh_terms': article.mesh_terms,
+            'url': article.url,
+            'form-0-author_name': 'Updated Author Test',  # Auteur
+            'form-0-affiliations': 'Updated Affiliation Test',  # Affiliations
             'form-TOTAL_FORMS': 1,  # Nombre total de formulaires dans le formset
-            'form-INITIAL_FORMS': 0,  # Initial forms
+            'form-INITIAL_FORMS': 1,  # Initial forms (formulaire déjà existant)
         }
-        response = self.client.post(reverse('create_update_article', args=[self.article.id]), data)
-        self.assertEqual(response.status_code, 302)  # Redirection après mise à jour
-        self.article.refresh_from_db()
-        self.assertEqual(self.article.title, 'Updated Article')
+        response_update = self.client.post(reverse('create_update_article', args=[article.id]), data_update)
+        self.assertEqual(response_update.status_code, 302)  # Redirection après mise à jour
+        article.refresh_from_db()
+        self.assertEqual(article.title, 'Updated Article')
+        self.assertEqual(article.authorships.count(), 1)
+        authorship = article.authorships.first()
+        self.assertEqual(authorship.author.name, 'Updated Author Test')
+        self.assertEqual(authorship.affiliation.name, 'Updated Affiliation Test')
 
 
     def test_article_delete_view(self):
