@@ -1,0 +1,115 @@
+apiVersion: 2021-09-01
+location: francecentral
+name: pubmed-container-group
+properties:
+  imageRegistryCredentials:
+    - server: ${REGISTRY_SERVER}
+      username: ${REGISTRY_USERNAME}
+      password: ${REGISTRY_PASSWORD}
+  containers:
+  - name: django
+    properties:
+      image: pubmedregistry.azurecr.io/django:latest
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGB: 1
+      ports:
+      - port: 8000
+      environmentVariables:
+        - name: DJANGO_SETTINGS_MODULE
+          value: ${DJANGO_SETTINGS_MODULE}
+        - name: ALLOWED_HOSTS
+          value: ${ALLOWED_HOSTS}
+        - name: DATABASE_HOST
+          value: ${DATABASE_HOST}
+        - name: DATABASE_PORT
+          value: ${DATABASE_PORT}
+        - name: DATABASE_USER
+          value: ${DATABASE_USER}
+        - name: DATABASE_PASSWORD
+          value: ${DATABASE_PASSWORD}
+        - name: DATABASE_NAME
+          value: ${DATABASE_NAME}
+        - name: EMAIL_HOST_USER
+          value: ${EMAIL_HOST_USER}
+        - name: EMAIL_HOST_PASSWORD
+          value: ${EMAIL_HOST_PASSWORD}
+        - name: OPENAI_API_KEY
+          value: ${OPENAI_API_KEY}
+
+  - name: postgres
+    properties:
+      image: pubmedregistry.azurecr.io/postgres:16
+      resources:
+        requests:
+          cpu: 0.5
+          memoryInGB: 1
+      ports:
+      - port: 5432
+      environmentVariables:
+        - name: DATABASE_USER
+          value: ${DATABASE_USER}
+        - name: DATABASE_PASSWORD
+          value: ${DATABASE_PASSWORD}
+        - name: DATABASE_NAME
+          value: ${DATABASE_NAME}
+
+  - name: elasticsearch
+    properties:
+      image: pubmedregistry.azurecr.io/elasticsearch:latest
+      resources:
+        requests:
+          cpu: 1
+          memoryInGB: 2
+      ports:
+      - port: 9200
+
+  - name: grafana
+    properties:
+      image: pubmedregistry.azurecr.io/grafana:latest
+      resources:
+        requests:
+          cpu: 0.25
+          memoryInGB: 0.5
+      ports:
+      - port: 3000
+
+  - name: ollama
+    properties:
+      image: pubmedregistry.azurecr.io/ollama:latest
+      resources:
+        requests:
+          cpu: 1
+          memoryInGB: 2
+      ports:
+      - port: 11434
+
+  - name: prometheus
+    properties:
+      image: pubmedregistry.azurecr.io/prometheus:latest
+      resources:
+        requests:
+          cpu: 0.25
+          memoryInGB: 0.5
+      ports:
+      - port: 9090
+
+  osType: Linux
+  restartPolicy: Always
+  ipAddress:
+    type: Public
+    dnsNameLabel: pubmed-containers
+    ports:
+    - protocol: TCP
+      port: 8000  
+    - protocol: TCP
+      port: 5432  
+    - protocol: TCP
+      port: 9200  
+    - protocol: TCP
+      port: 3000  
+    - protocol: TCP
+      port: 11434 
+    - protocol: TCP
+      port: 9090  

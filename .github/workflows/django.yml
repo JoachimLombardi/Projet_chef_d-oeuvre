@@ -1,17 +1,71 @@
-name: Django CI/CD with Docker Compose
+name: Django CI/CD Pipeline
 
 on:
   push:
     branches:
-      - master  # ou une branche principale spécifique
+      - master
   pull_request:
     branches:
       - master
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  # test:
+  #   runs-on: ubuntu-latest
 
+    # env:
+    #   ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+    #   DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    #   DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+    #   DATABASE_USER: ${{ secrets.DATABASE_USER }}
+    #   DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+    #   DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+    #   DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+    #   EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+    #   EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+    #   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    #   ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+    #   DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+    #   REGISTRY_SERVER: ${{ secrets.REGISTRY_SERVER }}
+    #   REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+    #   REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+    # services:
+    #   postgres:
+    #     image: postgres:16
+    #     env:
+    #       POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
+    #       POSTGRES_USER: ${{ secrets.DATABASE_USER }}
+    #       POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+    #     ports:
+    #       - 5432:5432
+    #     options: >-
+    #       --health-cmd="pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}"
+    #       --health-interval=10s
+    #       --health-timeout=5s
+    #       --health-retries=5 
+
+    # steps:
+    # - name: Checkout code
+    #   uses: actions/checkout@v2
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: '3.12.7'
+
+    # - name: Install dependencies
+    #   run: |
+    #     pip install -r pubmed_analyze/docker/requirements.txt
+
+    # - name: Run tests
+    #   run: |
+    #     python pubmed_analyze/manage.py test polls
+    #   env:
+    #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    #     DJANGO_SETTINGS_MODULE: pubmed_analyze.settings
+
+  deploy:
+    runs-on: ubuntu-latest
     env:
       ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -19,49 +73,29 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
+      REGISTRY_SERVER: ${{ secrets.REGISTRY_SERVER }}
+      REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+      REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-    
-    # Étape pour installer Docker Compose
-    - name: Set up Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+      uses: actions/checkout@v2
 
-    # Étape pour construire et démarrer les services avec Docker Compose
-    - name: Build and start services with Docker Compose
-      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml up --build -d
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}  
 
-    - name: Limit resources for Django container
-      run: docker container update --memory 4g --memory-swap 4g django
-
-    # Check with docker ps
-    - name: Check Docker containers
-      run: docker ps -a
-    
-    # Check if the container is running
-    - name: Check if Django container is running
-      run: docker container inspect -f '{{.State.Running}}' django
-    
-    # Check if database container is running
-    - name: Check if database container is running
-      run: docker container inspect -f '{{.State.Running}}' postgres
-    
-    # Exécuter les tests avec Docker Compose
-    - name: Run tests
-      run: docker exec django python manage.py test 
-
-    # Étape pour arrêter les services après les tests
-    - name: Stop services
-      run: docker-compose -f pubmed_analyze/docker/docker-compose.yml down
-
-
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: pubmed-container-group  
+        slot-name: 'production'
+        package: ./pubmed_analyze
 
