@@ -3,9 +3,9 @@ location: francecentral
 name: pubmed-container-group
 properties:
   imageRegistryCredentials:
-    - server: ${REGISTRY_SERVER}
-      username: ${REGISTRY_USERNAME}
-      password: ${REGISTRY_PASSWORD}
+    - server: ${{ secrets.REGISTRY_SERVER }}
+      username: ${{ secrets.REGISTRY_USERNAME }}
+      password: ${{ secrets.REGISTRY_PASSWORD }}
   containers:
   - name: django
     properties:
@@ -18,25 +18,25 @@ properties:
       - port: 8000
       environmentVariables:
         - name: DJANGO_SETTINGS_MODULE
-          value: ${DJANGO_SETTINGS_MODULE}
+          value: ${{ secrets.DJANGO_SETTINGS_MODULE }}
         - name: ALLOWED_HOSTS
-          value: ${ALLOWED_HOSTS}
+          value: ${{ secrets.ALLOWED_HOSTS }}
         - name: DATABASE_HOST
-          value: ${DATABASE_HOST}
+          value: ${{ secrets.DATABASE_HOST }}
         - name: DATABASE_PORT
-          value: ${DATABASE_PORT}
+          value: ${{ secrets.DATABASE_PORT }}
         - name: DATABASE_USER
-          value: ${DATABASE_USER}
+          value: ${{ secrets.DATABASE_USER }}
         - name: DATABASE_PASSWORD
-          value: ${DATABASE_PASSWORD}
+          value: ${{ secrets.DATABASE_PASSWORD }}
         - name: DATABASE_NAME
-          value: ${DATABASE_NAME}
+          value: ${{ secrets.DATABASE_NAME }}
         - name: EMAIL_HOST_USER
-          value: ${EMAIL_HOST_USER}
+          value: ${{ secrets.EMAIL_HOST_USER }}
         - name: EMAIL_HOST_PASSWORD
-          value: ${EMAIL_HOST_PASSWORD}
+          value: $ {{ secrets.EMAIL_HOST_PASSWORD }}
         - name: OPENAI_API_KEY
-          value: ${OPENAI_API_KEY}
+          value: ${{ secrets.OPENAI_API_KEY }}
 
   - name: postgres
     properties:
@@ -49,11 +49,11 @@ properties:
       - port: 5432
       environmentVariables:
         - name: DATABASE_USER
-          value: ${DATABASE_USER}
+          value: ${{ secrets.DATABASE_USER }}
         - name: DATABASE_PASSWORD
-          value: ${DATABASE_PASSWORD}
+          value: ${{ secrets.DATABASE_PASSWORD }}
         - name: DATABASE_NAME
-          value: ${DATABASE_NAME}
+          value: ${{ secrets.DATABASE_NAME }}
 
   - name: elasticsearch
     properties:
