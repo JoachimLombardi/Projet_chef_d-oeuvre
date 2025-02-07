@@ -1,4 +1,5 @@
 
+import csv
 import re
 from elasticsearch_dsl import Search
 import numpy as np
@@ -119,6 +120,83 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, 
                 json.dump(articles_data, f, ensure_ascii=False, indent=4)
 
 
+def scrap_article_to_csv(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, suffix_article=None):
+    articles_data = []
+    term = ""
+    filter = "2025"
+    suffix = term+"_"+filter
+    if not url:
+        links = extract_pubmed_url(base_url, term, filter)
+    else:
+        links = url
+    if suffix_article:
+        suffix += suffix_article
+    for link in links:
+        # Initialize soup
+        soup = init_soup(link)
+        if soup is None:
+            continue
+        # Extract reviews title
+        title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
+        # Extract date
+        date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
+        date = format_date(date)
+        # Extract title
+        title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
+        # Extract abstract
+        abstract = soup.select('div.abstract-content p')
+        abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
+        if abstract:
+            if isinstance(abstract, list):
+                abstract = " ".join(abstract)
+            # Extract PMID
+            pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
+            # Extract DOI
+            doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
+            if doi:
+                doi = "https://doi.org/"+doi
+            # Extract conflict of interest statement
+            disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
+            # Extract mesh terms
+            buttons = soup.select('button.keyword-actions-trigger')
+            mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
+            mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
+            url = get_absolute_url(pmid)
+            authors_tags = soup.select('.authors-list-item')
+            authors_affiliations = []
+            seen_authors = set() 
+            for author_tag in authors_tags:
+                # Extraire le nom de l'auteur
+                author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
+                if author_name and author_name not in seen_authors:
+                    seen_authors.add(author_name)
+                    # Extraire les affiliations
+                    affiliation_elements = author_tag.select('.affiliation-link')
+                    if affiliation_elements:
+                        affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
+                        authors_affiliations.append({'author_name': author_name, 'affiliations': affiliations_names})
+            # Add article data to list
+            articles_data.append({
+            'title_review': title_review,
+            'date': str(date),  # Convert date to string for JSON serialization
+            'title': title,
+            'abstract': abstract,
+            'pmid': pmid,
+            'doi': doi,
+            'disclosure': disclosure,
+            'mesh_terms': mesh_terms,
+            'url': url,
+            'authors_affiliations': authors_affiliations
+        })
+            output_path = Path(settings.EXPORT_CSV_DIR + "/" + suffix + ".csv")
+            with output_path.open('w', newline='', encoding='utf-8') as csvfile:
+                fieldnames = ['title_review', 'date', 'title', 'abstract', 'pmid', 'doi', 'disclosure', 'mesh_terms', 'url', 'authors_affiliations']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for article in articles_data:
+                    writer.writerow(article)
+
+
 @error_handling
 def article_json_to_database(): 
     """
@@ -193,6 +271,82 @@ def article_json_to_database():
                             affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
                             if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
                                 Authorship.objects.create(article=article, author=author, affiliation=affiliation)
+
+
+import csv
+from pathlib import Path
+
+def article_csv_to_database():
+    """
+    Read CSV files of articles scraped from PubMed and save them to the database
+    
+    This function reads CSV files that were created by the article_scraper function, 
+    and saves the articles to the database. 
+
+    The CSV files are located in the EXPORT_CSV_DIR directory, and are named 
+    after the term and filter used to search PubMed (e.g. "multiple_sclerosis_2024.csv").
+
+    The function creates an Article instance for each article in the CSV file, 
+    and saves it to the database. It also creates Author and Affiliation instances 
+    as needed, and creates Authorship instances to link authors to their affiliations.
+
+    The function does not create duplicate articles if they already exist in the database.
+
+    The function does not create duplicate authors, affiliations or authorships if they already exist in the database.
+
+    The function is meant to be called as a management command, and should be called once
+    after the article_scraper function has finished.
+    
+    """
+    term_list = ["multiple_sclerosis", "herpes_zoster"]
+    for term in term_list:
+        filter = "2024"
+        output_path = Path(settings.EXPORT_CSV_DIR + "/" + term + "_" + filter + ".csv")
+        with output_path.open('r', encoding='utf-8') as f:
+            articles = csv.DictReader(f)
+            for article in articles:
+                title = article['title']
+                abstract = article['abstract']
+                date = article['date']
+                if date == "None":
+                    date = None
+                url = article['url']
+                pmid = article['pmid']
+                doi = article['doi']
+                mesh_terms = article['mesh_terms']
+                disclosure = article['disclosure']
+                title_review = article['title_review']
+                authors_affiliations = eval(article['authors_affiliations'])  # Convert string representation of list to actual list
+                if not Article.objects.filter(doi=doi).exists():
+                    # Create a new article
+                    article_instance = Article.objects.create(
+                        title=title,
+                        abstract=abstract,
+                        date=date,
+                        url=url,
+                        pmid=pmid,
+                        doi=doi,
+                        mesh_terms=mesh_terms,
+                        disclosure=disclosure,
+                        title_review=title_review,
+                        term=term + "_" + filter
+                    )
+                    
+                    # Loop through the authors and affiliations
+                    for author_affiliation in authors_affiliations:
+                        author_name = author_affiliation['author_name']
+                        affiliations = author_affiliation['affiliations']
+                        
+                        # Create or get the author
+                        author, created = Authors.objects.get_or_create(name=author_name)
+                        
+                        # Create or get the affiliations
+                        for affiliation in affiliations:
+                            affiliation_instance, created = Affiliations.objects.get_or_create(name=affiliation)
+                            
+                            # Create authorship link if it doesn't exist
+                            if not Authorship.objects.filter(article=article_instance, author=author, affiliation=affiliation_instance).exists():
+                                Authorship.objects.create(article=article_instance, author=author, affiliation=affiliation_instance)
 
 
 @error_handling

@@ -79,7 +79,7 @@ def create_or_update_article(request, id=None):
 @error_handling
 @login_required
 def article_list(request):
-    articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation')
+    articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation').order_by('id')
     for article in articles:
         affiliations_by_author = {}
         for authorship in article.authorships.all():
