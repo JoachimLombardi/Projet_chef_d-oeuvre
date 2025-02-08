@@ -3,7 +3,6 @@ import re
 from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
-import pytz
 from django.core.mail import send_mail
 import traceback
 import logging
@@ -41,9 +40,9 @@ def format_date(date):
         return None  
     date_obj = parser.parse(date, fuzzy=True)
     if timezone.is_naive(date_obj):
-        return timezone.make_aware(date_obj, timezone=timezone.utc).date()
+        return timezone.make_aware(date_obj, timezone=timezone.get_default_timezone()).date()
     if date_obj.tzinfo:
-        return date_obj.astimezone(pytz.UTC).date()
+        return date_obj.astimezone(timezone.get_default_timezone()).date()
 
 
 def clean_whitespace(text: str) -> str:
