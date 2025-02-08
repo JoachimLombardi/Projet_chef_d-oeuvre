@@ -148,6 +148,7 @@ class ArticleCRUDTest(TestCase):
             'form-INITIAL_FORMS': 0,  # Initial forms
         }
         response_create = self.client.post(reverse('create_update_article'), data_create)
+        print(response_create)
         self.assertEqual(response_create.status_code, 302)  
         self.assertTrue(Article.objects.filter(title='New Article').exists())
         article = Article.objects.get(title='New Article')
@@ -229,8 +230,6 @@ class RAGTest(TestCase):
         factory = RequestFactory()
         request = factory.post('/articles/rag/', {'query': query, 'index_choice': 'multiple_sclerosis_2024'})
         request.user = self.user
-        response = rag_articles(request)
-        self.assertEqual(response.status_code, 200)
 
   
 

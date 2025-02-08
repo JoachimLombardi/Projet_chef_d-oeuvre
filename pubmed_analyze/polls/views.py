@@ -33,11 +33,11 @@ openai_key = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_API_KEY"] = openai_key
 
 @error_handling
-def create_or_update_article(request, id=None):
+def create_or_update_article(request, pk=None):
     article = None
     initial_data = []
-    if id:
-        article = get_object_or_404(Article, id=id)
+    if pk:
+        article = get_object_or_404(Article, id=pk)
         authorships = article.authorships.prefetch_related('author', 'affiliation')
         affiliations_by_author = {}
         for authorship in authorships:
