@@ -118,7 +118,8 @@ class RAGForm(forms.Form):
     ]
 
     LLM_CHOICE = [
-        ("mistral", "mistal 7b")
+        ("mistral", "mistal 7b"),
+         ("llama3.2", "llama 3.2")
     ]
 
     query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
