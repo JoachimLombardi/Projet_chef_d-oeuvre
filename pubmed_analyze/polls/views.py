@@ -62,7 +62,7 @@ def create_or_update_article(request, pk=None):
                 }
                 for form in formset
             ]
-            created, updated = article_form.save_article_with_authors(author_affiliation_data, id)
+            created, updated = article_form.save_article_with_authors(author_affiliation_data, pk)
             if created:
                 messages.success(request, "L'article a bien été créé dans la base de données.")
                 return redirect('article_list')

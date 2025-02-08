@@ -173,7 +173,7 @@ class ArticleCRUDTest(TestCase):
             'form-INITIAL_FORMS': 1,  # Initial forms (formulaire déjà existant)
         }
         response_update = self.client.post(reverse('create_update_article', args=[article.id]), data_update)
-        self.assertEqual(response_update.status_code, 302)  # Redirection après mise à jour
+        self.assertRedirects(response_update, reverse('article_list'))
         article.refresh_from_db()
         self.assertEqual(article.title, 'Updated Article')
         self.assertEqual(article.authorships.count(), 1)
