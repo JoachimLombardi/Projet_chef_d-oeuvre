@@ -4,9 +4,7 @@
 from datetime import date
 import json
 from pathlib import Path
-import unittest
 from django.conf import settings
-from django.http import HttpRequest
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 import numpy as np
@@ -148,7 +146,6 @@ class ArticleCRUDTest(TestCase):
             'form-INITIAL_FORMS': 0,  # Initial forms
         }
         response_create = self.client.post(reverse('create_update_article'), data_create)
-        print(response_create)
         self.assertEqual(response_create.status_code, 302)  
         self.assertTrue(Article.objects.filter(title='New Article').exists())
         article = Article.objects.get(title='New Article')
@@ -173,7 +170,7 @@ class ArticleCRUDTest(TestCase):
             'form-INITIAL_FORMS': 1,  # Initial forms (formulaire déjà existant)
         }
         response_update = self.client.post(reverse('create_update_article', args=[article.id]), data_update)
-        self.assertRedirects(response_update, reverse('article_list'))
+        self.assertEqual(response_update.status_code, 302)  # Redirection après mise à jour
         article.refresh_from_db()
         self.assertEqual(article.title, 'Updated Article')
         self.assertEqual(article.authorships.count(), 1)

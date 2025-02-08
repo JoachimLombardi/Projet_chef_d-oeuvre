@@ -1,4 +1,6 @@
+import pdb
 from django import forms
+from django.shortcuts import get_object_or_404
 from .models import Authors, Affiliations, Article, Authorship
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
@@ -62,6 +64,9 @@ class ArticleForm(forms.ModelForm):
         article = None
         # Ouvrir une transaction atomique
         with transaction.atomic():
+            if article_id:
+                article_initial = Article.objects.get(id=article_id)
+                get_object_or_404(Authorship, id=article_id).delete()
             # Utiliser update_or_create pour mettre à jour ou créer l'article
             article, created = Article.objects.update_or_create(
                 id=article_id,  # Recherche par ID de l'article
@@ -69,8 +74,9 @@ class ArticleForm(forms.ModelForm):
             )
             if not created:
                 # Si l'article existe déjà, suivez les champs mis à jour
+                # pdb.set_trace() 
                 for field, new_value in self.cleaned_data.items():
-                    current_value = getattr(article, field)
+                    current_value = getattr(article_initial, field, None)
                     if current_value != new_value:
                         updated_fields = True
             # Traiter les données des auteurs et de leurs affiliations
@@ -92,10 +98,10 @@ class ArticleForm(forms.ModelForm):
                         name=aff_name,
                     )
                     # Créez ou mettez à jour l'instance Authorship
-                    authorship, authorship_created = Authorship.objects.get_or_create(
+                    authorship = Authorship.objects.create(
                         article=article,
                         author=author,
-                        affiliation=affiliation,
+                        affiliation=affiliation
                     )
         return created, updated_fields
 
