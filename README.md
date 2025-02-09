@@ -65,7 +65,7 @@ DEBUG=True  # Laissez à True pour le développement, passez à False pour la pr
 ALLOWED_HOSTS=localhost,127.0.0.1,django,db  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
 
 # URL de connexion à la base de données (si utilisée)
-DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
+DATABASE_URL=postgres://postgres:simplon2024@db:5432/pubmed
 ```
 3. Lancer le client Docker
 4. Supprimer le fichier `postgresql` dans `pubmed_analyze\docker\data\postgresql`
