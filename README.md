@@ -68,12 +68,12 @@ ALLOWED_HOSTS=localhost,127.0.0.1,django  # Laissez tel quel ou ajoutez d'autres
 DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
 ```
 3. Lancer le client Docker
-
-4. Dans le terminal tapez:
+4. Supprimer le fichier `postgresql` dans `pubmed_analyze\docker\data\postgresql`
+5. Dans le terminal tapez:
    ```sh
    docker-compose --env-file .env up --build
    ```
-5. Dans un navigateur, tapez l'URL suivante pour accéder à l'application:
+6. Dans un navigateur, tapez l'URL suivante pour accéder à l'application:
    http://localhost:8000/article/read/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
