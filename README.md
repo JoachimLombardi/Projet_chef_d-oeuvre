@@ -91,9 +91,17 @@ Vous pouvez poser des questions variées à l'application RAG, telles que :
 
 Après avoir posé une question, le RAG renverra une **réponse détaillée** dans un **cadre de réponse** ci-dessous, ainsi qu'une liste des **trois premiers articles** utilisés pour générer la réponse, dans un **cadre distinct**.
 
+#### Exemple de question:
+
+##### Cadre de question: 
+
+![image](https://github.com/user-attachments/assets/82ee020c-6ee1-44c4-89c7-6d50153a293b)
+
 #### Exemple de réponse :
 
 ##### Cadre de réponse :
+
+![image](https://github.com/user-attachments/assets/c0b4f4aa-2fe8-419f-a9d3-a12df77c2b35)
 
 
 
@@ -120,7 +128,7 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 - [x] [Gestion des erreurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/14)  
 - [x] [Optimisation du code](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/15)  
 - [x] [Conteneurisation](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/16)  
-- [ ] [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
+- [x] [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
 - [ ] [Déploiements](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/18)  
 - [ ] [Futures améliorations](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/19)  
   
