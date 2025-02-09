@@ -259,6 +259,5 @@ Project Link: [https://github.com/JoachimLombardi/Projet_chef_d-oeuvre](https://
 [Issues](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues)  
 [License](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/blob/master/LICENSE.txt)
 
-[LinkedIn](https://www.linkedin.com/in/joachim-lombardi-machinelearning-intelligenceartificielle-datascientist/)  
 
 
