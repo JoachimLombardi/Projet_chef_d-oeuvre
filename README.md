@@ -6,7 +6,7 @@
   </a>
   <h3>RAG sur des Résumés PubMed 📚</h3>
   <p>
-    Cette application permet de poser des questions sur des résumés PubMed, d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Elle offre également une fonctionnalité pour évaluer la qualité de la recherche et de la génération en faisant varier certains paramètres.
+    Cette application permet de poser des questions sur des résumés PubMed, d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Elle offre également une fonctionnalité pour évaluer la qualité de la recherche et de la génération en faisant varier certains paramètres. Un monitoring a été mis en place et également accessible via l'appli.
   </p>
 </div>
 
