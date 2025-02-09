@@ -91,6 +91,12 @@ Vous pouvez poser des questions variées à l'application RAG, telles que :
 
 Après avoir posé une question, le RAG renverra une **réponse détaillée** dans un **cadre de réponse** ci-dessous, ainsi qu'une liste des **trois premiers articles** utilisés pour générer la réponse, dans un **cadre distinct**.
 
+#### Exemple de question:
+
+##### Cadre de question: 
+
+![image](https://github.com/user-attachments/assets/82ee020c-6ee1-44c4-89c7-6d50153a293b)
+
 #### Exemple de réponse :
 
 ##### Cadre de réponse :
