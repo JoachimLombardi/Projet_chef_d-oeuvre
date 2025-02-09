@@ -62,7 +62,7 @@ EMAIL_HOST_PASSWORD=your_email_password_here  # Remplacez par le mot de passe de
 # Paramètres de Django
 SECRET_KEY=your_django_secret_key_here  # Remplacez par une clé secrète unique pour votre projet Django
 DEBUG=True  # Laissez à True pour le développement, passez à False pour la production
-ALLOWED_HOSTS=localhost,127.0.0.1,django  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
+ALLOWED_HOSTS=localhost,127.0.0.1,django,db  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
 
 # URL de connexion à la base de données (si utilisée)
 DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
