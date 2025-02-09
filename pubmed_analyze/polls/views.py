@@ -33,7 +33,6 @@ import os
 openai_key = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_API_KEY"] = openai_key
 
-call_count = 0
 
 @error_handling
 def create_or_update_article(request, pk=None):
@@ -66,10 +65,6 @@ def create_or_update_article(request, pk=None):
                 for form in formset
             ]
             created, updated = article_form.save_article_with_authors(author_affiliation_data, pk)
-            # global call_count
-            # call_count += 1
-            # if call_count == 2:
-            #     pdb.set_trace() 
             if created:
                 messages.success(request, "L'article a bien été créé dans la base de données.")
                 return redirect('article_list')
