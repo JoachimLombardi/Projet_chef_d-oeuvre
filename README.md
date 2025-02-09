@@ -33,7 +33,7 @@ Assurez-vous de disposer de [Docker](https://www.docker.com/) pour faire fonctio
 
 ### ⚙️ Prérequis
 
-Vous aurez besoin d'une clé API pour certains services comme OpenAI.
+Vous aurez besoin d'une clé API pour certains services comme OpenAI. Il est conseillé de disposer d'un ordinateur avec 32 Go de RAM.
 
 ### 💻 Installation
 
