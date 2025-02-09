@@ -95,6 +95,8 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 
 ##### Cadre de réponse :
 
+![image](https://github.com/user-attachments/assets/c0b4f4aa-2fe8-419f-a9d3-a12df77c2b35)
+
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
