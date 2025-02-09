@@ -41,15 +41,15 @@ Vous aurez besoin d'une clé API pour certains services comme OpenAI.
    ```sh
    git clone https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
 
-3. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
+2. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
    Créer un fichier .env dans le dossier `pubmed_analyze/docker` sur le modèle suivant:
 ```env
 # Base de données PostgreSQL
-DATABASE_NAME=your_database_name_here  # Remplacez par le nom de votre base de données
-DATABASE_USER=your_database_user_here  # Remplacez par votre nom d'utilisateur de base de données
-DATABASE_PASSWORD=your_database_password_here  # Remplacez par le mot de passe de votre base de données
-DATABASE_HOST=your_database_host_here  # Remplacez par l'hôte de votre base de données (par exemple 'localhost' ou l'IP de votre serveur)
-DATABASE_PORT=5432  # Laissez tel quel si vous utilisez le port par défaut de PostgreSQL
+DATABASE_NAME=pubmed
+DATABASE_USER=postgres
+DATABASE_PASSWORD=simplon2024
+DATABASE_HOST=db
+DATABASE_PORT=5432
 
 # Clés API externes
 OPENAI_API_KEY=your_openai_api_key_here  # Remplacez par votre clé API OpenAI
@@ -67,13 +67,13 @@ ALLOWED_HOSTS=localhost,127.0.0.1,django  # Laissez tel quel ou ajoutez d'autres
 # URL de connexion à la base de données (si utilisée)
 DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
 ```
-4. Lancer le client Docker
+3. Lancer le client Docker
 
-5. Dans le terminal tapez:
+4. Dans le terminal tapez:
    ```sh
    docker-compose --env-file .env up --build
    ```
-6. Dans un navigateur, tapez l'URL suivante pour accéder à l'application:
+5. Dans un navigateur, tapez l'URL suivante pour accéder à l'application:
    http://localhost:8000/article/read/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
