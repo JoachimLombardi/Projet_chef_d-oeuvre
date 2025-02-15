@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# docker exec -it django python manage.py 
 # Attente de la base de données
 echo "Attente de la base de données..."
 while ! nc -z db 5432; do

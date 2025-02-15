@@ -33,23 +33,6 @@ WORKDIR /pubmed_analyze
 # Copier le reste de l'application
 COPY ../ /pubmed_analyze/
 
-
-# RUN echo "Exécution des migrations Django..." && \
-#     python manage.py makemigrations && \
-#     python manage.py migrate
-
-# # Créer un superutilisateur si nécessaire
-# RUN echo "Création du superutilisateur..." && \
-#     python manage.py createsuperuser --noinput || echo "Superutilisateur déjà existant"
-
-# # Exécuter des commandes personnalisées si nécessaire
-# RUN echo "Exécution des commandes personnalisées..." && \
-#     python manage.py commands article_to_database && \
-#     python manage.py commands index_articles
-
-# # Copier le script entrypoint
-# COPY ./entrypoint.sh pubmed_analyze/entrypoint.sh
-
 # # Donner les permissions d'exécution au script
 # RUN chmod +x pubmed_analyze/entrypoint.sh
 

@@ -7,6 +7,7 @@
 
 import json
 from pathlib import Path
+import pdb
 import re
 import time
 from django.conf import settings
@@ -32,12 +33,13 @@ import os
 openai_key = os.getenv("OPENAI_API_KEY")
 os.environ["OPENAI_API_KEY"] = openai_key
 
+
 @error_handling
-def create_or_update_article(request, id=None):
+def create_or_update_article(request, pk=None):
     article = None
     initial_data = []
-    if id:
-        article = get_object_or_404(Article, id=id)
+    if pk:
+        article = get_object_or_404(Article, id=pk)
         authorships = article.authorships.prefetch_related('author', 'affiliation')
         affiliations_by_author = {}
         for authorship in authorships:
@@ -62,7 +64,7 @@ def create_or_update_article(request, id=None):
                 }
                 for form in formset
             ]
-            created, updated = article_form.save_article_with_authors(author_affiliation_data, id)
+            created, updated = article_form.save_article_with_authors(author_affiliation_data, pk)
             if created:
                 messages.success(request, "L'article a bien été créé dans la base de données.")
                 return redirect('article_list')

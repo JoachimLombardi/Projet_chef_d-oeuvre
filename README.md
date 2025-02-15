@@ -6,7 +6,7 @@
   </a>
   <h3>RAG sur des Résumés PubMed 📚</h3>
   <p>
-    Cette application permet de poser des questions sur des résumés PubMed, d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Elle offre également une fonctionnalité pour évaluer la qualité de la recherche et de la génération en faisant varier certains paramètres.
+    Cette application permet de poser des questions sur des résumés PubMed, d'afficher la liste des articles avec les auteurs et affiliations correspondantes. Elle offre également une fonctionnalité pour évaluer la qualité de la recherche et de la génération en faisant varier certains paramètres. Un monitoring a été mis en place accessible via le menu de l'application.
   </p>
 </div>
 
@@ -33,7 +33,7 @@ Assurez-vous de disposer de [Docker](https://www.docker.com/) pour faire fonctio
 
 ### ⚙️ Prérequis
 
-Vous aurez besoin d'une clé API pour certains services comme OpenAI.
+Vous aurez besoin d'une clé API pour certains services comme OpenAI. Il est conseillé de disposer d'un ordinateur avec 32 Go de RAM.
 
 ### 💻 Installation
 
@@ -41,15 +41,15 @@ Vous aurez besoin d'une clé API pour certains services comme OpenAI.
    ```sh
    git clone https://github.com/JoachimLombardi/Projet_chef_d-oeuvre.git
 
-3. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
+2. Avant de lancer l'application, assurez-vous que vous avez configuré les variables d'environnement nécessaires.
    Créer un fichier .env dans le dossier `pubmed_analyze/docker` sur le modèle suivant:
 ```env
 # Base de données PostgreSQL
-DATABASE_NAME=your_database_name_here  # Remplacez par le nom de votre base de données
-DATABASE_USER=your_database_user_here  # Remplacez par votre nom d'utilisateur de base de données
-DATABASE_PASSWORD=your_database_password_here  # Remplacez par le mot de passe de votre base de données
-DATABASE_HOST=your_database_host_here  # Remplacez par l'hôte de votre base de données (par exemple 'localhost' ou l'IP de votre serveur)
-DATABASE_PORT=5432  # Laissez tel quel si vous utilisez le port par défaut de PostgreSQL
+DATABASE_NAME=pubmed
+DATABASE_USER=postgres
+DATABASE_PASSWORD=simplon2024
+DATABASE_HOST=db
+DATABASE_PORT=5432
 
 # Clés API externes
 OPENAI_API_KEY=your_openai_api_key_here  # Remplacez par votre clé API OpenAI
@@ -62,13 +62,13 @@ EMAIL_HOST_PASSWORD=your_email_password_here  # Remplacez par le mot de passe de
 # Paramètres de Django
 SECRET_KEY=your_django_secret_key_here  # Remplacez par une clé secrète unique pour votre projet Django
 DEBUG=True  # Laissez à True pour le développement, passez à False pour la production
-ALLOWED_HOSTS=localhost,127.0.0.1,django  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
+ALLOWED_HOSTS=localhost,127.0.0.1,django,db  # Laissez tel quel ou ajoutez d'autres hôtes autorisés
 
 # URL de connexion à la base de données (si utilisée)
-DATABASE_URL=postgres://your_database_user_here:your_database_password_here@your_database_host_here:5432/your_database_name_here  # Remplacez par l'URL de connexion à votre base de données PostgreSQL
+DATABASE_URL=postgres://postgres:simplon2024@db:5432/pubmed
 ```
-4. Lancer le client Docker
-
+3. Lancer le client Docker
+4. Supprimer le fichier `postgresql` dans `pubmed_analyze\docker\data\postgresql`
 5. Dans le terminal tapez:
    ```sh
    docker-compose --env-file .env up --build
@@ -91,9 +91,17 @@ Vous pouvez poser des questions variées à l'application RAG, telles que :
 
 Après avoir posé une question, le RAG renverra une **réponse détaillée** dans un **cadre de réponse** ci-dessous, ainsi qu'une liste des **trois premiers articles** utilisés pour générer la réponse, dans un **cadre distinct**.
 
+#### Exemple de question:
+
+##### Cadre de question: 
+
+![image](https://github.com/user-attachments/assets/82ee020c-6ee1-44c4-89c7-6d50153a293b)
+
 #### Exemple de réponse :
 
 ##### Cadre de réponse :
+
+![image](https://github.com/user-attachments/assets/c0b4f4aa-2fe8-419f-a9d3-a12df77c2b35)
 
 
 
@@ -120,7 +128,7 @@ Après avoir posé une question, le RAG renverra une **réponse détaillée** da
 - [x] [Gestion des erreurs](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/14)  
 - [x] [Optimisation du code](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/15)  
 - [x] [Conteneurisation](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/16)  
-- [ ] [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
+- [x] [CI/CD](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/17)  
 - [ ] [Déploiements](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/18)  
 - [ ] [Futures améliorations](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues/19)  
   
@@ -251,6 +259,5 @@ Project Link: [https://github.com/JoachimLombardi/Projet_chef_d-oeuvre](https://
 [Issues](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/issues)  
 [License](https://github.com/JoachimLombardi/Projet_chef_d-oeuvre/blob/master/LICENSE.txt)
 
-[LinkedIn](https://www.linkedin.com/in/joachim-lombardi-machinelearning-intelligenceartificielle-datascientist/)  
 
 
