@@ -280,9 +280,9 @@ def article_json_to_database():
                     new_articles.append(article_)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
-                    author_name = Authors(name=author_name)
+                    author_name_ = Authors(name=author_name)
                     if not author_name in existing_authors:
-                        new_authors.append(author_name)
+                        new_authors.append(author_name_)
                     affiliations = author_affiliation.get('affiliations', "")
                     try:
                         affiliations = ast.literal_eval(affiliations)
@@ -292,7 +292,7 @@ def article_json_to_database():
                         affiliation_ = Affiliations(name=affiliation)
                         if not affiliation in existing_affiliations:
                             new_affiliations.append(affiliation_)
-                        new_autorship.append(Authorship(article=article_, author=author_name, affiliation=affiliation_))
+                        new_autorship.append(Authorship(article=article_, author=author_name_, affiliation=affiliation_))
                 with transaction.atomic():
                     if new_articles:
                         Article.objects.bulk_create(new_articles)

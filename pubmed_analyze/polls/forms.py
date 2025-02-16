@@ -86,15 +86,15 @@ class ArticleForm(forms.ModelForm):
         new_autorship = []
         for author_data in author_affiliation_data:
             author_name = author_data.get('author_name')
-            author_name = Authors(name=author_name)
+            author_name_ = Authors(name=author_name)
             if author_name not in existing_authors:
-                new_authors.append(author_name)
+                new_authors.append(author_name_)
             affiliations = author_data.get('affiliations')
             for affiliation in affiliations.split('|'):
                 affiliation_ = Affiliations(name=affiliation)
                 if affiliation not in existing_affiliations:
                     new_affiliations.append(affiliation_)
-                new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation_))
+                new_autorship.append(Authorship(article=article, author=author_name_, affiliation=affiliation_))
         with transaction.atomic():
             if new_authors:
                 Authors.objects.bulk_create(new_authors)
