@@ -63,47 +63,46 @@ class ArticleForm(forms.ModelForm):
         updated_fields = False
         article = None
         # Ouvrir une transaction atomique
+        if article_id:
+            article_initial = Article.objects.get(id=article_id)
+            get_object_or_404(Authorship, id=article_id).delete()
+        # Utiliser update_or_create pour mettre à jour ou créer l'article
+        article, created = Article.objects.update_or_create(
+            id=article_id,  # Recherche par ID de l'article
+            defaults={key: value for key, value in self.cleaned_data.items()}  # Champs à mettre à jour
+        )
+        if not created:
+            # Si l'article existe déjà, suivez les champs mis à jour
+            # pdb.set_trace() 
+            for field, new_value in self.cleaned_data.items():
+                current_value = getattr(article_initial, field, None)
+                if current_value != new_value:
+                    updated_fields = True
+        # Traiter les données des auteurs et de leurs affiliations
+        existing_authors = {author.name: author for author in Authors.objects.all()}
+        existing_affiliations = {affiliation.name: affiliation for affiliation in Affiliations.objects.all()}
+        new_authors = []
+        new_affiliations = []
+        new_autorship = []
+        for author_data in author_affiliation_data:
+            author_name = author_data.get('author_name')
+            author_name = Authors(name=author_name)
+            if author_name not in existing_authors:
+                new_authors.append(author_name)
+            affiliations = author_data.get('affiliations')
+            for affiliation in affiliations.split('|'):
+                affiliation_ = Affiliations(name=affiliation)
+                if affiliation not in existing_affiliations:
+                    new_affiliations.append(affiliation_)
+                new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation_))
         with transaction.atomic():
-            if article_id:
-                article_initial = Article.objects.get(id=article_id)
-                get_object_or_404(Authorship, id=article_id).delete()
-            # Utiliser update_or_create pour mettre à jour ou créer l'article
-            article, created = Article.objects.update_or_create(
-                id=article_id,  # Recherche par ID de l'article
-                defaults={key: value for key, value in self.cleaned_data.items()}  # Champs à mettre à jour
-            )
-            if not created:
-                # Si l'article existe déjà, suivez les champs mis à jour
-                # pdb.set_trace() 
-                for field, new_value in self.cleaned_data.items():
-                    current_value = getattr(article_initial, field, None)
-                    if current_value != new_value:
-                        updated_fields = True
-            # Traiter les données des auteurs et de leurs affiliations
-            for author_data in author_affiliation_data:
-                author_name = author_data['author_name']
-                affiliations = author_data['affiliations']
-                # Vérifiez si l'auteur existe déjà
-                author, author_created = Authors.objects.get_or_create(
-                    name=author_name,
-                )
-                # Traitez les affiliations
-                if affiliations:
-                    affiliation_list = [aff.strip() for aff in affiliations.split('|')]
-                else:
-                    affiliation_list = []
-                for aff_name in affiliation_list:
-                    # Vérifiez si l'affiliation existe déjà
-                    affiliation, aff_created = Affiliations.objects.get_or_create(
-                        name=aff_name,
-                    )
-                    # Créez ou mettez à jour l'instance Authorship
-                    authorship = Authorship.objects.create(
-                        article=article,
-                        author=author,
-                        affiliation=affiliation
-                    )
-        return created, updated_fields
+            if new_authors:
+                Authors.objects.bulk_create(new_authors)
+            if new_affiliations:
+                Affiliations.objects.bulk_create(new_affiliations)
+            if new_autorship:
+                Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
+        return article, created, updated_fields
 
 
 class AuthorForm(forms.Form):

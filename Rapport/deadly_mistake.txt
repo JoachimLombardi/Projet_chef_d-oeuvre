@@ -1,0 +1,36 @@
+     with output_path.open('r', encoding='utf-8') as f:
+            articles = json.load(f)
+            for article in articles:
+                title = article.get('title', None)
+                abstract = article.get('abstract', None)
+                date = article.get('date', None)
+                if date == "None":
+                    date = None
+                url = article.get('url', None)
+                pmid = article.get('pmid', None)
+                doi = article.get('doi', None)
+                mesh_terms = article.get('mesh_terms', None)
+                disclosure = article.get('disclosure', None)
+                title_review = article.get('title_review', None)
+                authors_affiliations = article.get('authors_affiliations', None)
+                try:
+                    authors_affiliations = ast.literal_eval(authors_affiliations)
+                except Exception as e:
+                    author_affiliation = []
+                if not Article.objects.filter(doi=doi).exists():
+                    article = Article.objects.create(title=title, 
+                                                    abstract=abstract, 
+                                                    date=date, url=url, 
+                                                    pmid=pmid, doi=doi, 
+                                                    mesh_terms=mesh_terms, 
+                                                    disclosure=disclosure, 
+                                                    title_review=title_review, 
+                                                    term=term + "_" + filter)
+                    for author_affiliation in authors_affiliations:
+                        author_name = author_affiliation.get('author_name', None)
+                        affiliations = author_affiliation.get('affiliations', None)
+                        author, created = Authors.objects.get_or_create(name=author_name)
+                        for affiliation in affiliations:
+                            affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
+                            if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
+                                Authorship.objects.create(article=article, author=author, affiliation=affiliation)

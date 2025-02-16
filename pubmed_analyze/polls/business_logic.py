@@ -1,4 +1,5 @@
 
+import ast
 import csv
 import re
 from elasticsearch_dsl import Search
@@ -16,6 +17,8 @@ from .models import Authors, Affiliations, Article, Authorship
 from django.conf import settings
 from .utils import format_date, get_absolute_url, error_handling
 from polls.es_config import INDEX_NAME
+from django.db import transaction
+
 
 
 @error_handling
@@ -235,47 +238,72 @@ def article_json_to_database():
     The function does not return anything.
 
     """
+    existing_articles = {article.doi: article for article in Article.objects.all()}
+    existing_authors = {author.name: author for author in Authors.objects.all()}
+    existing_affiliations = {affiliation.name: affiliation for affiliation in Affiliations.objects.all()}
+    new_articles = []
+    new_authors = []
+    new_affiliations = []
+    new_autorship = []
     term_list = ["multiple_sclerosis", "herpes_zoster"]
+    filter = "2024"
     for term in term_list:
-        filter = "2024"
         output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
         with output_path.open('r', encoding='utf-8') as f:
             articles = json.load(f)
             for article in articles:
-                title = article['title']
-                abstract = article['abstract']
-                date = article['date']
+                title = article.get('title', "")
+                abstract = article.get('abstract', "")
+                date = article.get('date', "")
                 if date == "None":
                     date = None
-                url = article['url']
-                pmid = article['pmid']
-                doi = article['doi']
-                mesh_terms = article['mesh_terms']
-                disclosure = article['disclosure']
-                title_review = article['title_review']
-                authors_affiliations = article['authors_affiliations']
-                if not Article.objects.filter(doi=doi).exists():
-                    article = Article.objects.create(title=title, 
-                                                    abstract=abstract, 
-                                                    date=date, url=url, 
-                                                    pmid=pmid, doi=doi, 
-                                                    mesh_terms=mesh_terms, 
-                                                    disclosure=disclosure, 
-                                                    title_review=title_review, 
-                                                    term=term + "_" + filter)
-                    for author_affiliation in authors_affiliations:
-                        author_name = author_affiliation['author_name']
-                        affiliations = author_affiliation['affiliations']
-                        author, created = Authors.objects.get_or_create(name=author_name)
-                        for affiliation in affiliations:
-                            affiliation, created = Affiliations.objects.get_or_create(name=affiliation)
-                            if not Authorship.objects.filter(article=article, author=author, affiliation=affiliation).exists():
-                                Authorship.objects.create(article=article, author=author, affiliation=affiliation)
-
-
-import csv
-from pathlib import Path
-
+                url = article.get('url', "")
+                pmid = article.get('pmid', "")
+                doi = article.get('doi', "")
+                mesh_terms = article.get('mesh_terms', "")
+                disclosure = article.get('disclosure', "")
+                title_review = article.get('title_review', "")
+                authors_affiliations = article.get('authors_affiliations', "")
+                try:
+                    authors_affiliations = ast.literal_eval(authors_affiliations)
+                except Exception as e:
+                    author_affiliation = []
+                    article_ = Article(title=title, 
+                                        abstract=abstract, 
+                                        date=date, url=url, 
+                                        pmid=pmid, doi=doi, 
+                                        mesh_terms=mesh_terms, 
+                                        disclosure=disclosure, 
+                                        title_review=title_review, 
+                                        term=term + "_" + filter)
+                if not doi in existing_articles:
+                    new_articles.append(article_)
+                for author_affiliation in authors_affiliations:
+                    author_name = author_affiliation.get('author_name', "")
+                    author_name = Authors(name=author_name)
+                    if not author_name in existing_authors:
+                        new_authors.append(author_name)
+                    affiliations = author_affiliation.get('affiliations', "")
+                    try:
+                        affiliations = ast.literal_eval(affiliations)
+                    except:
+                        affiliations = []
+                    for affiliation in affiliations:
+                        affiliation_ = Affiliations(name=affiliation)
+                        if not affiliation in existing_affiliations:
+                            new_affiliations.append(affiliation_)
+                        new_autorship.append(Authorship(article=article_, author=author_name, affiliation=affiliation_))
+                with transaction.atomic():
+                    if new_articles:
+                        Article.objects.bulk_create(new_articles)
+                    if new_authors:
+                        Authors.objects.bulk_create(new_authors)
+                    if new_affiliations:
+                        Affiliations.objects.bulk_create(new_affiliations) 
+                    if new_autorship:   
+                        Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
+              
+              
 def article_csv_to_database():
     """
     Read CSV files of articles scraped from PubMed and save them to the database
@@ -298,6 +326,13 @@ def article_csv_to_database():
     after the article_scraper function has finished.
     
     """
+    existing_articles = {article.doi: article for article in Article.objects.all()}
+    existing_authors = {author.name: author for author in Authors.objects.all()}
+    existing_affiliations = {affiliation.name: affiliation for affiliation in Affiliations.objects.all()}
+    new_articles = []
+    new_authors = []
+    new_affiliations = []
+    new_autorship = []
     term_list = ["multiple_sclerosis", "herpes_zoster"]
     for term in term_list:
         filter = "2024"
@@ -305,48 +340,56 @@ def article_csv_to_database():
         with output_path.open('r', encoding='utf-8') as f:
             articles = csv.DictReader(f)
             for article in articles:
-                title = article['title']
-                abstract = article['abstract']
-                date = article['date']
+                title = article.get('title', "")
+                abstract = article.get('abstract', "")
+                date = article.get('date', "")
                 if date == "None":
                     date = None
-                url = article['url']
-                pmid = article['pmid']
-                doi = article['doi']
-                mesh_terms = article['mesh_terms']
-                disclosure = article['disclosure']
-                title_review = article['title_review']
-                authors_affiliations = eval(article['authors_affiliations'])  # Convert string representation of list to actual list
-                if not Article.objects.filter(doi=doi).exists():
-                    # Create a new article
-                    article_instance = Article.objects.create(
-                        title=title,
-                        abstract=abstract,
-                        date=date,
-                        url=url,
-                        pmid=pmid,
-                        doi=doi,
-                        mesh_terms=mesh_terms,
-                        disclosure=disclosure,
-                        title_review=title_review,
-                        term=term + "_" + filter
-                    )
-                    
-                    # Loop through the authors and affiliations
-                    for author_affiliation in authors_affiliations:
-                        author_name = author_affiliation['author_name']
-                        affiliations = author_affiliation['affiliations']
-                        
-                        # Create or get the author
-                        author, created = Authors.objects.get_or_create(name=author_name)
-                        
-                        # Create or get the affiliations
-                        for affiliation in affiliations:
-                            affiliation_instance, created = Affiliations.objects.get_or_create(name=affiliation)
-                            
-                            # Create authorship link if it doesn't exist
-                            if not Authorship.objects.filter(article=article_instance, author=author, affiliation=affiliation_instance).exists():
-                                Authorship.objects.create(article=article_instance, author=author, affiliation=affiliation_instance)
+                url = article.get('url', "")
+                pmid = article.get('pmid', "")
+                doi = article.get('doi', "")
+                mesh_terms = article.get('mesh_terms', "")
+                disclosure = article.get('disclosure', "")
+                title_review = article.get('title_review', "")
+                authors_affiliations = article.get('authors_affiliations', "")
+                try:
+                    authors_affiliations = ast.literal_eval(authors_affiliations)
+                except Exception as e:
+                    author_affiliation = []
+                    article_ = Article(title=title, 
+                                        abstract=abstract, 
+                                        date=date, url=url, 
+                                        pmid=pmid, doi=doi, 
+                                        mesh_terms=mesh_terms, 
+                                        disclosure=disclosure, 
+                                        title_review=title_review, 
+                                        term=term + "_" + filter)
+                if not doi in existing_articles:
+                    new_articles.append(article_)
+                for author_affiliation in authors_affiliations:
+                    author_name = author_affiliation.get('author_name', "")
+                    author_name = Authors(name=author_name)
+                    if not author_name in existing_authors:
+                        new_authors.append(author_name)
+                    affiliations = author_affiliation.get('affiliations', "")
+                    try:
+                        affiliations = ast.literal_eval(affiliations)
+                    except:
+                        affiliations = []
+                    for affiliation in affiliations:
+                        affiliation_ = Affiliations(name=affiliation)
+                        if not affiliation in existing_affiliations:
+                            new_affiliations.append(affiliation_)
+                        new_autorship.append(Authorship(article=article_, author=author_name, affiliation=affiliation_))
+                with transaction.atomic():
+                    if new_articles:
+                        Article.objects.bulk_create(new_articles)
+                    if new_authors:
+                        Authors.objects.bulk_create(new_authors)
+                    if new_affiliations:
+                        Affiliations.objects.bulk_create(new_affiliations) 
+                    if new_autorship:   
+                        Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
 
 
 @error_handling
