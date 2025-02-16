@@ -94,14 +94,23 @@ class ArticleForm(forms.ModelForm):
                 affiliation_ = Affiliations(name=affiliation)
                 if affiliation not in existing_affiliations:
                     new_affiliations.append(affiliation_)
-                new_autorship.append(Authorship(article=article, author=author_name_, affiliation=affiliation_))
         with transaction.atomic():
             if new_authors:
                 Authors.objects.bulk_create(new_authors)
+                existing_authors.update({author.name: author for author in Authors.objects.all()})
             if new_affiliations:
                 Affiliations.objects.bulk_create(new_affiliations)
+                existing_affiliations.update({affiliation.name: affiliation for affiliation in Affiliations.objects.all()})
+        for author_data in author_affiliation_data:
+            author_name = author_data.get('author_name')
+            author_name_ = existing_authors.get(author_name)
+            affiliations = author_data.get('affiliations')
+            for affiliation in affiliations.split('|'):
+                affiliation_ = existing_affiliations.get(affiliation)
+                new_autorship.append(Authorship(article=article, author=author_name_, affiliation=affiliation_))
+        with transaction.atomic():
             if new_autorship:
-                Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
+                Authorship.objects.bulk_create(new_autorship)
         return article, created, updated_fields
 
 

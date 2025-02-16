@@ -292,17 +292,43 @@ def article_json_to_database():
                         affiliation_ = Affiliations(name=affiliation)
                         if not affiliation in existing_affiliations:
                             new_affiliations.append(affiliation_)
-                        new_autorship.append(Authorship(article=article_, author=author_name_, affiliation=affiliation_))
-                with transaction.atomic():
-                    if new_articles:
-                        Article.objects.bulk_create(new_articles)
-                    if new_authors:
-                        Authors.objects.bulk_create(new_authors)
-                    if new_affiliations:
-                        Affiliations.objects.bulk_create(new_affiliations) 
-                    if new_autorship:   
-                        Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
-              
+    with transaction.atomic():
+        if new_articles:
+            Article.objects.bulk_create(new_articles)
+            existing_articles.update({article.doi: article for article in Article.objects.all()})
+        if new_authors:
+            Authors.objects.bulk_create(new_authors)
+            existing_authors.update({author.name: author for author in Authors.objects.all()})
+        if new_affiliations:
+            Affiliations.objects.bulk_create(new_affiliations) 
+            existing_affiliations.update({affiliation.name: affiliation for affiliation in Affiliations.objects.all()})
+    for term in term_list:
+        output_path = Path(settings.EXPORT_JSON_DIR + "/" + term + "_" + filter + ".json")
+        with output_path.open('r', encoding='utf-8') as f:
+            articles = json.load(f)
+            for article in articles:
+                doi = article.get('doi', "")
+                article = existing_articles.get(doi)
+                authors_affiliations = article.get('authors_affiliations', "")
+                try:
+                    authors_affiliations = ast.literal_eval(authors_affiliations)
+                except:
+                    authors_affiliations = []
+                for author_affiliation in authors_affiliations:
+                    author_name = author_affiliation.get('author_name', "")
+                    author_name = existing_authors.get(author_name)
+                    affiliations = author_affiliation.get('affiliations', "")
+                    try:
+                        affiliations = ast.literal_eval(affiliations)
+                    except:
+                        affiliations = []
+                    for affiliation in affiliations:
+                        affiliation = existing_affiliations.get(affiliation)
+                new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation))
+    with transaction.atomic():
+        if new_autorship:
+            Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
+        
               
 def article_csv_to_database():
     """
