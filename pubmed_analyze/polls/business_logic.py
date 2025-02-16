@@ -308,23 +308,23 @@ def article_json_to_database():
             articles = json.load(f)
             for article in articles:
                 doi = article.get('doi', "")
-                article = existing_articles.get(doi)
                 authors_affiliations = article.get('authors_affiliations', "")
+                article_ = existing_articles.get(doi)
                 try:
                     authors_affiliations = ast.literal_eval(authors_affiliations)
                 except:
                     authors_affiliations = []
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
-                    author_name = existing_authors.get(author_name)
                     affiliations = author_affiliation.get('affiliations', "")
+                    author_name = existing_authors.get(author_name)
                     try:
                         affiliations = ast.literal_eval(affiliations)
                     except:
                         affiliations = []
                     for affiliation in affiliations:
-                        affiliation = existing_affiliations.get(affiliation)
-                        new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation))
+                        affiliation_ = existing_affiliations.get(affiliation)
+                        new_autorship.append(Authorship(article=article_, author=author_name, affiliation=affiliation_))
     with transaction.atomic():
         if new_autorship:
             Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
