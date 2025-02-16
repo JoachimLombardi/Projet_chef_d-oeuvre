@@ -324,7 +324,7 @@ def article_json_to_database():
                         affiliations = []
                     for affiliation in affiliations:
                         affiliation = existing_affiliations.get(affiliation)
-                new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation))
+                        new_autorship.append(Authorship(article=article, author=author_name, affiliation=affiliation))
     with transaction.atomic():
         if new_autorship:
             Authorship.objects.bulk_create(new_autorship, ignore_conflicts=True)
