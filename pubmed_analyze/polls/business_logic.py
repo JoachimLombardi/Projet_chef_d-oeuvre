@@ -238,7 +238,7 @@ def article_json_to_database():
     The function does not return anything.
 
     """
-    existing_articles = {article.doi: article for article in Article.objects.all()}
+    existing_articles = {article.pmid: article for article in Article.objects.all()}
     existing_authors = {author.name: author for author in Authors.objects.all()}
     existing_affiliations = {affiliation.name: affiliation for affiliation in Affiliations.objects.all()}
     new_articles = []
@@ -307,7 +307,8 @@ def article_json_to_database():
             for article in articles:
                 pmid = article.get('pmid')
                 authors_affiliations = article.get('authors_affiliations', "")
-                article_obj = existing_articles.get(pmid)
+                article_obj = existing_articles.get(int(pmid))
+                print(list(existing_articles.keys())[0])
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     affiliations = author_affiliation.get('affiliations', "")
