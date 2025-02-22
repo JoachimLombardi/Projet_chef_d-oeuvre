@@ -275,9 +275,9 @@ def article_json_to_database():
                                     disclosure=disclosure, 
                                     title_review=title_review, 
                                     term=term + "_" + filter)
-                if doi and not doi in existing_articles and not doi in article_in_json:
+                if pmid in existing_articles and not pmid in article_in_json:
                     new_articles.append(article_obj)
-                    article_in_json.add(doi)
+                    article_in_json.add(pmid)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     author_name_obj = Authors(name=author_name)
@@ -293,7 +293,7 @@ def article_json_to_database():
     with transaction.atomic():
         if new_articles:
             Article.objects.bulk_create(new_articles)
-            existing_articles.update({article.doi: article for article in Article.objects.all()})
+            existing_articles.update({article.pmid: article for article in Article.objects.all()})
         if new_authors:
             Authors.objects.bulk_create(new_authors)
             existing_authors.update({author.name: author for author in Authors.objects.all()})
@@ -305,9 +305,9 @@ def article_json_to_database():
         with output_path.open('r', encoding='utf-8') as f:
             articles = json.load(f)
             for article in articles:
-                doi = article.get('doi', "")
+                pmid = article.get('pmid')
                 authors_affiliations = article.get('authors_affiliations', "")
-                article_obj = existing_articles.get(doi)
+                article_obj = existing_articles.get(pmid)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     affiliations = author_affiliation.get('affiliations', "")
