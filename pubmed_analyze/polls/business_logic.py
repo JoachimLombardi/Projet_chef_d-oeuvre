@@ -308,7 +308,6 @@ def article_json_to_database():
                 pmid = article.get('pmid')
                 authors_affiliations = article.get('authors_affiliations', "")
                 article_obj = existing_articles.get(int(pmid))
-                print(list(existing_articles.keys())[0])
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     affiliations = author_affiliation.get('affiliations', "")
