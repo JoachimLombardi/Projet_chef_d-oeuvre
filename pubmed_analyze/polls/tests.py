@@ -63,9 +63,7 @@ class ExtractArticlesTest(TestCase):
         # Appel direct de la fonction à tester (en utilisant le fichier réel)
         article_json_to_database()
         # Vérifie que l'article a été créé
-        created_articles = Article.objects.filter(title="Multiple sclerosis")
-        # Vérifie les détails de l'article
-        article = created_articles[0]
+        article = Article.objects.filter(title="Multiple sclerosis").first()
         self.assertEqual(article.title, "Multiple sclerosis")
         self.assertEqual(article.abstract, "Multiple sclerosis remains one of the most common causes of neurological disability in the young adult population (aged 18-40 years). Novel pathophysiological findings underline the importance of the interaction between genetics and environment. Improvements in diagnostic criteria, harmonised guidelines for MRI, and globalised treatment recommendations have led to more accurate diagnosis and an earlier start of effective immunomodulatory treatment than previously. Understanding and capturing the long prodromal multiple sclerosis period would further improve diagnostic abilities and thus treatment initiation, eventually improving long-term disease outcomes. The large portfolio of currently available medications paved the way for personalised therapeutic strategies that will balance safety and effectiveness. Incorporation of cognitive interventions, lifestyle recommendations, and management of non-neurological comorbidities could further improve quality of life and outcomes. Future challenges include the development of medications that successfully target the neurodegenerative aspect of the disease and creation of sensitive imaging and fluid biomarkers that can effectively predict and monitor disease changes.")
         self.assertEqual(article.date, date(2024, 1, 13))

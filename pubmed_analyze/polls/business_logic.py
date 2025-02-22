@@ -245,6 +245,7 @@ def article_json_to_database():
     new_authors = []
     new_affiliations = []
     new_autorship = []
+    article_in_json = set()
     author_in_json = set()
     affiliation_in_json = set()
     term_list = ["multiple_sclerosis", "herpes_zoster"]
@@ -266,10 +267,6 @@ def article_json_to_database():
                 disclosure = article.get('disclosure', "")
                 title_review = article.get('title_review', "")
                 authors_affiliations = article.get('authors_affiliations', "")
-                try:
-                    authors_affiliations = ast.literal_eval(authors_affiliations)
-                except Exception as e:
-                    author_affiliation = []
                 article_obj = Article(title=title, 
                                     abstract=abstract, 
                                     date=date, url=url, 
@@ -278,8 +275,9 @@ def article_json_to_database():
                                     disclosure=disclosure, 
                                     title_review=title_review, 
                                     term=term + "_" + filter)
-                if not doi in existing_articles:
+                if doi and not doi in existing_articles and not doi in article_in_json:
                     new_articles.append(article_obj)
+                    article_in_json.add(doi)
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     author_name_obj = Authors(name=author_name)
@@ -287,10 +285,6 @@ def article_json_to_database():
                         new_authors.append(author_name_obj)
                         author_in_json.add(author_name)
                     affiliations = author_affiliation.get('affiliations', "")
-                    try:
-                        affiliations = ast.literal_eval(affiliations)
-                    except:
-                        affiliations = []
                     for affiliation in affiliations:
                         affiliation_obj = Affiliations(name=affiliation)
                         if not affiliation in existing_affiliations and not affiliation in affiliation_in_json:
@@ -314,18 +308,10 @@ def article_json_to_database():
                 doi = article.get('doi', "")
                 authors_affiliations = article.get('authors_affiliations', "")
                 article_obj = existing_articles.get(doi)
-                try:
-                    authors_affiliations = ast.literal_eval(authors_affiliations)
-                except:
-                    authors_affiliations = []
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     affiliations = author_affiliation.get('affiliations', "")
                     author_name_obj = existing_authors.get(author_name)
-                    try:
-                        affiliations = ast.literal_eval(affiliations)
-                    except:
-                        affiliations = []
                     for affiliation in affiliations:
                         affiliation_obj = existing_affiliations.get(affiliation)
                         new_autorship.append(Authorship(article=article_obj, author=author_name_obj, affiliation=affiliation_obj))
