@@ -275,7 +275,7 @@ def article_json_to_database():
                                     disclosure=disclosure, 
                                     title_review=title_review, 
                                     term=term + "_" + filter)
-                if pmid in existing_articles and not pmid in article_in_json:
+                if pmid not in existing_articles and pmid not in article_in_json:
                     new_articles.append(article_obj)
                     article_in_json.add(pmid)
                 for author_affiliation in authors_affiliations:
