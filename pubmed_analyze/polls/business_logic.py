@@ -281,13 +281,13 @@ def article_json_to_database():
                 for author_affiliation in authors_affiliations:
                     author_name = author_affiliation.get('author_name', "")
                     author_name_obj = Authors(name=author_name)
-                    if not author_name in existing_authors and not author_name in author_in_json:
+                    if author_name not in existing_authors and author_name not in author_in_json:
                         new_authors.append(author_name_obj)
                         author_in_json.add(author_name)
                     affiliations = author_affiliation.get('affiliations', "")
                     for affiliation in affiliations:
                         affiliation_obj = Affiliations(name=affiliation)
-                        if not affiliation in existing_affiliations and not affiliation in affiliation_in_json:
+                        if affiliation not in existing_affiliations and affiliation not in affiliation_in_json:
                             new_affiliations.append(affiliation_obj)
                             affiliation_in_json.add(affiliation)
     with transaction.atomic():

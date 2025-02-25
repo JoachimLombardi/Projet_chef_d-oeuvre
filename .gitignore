@@ -172,3 +172,4 @@ vllm_models/
 *.h5
 
 .vs
+elasticsearch-8.15.1
