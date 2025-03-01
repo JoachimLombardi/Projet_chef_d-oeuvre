@@ -13,6 +13,9 @@ ARG EMAIL_HOST_PASSWORD
 ARG OPENAI_API_KEY
 ARG ERROR_NOTIFICATION_EMAIL 
 ARG DEFAULT_FROM_EMAIL 
+ARG DJANGO_SUPERUSER_USERNAME
+ARG DJANGO_SUPERUSER_EMAIL
+ARG DJANGO_SUPERUSER_PASSWORD
 
 ENV ALLOWED_HOSTS=${ALLOWED_HOSTS}
 ENV DATABASE_URL=${DATABASE_URL}
@@ -26,6 +29,9 @@ ENV EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
 ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 ENV ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
 ENV DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
+ENV DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
+ENV DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+ENV DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
 
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /pubmed_analyze
@@ -33,14 +39,6 @@ WORKDIR /pubmed_analyze
 # Copier le reste de l'application
 COPY ../ /pubmed_analyze/
 
-# # Donner les permissions d'exécution au script
-# RUN chmod +x pubmed_analyze/entrypoint.sh
-
 # Exposer le port 8000 pour Django
 EXPOSE 8000
 
-# Définir le point d'entrée pour exécuter le script
-# ENTRYPOINT ["/entrypoint.sh"]
-
-# Commande par défaut (lancée par ENTRYPOINT)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

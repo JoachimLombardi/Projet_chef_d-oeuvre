@@ -107,6 +107,14 @@ DATABASES = {
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('DATABASE_HOST'),
         'PORT': os.getenv('DATABASE_PORT'),
+    },
+    'external': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'homo_sapiens_core_110_38', 
+        'USER': 'anonymous', 
+        'PASSWORD': '',  
+        'HOST': 'ensembldb.ensembl.org',  
+        'PORT': '3306'
     }
 }
 
@@ -164,6 +172,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 ERROR_NOTIFICATION_EMAIL = [os.getenv('EMAIL_HOST_USER')]
+ADMINS = [('Admin', os.getenv('EMAIL_HOST_USER'))]
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 
 

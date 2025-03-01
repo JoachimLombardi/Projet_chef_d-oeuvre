@@ -8,10 +8,40 @@ services:
   django:
     build:
       context: .
-      dockerfile: Dockerfile.django  # Assurez-vous d'avoir un Dockerfile spécifique pour Django
+      dockerfile: Dockerfile.django 
+    command: >
+      /bin/bash -c "
+        if python manage.py showmigrations | grep '\[ \]'; then
+          echo 'Migrations en attente, application...'
+          python manage.py makemigrations
+          python manage.py migrate
+        else
+          echo 'Aucune migration en attente.'
+        fi
+        if python manage.py shell -c \"from django.contrib.auth import get_user_model; print(get_user_model().objects.filter(is_superuser=True).exists())\" | grep -q 'False'; then
+          echo 'Création du superutilisateur...'
+          python manage.py createsuperuser --noinput
+        else
+          echo 'Superutilisateur déjà existant.'
+        fi
+        if ! python manage.py shell -c \"from pubmed_analyze.models import Article; exit(1 if Article.objects.exists() else 0)\"; then
+          echo 'Ajout des articles à la base de données...'
+          python manage.py commands article_to_database
+        else
+          echo 'Les articles sont déjà ajoutés.'
+        fi
+        if ! python manage.py shell -c \"from django_elasticsearch_dsl.registries import registry; exit(1 if registry.get_documents() else 0)\"; then
+          echo 'Indexation des articles...'
+          python manage.py commands index_articles
+        else
+          echo 'Les articles sont déjà indexés.'
+        fi
+        echo 'Démarrage du serveur Django...'
+        python manage.py runserver 0.0.0.0:8000
+      "
     container_name: django
     ports:
-      - "8000:8000"  # Accès à Django sur le port 8000
+      - "8000:8000" 
     environment:
       - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
       - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
@@ -26,6 +56,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
       - DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:

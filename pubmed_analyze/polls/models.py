@@ -63,3 +63,21 @@ class Authorship(models.Model):
     def __str__(self):
         return f"{self.author.name} - {self.affiliation.name} (Article: {self.article.title})"
 
+
+class Xref(models.Model):
+    xref_id = models.AutoField(primary_key=True)
+    display_label = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'xref' 
+        managed = False  
+
+
+class Gene(models.Model):
+    stable_id = models.CharField(max_length=255)
+    description = models.TextField()
+    display_xref = models.ForeignKey(Xref, on_delete=models.DO_NOTHING, db_column='display_xref_id')
+
+    class Meta:
+        db_table = 'gene' 
+        managed = False  

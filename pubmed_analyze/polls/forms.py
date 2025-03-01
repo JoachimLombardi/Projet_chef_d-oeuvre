@@ -222,3 +222,6 @@ class EvaluationForm(forms.Form):
         label="Rank Scaling Factors"
     )
 
+class GeneForm(forms.Form):
+    gene_name = forms.CharField(label="Recherche  un gène", widget=forms.TextInput(attrs={'class': 'form-control'}))
+   

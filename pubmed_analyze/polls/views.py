@@ -14,9 +14,9 @@ from django.conf import settings
 from django.http import HttpResponse
 import requests
 from polls.monitoring.monitor_rag import handle_rag_pipeline
-from .models import Article
+from .models import Article, Gene, Xref
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
+from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, GeneForm, RAGForm, EvaluationForm
 from .business_logic import generation, search_articles
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
@@ -338,6 +338,30 @@ def grafana(request):
 def uptime_kuma(request):
     return redirect('http://127.0.0.1:3001')
 
+
+@error_handling
+def get_info_gene(request):
+    """Function to get information about a gene from Ensembl database using Django ORM.
+
+    Parameters:
+    gene_name (str): The name of the gene to search for.
+
+    Returns:
+    dict: A dictionary containing information about the gene.
+    """
+    form = GeneForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            gene_name = form.cleaned_data.get('gene_name')
+            genes = Gene.objects.using('external').filter(display_xref__display_label__icontains=gene_name)
+            if not genes.exists():
+                messages.error(request, "Informations sur le gène non trouvées")
+                return redirect('get_info_gene')
+            return render(request, 'polls/info_gene.html', {'form': form, "gènes": genes})
+        else:
+            messages.error(request, "Le formulaire n'est pas valide")
+    return render(request, 'polls/info_gene.html', {'form': form})
+ 
 
 
 

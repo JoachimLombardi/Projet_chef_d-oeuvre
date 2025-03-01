@@ -1,0 +1,60 @@
+{% extends "polls/base.html" %}
+
+{% block title %}
+    Info Gene
+{% endblock %}
+
+{% block content %}
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <div class="alert
+                    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                        alert-danger
+                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                        alert-success
+                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                        alert-warning
+                    {% else %}
+                        alert-info
+                    {% endif %}
+                ">
+                    {{ message|safe }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+<div class="container mt-5">
+    
+    <h1 class="text-center mb-4">Info gène</h1>
+
+    <form method="POST" action="{% url 'gene' %}" class="mb-4">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Envoyer</button>
+    </form>
+
+    {% if stable_id %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title">Gène :</h2>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ stable_id }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    
+    {% if description %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title">Info gène :</h2>
+        </div>
+        <div class="card-body">
+            <p class="card-text">{{ description }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
