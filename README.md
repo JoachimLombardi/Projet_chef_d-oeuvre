@@ -51,6 +51,11 @@ DATABASE_PASSWORD=simplon2024
 DATABASE_HOST=db
 DATABASE_PORT=5432
 
+# Configuration de l'administrateur
+DJANGO_SUPERUSER_USERNAME=your_username # Nom d'utilisateur de l'administrateur
+DJANGO_SUPERUSER_EMAIL=your_email_here # Email de l'administrateur
+DJANGO_SUPERUSER_PASSWORD=your_password_here # Mot de passe de l'administrateur
+
 # Clés API externes
 OPENAI_API_KEY=your_openai_api_key_here  # Remplacez par votre clé API OpenAI
 HUGGING_FACE_HUB_TOKEN=your_hugging_face_token_here  # Remplacez par votre jeton Hugging Face
@@ -58,6 +63,8 @@ HUGGING_FACE_HUB_TOKEN=your_hugging_face_token_here  # Remplacez par votre jeton
 # Configuration de l'email
 EMAIL_HOST_USER=your_email_address_here  # Remplacez par l'adresse email utilisée pour envoyer les emails via Django
 EMAIL_HOST_PASSWORD=your_email_password_here  # Remplacez par le mot de passe de votre adresse email
+DEFAULT_FROM_EMAIL=your_email_address_here # Adresse e-mail utilisée par défaut comme expéditeur.
+ERROR_NOTIFICATION_EMAIL=your_email_here # Liste des e-mails qui recevront les notifications d'erreur.
 
 # Paramètres de Django
 SECRET_KEY=your_django_secret_key_here  # Remplacez par une clé secrète unique pour votre projet Django
