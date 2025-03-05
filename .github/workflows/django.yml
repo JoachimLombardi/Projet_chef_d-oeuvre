@@ -19,26 +19,27 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DJANGO_SUPERUSER_USERNAME: ${{ secrets.DJANGO_SUPERUSER_USERNAME }}
-      DJANGO_SETTINGS_MODULE: pubmed_analyze.settings
+      DJANGO_SUPERUSER_EMAIL: ${{ secrets.DJANGO_SUPERUSER_EMAIL }}
+      DJANGO_SUPERUSER_PASSWORD: ${{ secrets.DJANGO_SUPERUSER_PASSWORD }}
 
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
-          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          POSTGRES_DB: ${{secrets.DATABASE_NAME}}
+          POSTGRES_USER: ${{secrets.DATABASE_USER}}
+          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}"
+          --health-cmd="pg_isready -U test_user -d test_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5  
@@ -50,7 +51,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11.8'  
+        python-version: '3.12.7'  
 
     - name: Install dependencies
       run: |
@@ -60,7 +61,9 @@ jobs:
       run: |
         python pubmed_analyze/manage.py test polls  
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DATABASE_URL: ${{secrets.DATABASE_URL}}
+        DJANGO_SETTINGS_MODULE: pubmed_analyze.settings  
+
 
   # deploy:
   #   runs-on: ubuntu-latest
