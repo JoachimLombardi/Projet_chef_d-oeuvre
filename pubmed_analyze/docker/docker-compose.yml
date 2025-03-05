@@ -43,8 +43,8 @@ services:
     ports:
       - "8000:8000" 
     environment:
-      - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
+      - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings 
+      - DATABASE_URL=${DATABASE_URL} 
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_USER=${DATABASE_USER}
@@ -57,8 +57,8 @@ services:
       - ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
       - DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${EMAIL_HOST_USER}
+      - DJANGO_SUPERUSER_PASSWORD=${DATABASE_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:

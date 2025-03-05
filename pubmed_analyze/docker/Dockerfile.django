@@ -1,4 +1,8 @@
 # Utiliser une image Python comme base
+# docker tag docker-django:latest joachimlombardi/django:latest
+# docker login
+# docker push joachimlombardi/django:latest 
+
 FROM joachimlombardi/pubmed_dependencies:latest
 
 ARG ALLOWED_HOSTS
@@ -14,8 +18,6 @@ ARG OPENAI_API_KEY
 ARG ERROR_NOTIFICATION_EMAIL 
 ARG DEFAULT_FROM_EMAIL 
 ARG DJANGO_SUPERUSER_USERNAME
-ARG DJANGO_SUPERUSER_EMAIL
-ARG DJANGO_SUPERUSER_PASSWORD
 
 ENV ALLOWED_HOSTS=${ALLOWED_HOSTS}
 ENV DATABASE_URL=${DATABASE_URL}
@@ -30,8 +32,7 @@ ENV OPENAI_API_KEY=${OPENAI_API_KEY}
 ENV ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
 ENV DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
 ENV DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-ENV DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
-ENV DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+
 
 # Définir le répertoire de travail dans le conteneur
 WORKDIR /pubmed_analyze
@@ -42,3 +43,8 @@ COPY ../ /pubmed_analyze/
 # Exposer le port 8000 pour Django
 EXPOSE 8000
 
+# # Donner les permissions d'exécution au fichier script
+# RUN chmod +x .pubmed_analyze/docker/entrypoint.sh
+
+# # Utiliser ce script comme point d'entrée
+# ENTRYPOINT ["/bin/bash", "./docker/entrypoint.sh"]

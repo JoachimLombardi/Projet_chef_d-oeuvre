@@ -19,27 +19,26 @@ jobs:
       DATABASE_USER: ${{ secrets.DATABASE_USER }}
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
-      DATABASE_PORT: ${{ secrets.DATABASE_PORT}}
+      DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
       EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
       EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ERROR_NOTIFICATION_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DEFAULT_FROM_EMAIL: ${{ secrets.EMAIL_HOST_USER }}
       DJANGO_SUPERUSER_USERNAME: ${{ secrets.DJANGO_SUPERUSER_USERNAME }}
-      DJANGO_SUPERUSER_EMAIL: ${{ secrets.DJANGO_SUPERUSER_EMAIL }}
-      DJANGO_SUPERUSER_PASSWORD: ${{ secrets.DJANGO_SUPERUSER_PASSWORD }}
+      DJANGO_SETTINGS_MODULE: pubmed_analyze.settings
 
     services:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: ${{secrets.DATABASE_NAME}}
-          POSTGRES_USER: ${{secrets.DATABASE_USER}}
-          POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+          POSTGRES_DB: ${{ secrets.DATABASE_NAME }}
+          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U test_user -d test_db"
+          --health-cmd="pg_isready -U ${{ secrets.DATABASE_USER }} -d ${{ secrets.DATABASE_NAME }}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5  
@@ -51,7 +50,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.12.7'  
+        python-version: '3.11.8'  
 
     - name: Install dependencies
       run: |
@@ -61,5 +60,48 @@ jobs:
       run: |
         python pubmed_analyze/manage.py test polls  
       env:
-        DATABASE_URL: ${{secrets.DATABASE_URL}}
-        DJANGO_SETTINGS_MODULE: pubmed_analyze.settings  
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: test  # This ensures that the deploy job only runs if the test job succeeds
+  #   env:
+  #     ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+  #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  #     DATABASE_HOST: ${{ secrets.DATABASE_HOST }}
+  #     DATABASE_USER: ${{ secrets.DATABASE_USER }}
+  #     DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+  #     DATABASE_NAME: ${{ secrets.DATABASE_NAME }}
+  #     DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+  #     DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  #     DJANGO_SETTINGS_MODULE: pubmed_analyze.settings
+
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v2
+
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: '3.11.8'
+
+  #   - name: Install dependencies
+  #     run: |
+  #       pip install -r pubmed_analyze/docker/requirements.txt
+
+  #   - name: Deploy to Azure (or your cloud provider)
+  #     run: |
+  #       # Here, adjust the commands for deploying your Django app to your cloud provider
+  #       # Example for Azure (make sure you have Azure CLI configured as secret or environment variable)
+  #       az webapp up --name your-app-name --resource-group your-resource-group --plan your-app-service-plan --location your-location
+  #       # Or use Docker to push the container image to a container registry if needed
+
+  #   - name: Run migrations
+  #     run: |
+  #       python pubmed_analyze/manage.py migrate
+  #       # Optionally, add more commands for your post-deployment steps like collecting static files, etc.
+
+  #   - name: Restart application
+  #     run: |
+  #       # If you're using Azure App Service, for example:
+  #       az webapp restart --name your-app-name --resource-group your-resource-group

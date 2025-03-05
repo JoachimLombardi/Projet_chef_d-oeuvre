@@ -7,17 +7,12 @@
 
 import json
 from pathlib import Path
-import pdb
-import re
 import time
 from django.conf import settings
-from django.http import HttpResponse
-import requests
 from polls.monitoring.monitor_rag import handle_rag_pipeline
 from .models import Article, Gene, Xref
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, GeneForm, RAGForm, EvaluationForm
-from .business_logic import generation, search_articles
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -26,8 +21,6 @@ from polls.rag_evaluation.file_eval_json import queries, expected_abstracts
 from polls.rag_evaluation.evaluation_rag_model import create_eval_rag_json, rag_articles_for_eval, eval_retrieval, eval_response
 from polls.utils import convert_seconds, error_handling
 from django.core.paginator import Paginator
-from deepeval.metrics import FaithfulnessMetric, ContextualRelevancyMetric
-from deepeval.test_case import LLMTestCase
 import os
 
 openai_key = os.getenv("OPENAI_API_KEY")
@@ -135,7 +128,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             auth_login(request, user)  
-            return redirect('rag_articles')
+            return redirect('list_articles')
         else:
             messages.error("Le formulaire n'est pas valide")
     return render(request, 'polls/register.html', {'form': form})
@@ -222,51 +215,21 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                 found_abstract = retrieved_documents[0]["abstract"]
                 print(context, flush=True)
                 print(type(context), flush=True)
-                if choose_eval_method == "deep_eval":
-                    metric = FaithfulnessMetric(
-                        threshold=0.7,
-                        model=model_evaluation,
-                        include_reason=True
-                    )
-                    test_case = LLMTestCase(
-                        input=query,
-                        actual_output=response,
-                        retrieval_context=list(context)
-                    )
-                    metric.measure(test_case)
-                    score_generation = metric.score
-                    score_generation_list.append(score_generation)
-                    scoring_generation_reason = metric.reason
-                    metric = ContextualRelevancyMetric(
-                    threshold=0.7,
-                    model=model_evaluation,
-                    include_reason=True
-                    )
-                    test_case = LLMTestCase(
-                        input=query,
-                        actual_output=response,
-                        retrieval_context=list(context)
-                    )
-                    metric.measure(test_case)
-                    score_retrieval = metric.score
-                    score_retrieval_list.append(score_retrieval)
-                    scoring_retrieval_reason = metric.reason
-                else:
-                    number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
-                    # Évaluation de la récupération
-                    score_retrieval_list.append(number)
-                    # Évaluation de la génération
-                    score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
-                    score_generation = (score_generation - 1)/4
-                    score_generation_list.append(score_generation)
-                    # Stocker les résultats
-                    eval_rag_list.append({
-                        "query": query,
-                        "expected_abstract": expected_abstract,
-                        "found_abstract": found_abstract,
-                        "response": response
-                    })
-                    # Calcul des scores finaux
+                number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
+                # Évaluation de la récupération
+                score_retrieval_list.append(number)
+                # Évaluation de la génération
+                score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
+                score_generation = (score_generation - 1)/4
+                score_generation_list.append(score_generation)
+                # Stocker les résultats
+                eval_rag_list.append({
+                    "query": query,
+                    "expected_abstract": expected_abstract,
+                    "found_abstract": found_abstract,
+                    "response": response
+                })
+                # Calcul des scores finaux
                 score_retrieval = round(sum(score_retrieval_list) / len(score_retrieval_list), 2)
                 score_generation = round(sum(score_generation_list) / len(score_generation_list), 2)
             end_time = time.time()
