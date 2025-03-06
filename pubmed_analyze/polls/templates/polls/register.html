@@ -44,6 +44,14 @@
                 <div class="form-group">
                     {{ form.as_p }}
                 </div>
+                <div class="form-group">
+                    <p class="small text-muted">
+                        En vous inscrivant, vous acceptez que vos données personnelles soient collectées et traitées conformément à notre 
+                        politique de confidentialité.
+                        Vous avez le droit d'accéder à vos données personnelles, de les rectifier, de les supprimer ou de demander leur portabilité. 
+                        Vous pouvez également retirer votre consentement à tout moment et demander la suppression de votre compte et de vos données personnelles.
+                    </p>
+                </div>
                 <button type="submit" class="btn btn-primary btn-block">S'inscrire</button>
             </form>
             <p class="text-center mt-3">Déjà un compte ? <a href="{% url 'login' %}">Se connecter</a></p>

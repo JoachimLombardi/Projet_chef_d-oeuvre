@@ -64,20 +64,22 @@ class Authorship(models.Model):
         return f"{self.author.name} - {self.affiliation.name} (Article: {self.article.title})"
 
 
-class Xref(models.Model):
-    xref_id = models.AutoField(primary_key=True)
-    display_label = models.CharField(max_length=255)
+
+class Taxonomy(models.Model):
+    id = models.AutoField(primary_key=True)
+    lineage = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'xref' 
+        db_table = 'rnc_taxonomy'
         managed = False  
 
 
-class Gene(models.Model):
-    stable_id = models.CharField(max_length=255)
-    description = models.TextField()
-    display_xref = models.ForeignKey(Xref, on_delete=models.DO_NOTHING, db_column='display_xref_id')
+class RnaPrecomputed(models.Model):
+    id = models.AutoField(primary_key=True)
+    taxid = models.ForeignKey(Taxonomy, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    rna_type = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'gene' 
+        db_table = 'rnc_rna_precomputed'
         managed = False  

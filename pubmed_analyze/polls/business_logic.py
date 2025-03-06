@@ -65,19 +65,19 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, 
         soup = init_soup(link)
         if soup is None:
             continue
-        # Extract reviews title
-        title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
-        # Extract date
-        date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
-        date = format_date(date)
-        # Extract title
-        title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
         # Extract abstract
         abstract = soup.select('div.abstract-content p')
         abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
         if abstract:
             if isinstance(abstract, list):
                 abstract = " ".join(abstract)
+             # Extract reviews title
+            title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
+            # Extract date
+            date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
+            date = format_date(date)
+            # Extract title
+            title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
             # Extract PMID
             pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
             # Extract DOI

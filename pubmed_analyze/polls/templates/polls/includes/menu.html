@@ -4,5 +4,6 @@
     <a href="{% url 'evaluate_rag' %}" class="{% if request.resolver_match.url_name == 'evaluate_rag' %}active{% endif %}">Evaluation</a>
     <a href="{% url 'grafana' %}" class="{% if request.resolver_match.url_name == 'grafana' %}active{% endif %}">Grafana</a>
     <a href="{% url 'uptime_kuma' %}" class="{% if request.resolver_match.url_name == 'uptime_kuma' %}active{% endif %}">Uptime Kuma</a>
-    <a href="{% url 'gene' %}" class="{% if request.resolver_match.url_name == 'gene' %}active{% endif %}">Info gène</a>
+    <a href="{% url 'get_info_gene' %}" class="{% if request.resolver_match.url_name == 'get_info_gene' %}active{% endif %}">Info gène</a>
+    <a href="{% url 'disclaimer' %}" class="{% if request.resolver_match.url_name == 'disclaimer' %}active{% endif %}">Disclaimer</a>
 </div>

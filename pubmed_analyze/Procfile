@@ -1,1 +1,0 @@
-web: gunicorn pubmed_analyze.pubmed_analyze.wsgi --log-file -

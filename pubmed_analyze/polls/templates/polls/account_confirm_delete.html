@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+{% load custom_filters %}
+
+{% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    alert-danger
+                {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+                    alert-success
+                {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+                    alert-warning
+                {% else %}
+                    alert-info
+                {% endif %}
+            ">
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="container mt-4">
+    <h1 class="text-center">Supprimer votre compte</h1>
+    <p class="text-center">Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.</p>
+    <form method="post" class="text-center">
+        {% csrf_token %}
+        <input type="hidden" name="_method" value="DELETE">
+        <div class="d-flex justify-content-center mt-3">
+            <button type="submit" class="btn btn-danger mr-2">Oui, supprimer mon compte</button>
+            <a href="{% url 'article_list' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
