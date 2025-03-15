@@ -10,8 +10,14 @@ import json
 from pathlib import Path
 import time
 from django.conf import settings
+<<<<<<< HEAD
 from polls.monitoring.monitor_rag import handle_rag_pipeline
 from .models import Article, ArticlesWithAuthors, RnaPrecomputed
+=======
+from django.http import HttpResponseForbidden
+from polls.monitoring.monitor_rag import handle_rag_pipeline
+from .models import Article, RnaPrecomputed
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -24,9 +30,14 @@ from polls.utils import convert_seconds, error_handling
 from django.core.paginator import Paginator
 import os
 from rest_framework.decorators import api_view
+<<<<<<< HEAD
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 import pdb
+=======
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.response import Response
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 
 
 openai_key = os.getenv("OPENAI_API_KEY")
@@ -42,20 +53,34 @@ pk_param = openapi.Parameter(
 
 @swagger_auto_schema(
     method='get',
+<<<<<<< HEAD
     manual_parameters=[pk_param], 
     operation_description="Affiche le formulaire de création ou mise à jour d'un article.",
     responses={
         200: 'Formulaire rendu.',
         404: 'Article non trouvé.',
+=======
+    operation_description="Displays the article creation or update form.",
+    responses={
+        200: 'Form for creating or updating an article rendered.',
+        404: 'Article not found when editing.',
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     }
 )
 @swagger_auto_schema(
     method='post',
+<<<<<<< HEAD
     manual_parameters=[pk_param], 
     operation_description="Crée ou met à jour un article.",
     responses={
         200: 'Article créé ou mis à jour.',
         400: 'Erreur de validation du formulaire.',
+=======
+    operation_description="Handles both creation and update of articles.",
+    responses={
+        200: 'Article successfully created or updated.',
+        400: 'Form validation failed or article with the same details already exists.',
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     }
 )
 @api_view(['GET', 'POST'])
@@ -132,6 +157,7 @@ def create_or_update_article(request, pk=None):
 @login_required
 def article_list(request):
     """
+<<<<<<< HEAD
     Displays a paginated list of articles with authors and their affiliations.
 
     Paginates all articles with their authors and affiliations. Each page
@@ -145,6 +171,34 @@ def article_list(request):
     :return: A rendered template with the paginated list of articles
     """
     articles = ArticlesWithAuthors.objects.all()
+=======
+    Displays a paginated list of articles along with their authors and affiliations.
+
+    This view fetches all articles from the database, prefetching related author and 
+    affiliation data to minimize database queries. It then constructs a dictionary 
+    mapping authors to their respective affiliations for each article. The articles 
+    are paginated, displaying a specified number per page.
+
+    This view requires the user to be authenticated and is decorated with 
+    error handling to manage exceptions gracefully.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        A rendered HTML page displaying the list of articles, paginated, with 
+        author and affiliation details.
+    """
+
+    articles = Article.objects.prefetch_related('authorships__author', 'authorships__affiliation').order_by('id')
+    for article in articles:
+        affiliations_by_author = {}
+        for authorship in article.authorships.all():
+            author_name = authorship.author.name
+            affiliation_name = authorship.affiliation.name    
+            affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
+        article.affiliations_by_author = {author: list(affs) for author, affs in affiliations_by_author.items()}
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     paginator = Paginator(articles, 3)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -257,15 +311,30 @@ def rag_articles(request):
 
 
 @swagger_auto_schema(
+<<<<<<< HEAD
     methods=['get', 'post'],
     operation_description="Handles user registration: displays the form and processes submission.",
     responses={ 
         200: 'Registration form rendered successfully or user registered.',
+=======
+    method='get',
+    operation_description="Displays the registration form for a new user.",
+    responses={ 
+        200: 'Registration form rendered successfully.',
+    }
+)
+@swagger_auto_schema(
+    method='post',
+    operation_description="Registers a new user and logs them in if the form is valid.",
+    responses={ 
+        200: 'User successfully registered and logged in.',
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
         400: 'Form submission is invalid.',
     }
 )
 @api_view(['GET', 'POST'])
 @error_handling
+<<<<<<< HEAD
 def create_or_update_register(request):
     """
     Handles user registration: displays the form and processes submission.
@@ -287,6 +356,28 @@ def create_or_update_register(request):
                 user.set_password(form.cleaned_data['password1'])
             user.save()
             auth_login(request, user)
+=======
+def register(request):
+    """
+    Registers a new user and logs them in if the form is valid.
+
+    This view is connected to the 'register' URL pattern and is decorated with
+    the @error_handling decorator to catch any exceptions that may occur during
+    the registration process.
+
+    If the form is valid, it creates a new user and logs them in using
+    the auth_login function. If the user is successfully logged in, it
+    redirects to the article list page.
+
+    If the form is not valid, it displays an error message to the user.
+
+    """
+    form = CustomUserCreationForm(request.POST or None)
+    if request.method == 'POST':
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)  
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
             return redirect('list_articles')
         else:
             messages.error(request, "Le formulaire n'est pas valide")
@@ -348,13 +439,21 @@ def custom_login(request):
 
 
 @swagger_auto_schema(
+<<<<<<< HEAD
     method='post',
+=======
+    method='get',
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     operation_description="Logs out the user and redirects to the login page.",
     responses={
         200: 'User successfully logged out and redirected to login.',
     }
 )
+<<<<<<< HEAD
 @api_view(['POST'])
+=======
+@api_view(['GET'])
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 @error_handling
 def custom_logout(request):
     """
@@ -371,6 +470,7 @@ def custom_logout(request):
 
 
 @swagger_auto_schema(
+<<<<<<< HEAD
     method='get',
     operation_description="Displays the user's profile page.",
     responses={
@@ -385,6 +485,8 @@ def user_profile(request):
 
 
 @swagger_auto_schema(
+=======
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     methods=['GET', 'POST'],  
     operation_description="Deletes the authenticated user's account.",
     responses={
@@ -402,7 +504,11 @@ def delete_account(request):
 
     This view ensures that the user is logged in before proceeding with the deletion.
     """
+<<<<<<< HEAD
     if request.method == 'POST':
+=======
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE':
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
         user = request.user
         user.delete()  
         auth_logout(request)  
@@ -505,16 +611,30 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                 print(context, flush=True)
                 print(type(context), flush=True)
                 number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
+<<<<<<< HEAD
                 score_retrieval_list.append(number)
                 score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
                 score_generation = (score_generation - 1)/4
                 score_generation_list.append(score_generation)
+=======
+                # Évaluation de la récupération
+                score_retrieval_list.append(number)
+                # Évaluation de la génération
+                score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
+                score_generation = (score_generation - 1)/4
+                score_generation_list.append(score_generation)
+                # Stocker les résultats
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
                 eval_rag_list.append({
                     "query": query,
                     "expected_abstract": expected_abstract,
                     "found_abstract": found_abstract,
                     "response": response
                 })
+<<<<<<< HEAD
+=======
+                # Calcul des scores finaux
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
                 score_retrieval = round(sum(score_retrieval_list) / len(score_retrieval_list), 2)
                 score_generation = round(sum(score_generation_list) / len(score_generation_list), 2)
             end_time = time.time()
@@ -673,6 +793,10 @@ def disclaimer(request):
     Returns:
     HttpResponse: An HTTP response with the rendered Disclaimer page.
     """
+<<<<<<< HEAD
+=======
+
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     return render(request, 'polls/disclaimer.html')
 
 

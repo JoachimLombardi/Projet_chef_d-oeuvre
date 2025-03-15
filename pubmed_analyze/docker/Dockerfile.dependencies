@@ -9,5 +9,7 @@ WORKDIR /pubmed_analyze
 # Copier uniquement le fichier requirements.txt
 COPY ./requirements.txt /pubmed_analyze/requirements.txt
 
+RUN apt-get update && apt-get install -y libmysqlclient-dev
+
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt

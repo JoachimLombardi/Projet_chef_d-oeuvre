@@ -1,6 +1,7 @@
 import prometheus_client
 from polls.business_logic import search_articles, generation
 
+<<<<<<< HEAD
 rag_pipeline_latency = prometheus_client.Histogram(
     'rag_pipeline_latency_seconds', 'Latency of the RAG pipeline', 
     buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0]
@@ -30,6 +31,13 @@ rag_error_type_total = prometheus_client.Counter(
     'rag_error_type_total', 'Total number of RAG errors by type', ['type']
 )
 
+=======
+rag_pipeline_latency = prometheus_client.Summary('rag_pipeline_latency_seconds', 'Latency of the RAG pipeline')
+search_latency = prometheus_client.Summary('search_latency_seconds', 'Latency of document retrieval')
+llm_latency = prometheus_client.Summary('llm_latency_seconds', 'Latency of LLM generation')
+rag_requests_total = prometheus_client.Counter('rag_requests_total', 'Total number of RAG requests')
+rag_errors_total = prometheus_client.Counter('rag_errors_total', 'Total number of RAG errors')
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 
 @rag_pipeline_latency.time()
 def handle_rag_pipeline(query, llm, index):
@@ -54,8 +62,11 @@ def handle_rag_pipeline(query, llm, index):
         rag_requests_total.inc()  
         with search_latency.time():
             documents, query = search_articles(query, index)
+<<<<<<< HEAD
         avg_length = sum(len(doc) for doc in documents) / len(documents) if documents else 0
         document_length.observe(avg_length)  
+=======
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
         with llm_latency.time():
             response, documents_formated = generation(query, documents, llm, index)
         rag_success_ratio.set((rag_requests_total._value.get() - rag_errors_total._value.get()) / rag_requests_total._value.get())
@@ -63,12 +74,15 @@ def handle_rag_pipeline(query, llm, index):
 
     except Exception as e:
         rag_errors_total.inc()
+<<<<<<< HEAD
         error_type = "unknown"
         if "search" in str(e).lower():
             error_type = "retrieval"
         elif "generation" in str(e).lower():
             error_type = "llm"
         rag_error_type_total.labels(error_type).inc()
+=======
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
         response = f"error: {str(e)}"
         documents = ""
         return response, documents

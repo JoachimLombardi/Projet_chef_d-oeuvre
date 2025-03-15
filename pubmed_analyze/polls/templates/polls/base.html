@@ -58,6 +58,7 @@
     {% include "polls/includes/menu.html" %}
 
     <div class="user-status-bar d-flex justify-content-between align-items-center">
+<<<<<<< HEAD
         {% if user.is_authenticated %}
             <p class="mb-0">Connecté en tant que <strong>{{ user.username }}</strong></p>
             <form action="{% url 'logout' %}" method="post" class="mb-0">
@@ -68,9 +69,25 @@
             <a href="{% url 'create_update_profile' %}" class="btn btn-outline-warning btn-sm mr-2">Modifier mon profile</a>
             <a href="{% url 'delete_account' %}" class="btn btn-outline-danger btn-sm">Supprimer mon compte</a>
         {% endif %}
+=======
+        <p class="mb-0">Connecté en tant que <strong>{{ user.username }}</strong></p>
+        <form action="{% url 'logout' %}" method="post" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+        </form>
+        <form action="{% url 'delete_account' %}" method="post" class="mb-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">Supprimer mon compte</button>
+        </form>
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     </div>
     
 
+<<<<<<< HEAD
+=======
+
+    <!-- Contenu principal -->
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     <div class="content">
         {% block content %}
         {% endblock %}

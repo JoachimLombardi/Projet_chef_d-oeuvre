@@ -116,6 +116,7 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, 
     term = ""
     filter = "2025"
     suffix = term+"_"+filter
+<<<<<<< HEAD
     with requests.Session() as session:
         if not url:
             links = extract_pubmed_url(base_url, term, filter, session)
@@ -171,6 +172,75 @@ def scrap_article_to_json(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, 
                 output_path = Path(settings.EXPORT_JSON_DIR + "/" + suffix + ".json")
                 with output_path.open('w', encoding='utf-8') as f:
                     json.dump(articles_data, f, ensure_ascii=False, indent=4)
+=======
+    if not url:
+        links = extract_pubmed_url(base_url, term, filter)
+    else:
+        links = url
+    if suffix_article:
+        suffix += suffix_article
+    for link in links:
+        # Initialize soup
+        soup = init_soup(link)
+        if soup is None:
+            continue
+        # Extract abstract
+        abstract = soup.select('div.abstract-content p')
+        abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
+        if abstract:
+            if isinstance(abstract, list):
+                abstract = " ".join(abstract)
+             # Extract reviews title
+            title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
+            # Extract date
+            date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
+            date = format_date(date)
+            # Extract title
+            title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
+            # Extract PMID
+            pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
+            # Extract DOI
+            doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
+            if doi:
+                doi = "https://doi.org/"+doi
+            # Extract conflict of interest statement
+            disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
+            # Extract mesh terms
+            buttons = soup.select('button.keyword-actions-trigger')
+            mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
+            mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
+            url = get_absolute_url(pmid)
+            authors_tags = soup.select('.authors-list-item')
+            authors_affiliations = []
+            seen_authors = set() 
+            for author_tag in authors_tags:
+                # Extraire le nom de l'auteur
+                author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
+                if author_name and author_name not in seen_authors:
+                    seen_authors.add(author_name)
+                    # Extraire les affiliations
+                    affiliation_elements = author_tag.select('.affiliation-link')
+                    if affiliation_elements:
+                        affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
+                        authors_affiliations.append({'author_name': author_name, 'affiliations': affiliations_names})
+            # Add article data to list
+            articles_data.append({
+            'title_review': title_review,
+            'date': str(date),  # Convert date to string for JSON serialization
+            'title': title,
+            'abstract': abstract,
+            'pmid': pmid,
+            'doi': doi,
+            'disclosure': disclosure,
+            'mesh_terms': mesh_terms,
+            'url': url,
+            'authors_affiliations': authors_affiliations
+        })
+            # Save articles data to a JSON file
+            output_path = Path(settings.EXPORT_JSON_DIR + "/" + suffix + ".json")
+            with output_path.open('w', encoding='utf-8') as f:
+                json.dump(articles_data, f, ensure_ascii=False, indent=4)
+>>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 
 
 def scrap_article_to_csv(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, suffix_article=None):
