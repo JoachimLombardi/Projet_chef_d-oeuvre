@@ -64,7 +64,6 @@ class Authorship(models.Model):
         return f"{self.author.name} - {self.affiliation.name} (Article: {self.article.title})"
 
 
-<<<<<<< HEAD
 class ArticlesWithAuthors(models.Model):
     title_review = models.CharField(null=True, max_length=2000, verbose_name='title of review', db_column='title of review')
     date = models.DateField(null=True, verbose_name='date of publication', db_column='date of publication')
@@ -78,8 +77,6 @@ class ArticlesWithAuthors(models.Model):
     term = models.CharField(null=True, max_length=200, verbose_name='term', db_column='term')
     affiliations_by_author = models.JSONField(null=True, verbose_name='authors', db_column='authors')
 
-=======
->>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 
 class Taxonomy(models.Model):
     id = models.AutoField(primary_key=True)
@@ -98,9 +95,5 @@ class RnaPrecomputed(models.Model):
 
     class Meta:
         db_table = 'rnc_rna_precomputed'
-<<<<<<< HEAD
         managed = False  
 
-=======
-        managed = False  
->>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
