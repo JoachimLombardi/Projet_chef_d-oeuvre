@@ -11,7 +11,7 @@ import numpy as np
 from polls.models import Article, Affiliations, Authors, Authorship
 from unittest.mock import MagicMock, patch
 from polls.views import rag_articles
-from polls.business_logic import article_json_to_database, scrap_article_to_json
+from polls.business_logic import article_json_to_database, articles_full_to_database, scrap_article_to_json
 from django.contrib.auth import get_user_model
 
 
@@ -155,8 +155,9 @@ class ArticleCRUDTest(TestCase):
             url='http://example.com/test-article',
         )
         Authorship.objects.create(article=self.article, author=author, affiliation=affiliation)
+        articles_full_to_database()
 
-
+        
     def test_article_list_view(self):
         """
         Tests the article_list view.
