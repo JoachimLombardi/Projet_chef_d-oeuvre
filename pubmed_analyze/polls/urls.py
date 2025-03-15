@@ -35,11 +35,7 @@ urlpatterns = [
     path('uptime_kuma/', views.uptime_kuma, name='uptime_kuma'),
     path("", include("django_prometheus.urls")),
     path('gene/', views.get_info_gene, name='get_info_gene'),
-<<<<<<< HEAD
     path("app_doc/", schema_view.with_ui("swagger", cache_timeout=0), name="app_doc"),
-=======
-    path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
->>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
     path('disclaimer/', views.disclaimer, name='disclaimer'),
 
 ]
