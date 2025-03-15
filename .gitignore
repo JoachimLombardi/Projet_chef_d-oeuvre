@@ -173,3 +173,5 @@ vllm_models/
 
 .vs
 elasticsearch-8.15.1
+
+pubmed_analyze/docker/data/*

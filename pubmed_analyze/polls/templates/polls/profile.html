@@ -1,0 +1,20 @@
+{% extends "polls/base.html" %}
+
+{% block title %}
+    Profil
+{% endblock %}
+
+{% block content %}
+    <div class="col-12 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Informations utilisateur</h5>
+                <ul class="list-unstyled">
+                    <li><strong>Nom d'utilisateur:</strong> {{ user.username }}</li>
+                    <li><strong>Email:</strong> {{ user.email }}</li>
+                    <li><strong>Date d'inscription:</strong> {{ user.date_joined|date:"d M Y" }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>    
+{% endblock %}

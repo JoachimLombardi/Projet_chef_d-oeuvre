@@ -64,20 +64,36 @@ class Authorship(models.Model):
         return f"{self.author.name} - {self.affiliation.name} (Article: {self.article.title})"
 
 
-class Xref(models.Model):
-    xref_id = models.AutoField(primary_key=True)
-    display_label = models.CharField(max_length=255)
+class ArticlesWithAuthors(models.Model):
+    title_review = models.CharField(null=True, max_length=2000, verbose_name='title of review', db_column='title of review')
+    date = models.DateField(null=True, verbose_name='date of publication', db_column='date of publication')
+    title = models.CharField(null=True, max_length=2000, verbose_name='title of article', db_column='title of article')
+    abstract = models.TextField(null=True, verbose_name='abstract', db_column='abstract')
+    pmid = models.IntegerField(null=True, verbose_name='pubmed id', db_column='pubmed id')
+    doi = models.CharField(null=True, max_length=200, verbose_name='doi', db_column='doi')
+    disclosure = models.TextField(null=True, verbose_name='conflict of interest', db_column='conflict of interest')
+    mesh_terms = models.TextField(null=True, verbose_name='mesh terms', db_column='mesh terms')
+    url = models.CharField(max_length=200, null=True, verbose_name='url', db_column='url')
+    term = models.CharField(null=True, max_length=200, verbose_name='term', db_column='term')
+    affiliations_by_author = models.JSONField(null=True, verbose_name='authors', db_column='authors')
+
+
+class Taxonomy(models.Model):
+    id = models.AutoField(primary_key=True)
+    lineage = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'xref' 
+        db_table = 'rnc_taxonomy'
         managed = False  
 
 
-class Gene(models.Model):
-    stable_id = models.CharField(max_length=255)
-    description = models.TextField()
-    display_xref = models.ForeignKey(Xref, on_delete=models.DO_NOTHING, db_column='display_xref_id')
+class RnaPrecomputed(models.Model):
+    id = models.AutoField(primary_key=True)
+    taxid = models.ForeignKey(Taxonomy, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    rna_type = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'gene' 
+        db_table = 'rnc_rna_precomputed'
         managed = False  
+

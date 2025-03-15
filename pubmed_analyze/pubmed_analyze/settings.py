@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'drf_yasg',
     'django.contrib.staticfiles',
     'django_prometheus',
 ]
@@ -109,12 +110,12 @@ DATABASES = {
         'PORT': os.getenv('DATABASE_PORT'),
     },
     'external': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'homo_sapiens_core_110_38', 
-        'USER': 'anonymous', 
-        'PASSWORD': '',  
-        'HOST': 'ensembldb.ensembl.org',  
-        'PORT': '3306'
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pfmegrnargs', 
+        'USER': 'reader', 
+        'PASSWORD': 'NWDMCE5xdipIjRrp',  
+        'HOST': 'hh-pgsql-public.ebi.ac.uk',  
+        'PORT': '5432'
     }
 }
 
@@ -175,5 +176,24 @@ ERROR_NOTIFICATION_EMAIL = [os.getenv('EMAIL_HOST_USER')]
 ADMINS = [('Admin', os.getenv('EMAIL_HOST_USER'))]
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'errors.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
 
 

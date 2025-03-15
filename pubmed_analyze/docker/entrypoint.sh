@@ -1,26 +1,38 @@
 #!/bin/bash
-# docker exec -it django python manage.py 
-# Attente de la base de données
-echo "Attente de la base de données..."
-while ! nc -z db 5432; do
-  sleep 1
-done
-echo "Base de données prête."
 
-# Appliquer les migrations Django
-echo "Exécution des migrations Django..."
-python manage.py makemigrations
-python manage.py migrate
+# Vérification des migrations
+if python manage.py showmigrations | grep '\[ \]'; then
+  echo 'Migrations en attente, application...'
+  python manage.py makemigrations
+  python manage.py migrate
+else
+  echo 'Aucune migration en attente.'
+fi
 
-# Créer un superutilisateur si nécessaire
-echo "Création du superutilisateur..."
-python manage.py createsuperuser --noinput || echo "Superutilisateur déjà existant"
+# Vérification de l'existence d'un superutilisateur
+if python manage.py shell -c "from django.contrib.auth import get_user_model; print(get_user_model().objects.filter(is_superuser=True).exists())" | grep -q 'False'; then
+  echo 'Création du superutilisateur...'
+  python manage.py createsuperuser --noinput
+else
+  echo 'Superutilisateur déjà existant.'
+fi
 
-# Exécuter des commandes personnalisées si nécessaire
-echo "Exécution des commandes personnalisées..."
-python manage.py commands article_to_database
-python manage.py commands index_articles
+# Vérification des articles dans la base de données
+if ! python manage.py shell -c "from pubmed_analyze.models import Article; exit(1 if Article.objects.exists() else 0)"; then
+  echo 'Ajout des articles à la base de données...'
+  python manage.py commands article_to_database
+else
+  echo 'Les articles sont déjà ajoutés.'
+fi
 
-# Lancer le serveur Django
-echo "Démarrage du serveur Django..."
+# Vérification de l'indexation des articles
+if ! python manage.py shell -c "from django_elasticsearch_dsl.registries import registry; exit(1 if registry.get_documents() else 0)"; then
+  echo 'Indexation des articles...'
+  python manage.py commands index_articles
+else
+  echo 'Les articles sont déjà indexés.'
+fi
+
+# Démarrage du serveur Django
+echo 'Démarrage du serveur Django...'
 python manage.py runserver 0.0.0.0:8000

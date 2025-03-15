@@ -1,7 +1,12 @@
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if article_form.instance.id %}Modifier l'article{% else %}Ajouter un article{% endif %}
+{% endblock %}
 
 {% load custom_filters %}
 
+{% block content %}
 {% if messages %}
     <div>
         {% for message in messages %}
@@ -83,3 +88,4 @@
         });
     });
 </script>
+{% endblock %}

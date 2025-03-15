@@ -30,6 +30,12 @@ services:
         else
           echo 'Les articles sont déjà ajoutés.'
         fi
+        if ! python manage.py shell -c \"from pubmed_analyze.models import ArticlesWithAuthors; exit(1 if ArticlesWithAuthors.objects.exists() else 0)\"; then
+        echo 'Ajout des articles avec auteurs à la base de données...'
+        python manage.py commands article_full_to_database
+        else
+          echo 'Les articles avec auteurs sont déjà ajoutés.'
+        fi
         if ! python manage.py shell -c \"from django_elasticsearch_dsl.registries import registry; exit(1 if registry.get_documents() else 0)\"; then
           echo 'Indexation des articles...'
           python manage.py commands index_articles
@@ -43,8 +49,8 @@ services:
     ports:
       - "8000:8000" 
     environment:
-      - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings  # Modifiez le chemin vers vos paramètres Django
-      - DATABASE_URL=${DATABASE_URL}  # Connexion à la base de données via les variables d'environnement
+      - DJANGO_SETTINGS_MODULE=pubmed_analyze.settings 
+      - DATABASE_URL=${DATABASE_URL} 
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - DATABASE_HOST=${DATABASE_HOST}
       - DATABASE_USER=${DATABASE_USER}
@@ -57,8 +63,8 @@ services:
       - ERROR_NOTIFICATION_EMAIL=${EMAIL_HOST_USER}
       - DEFAULT_FROM_EMAIL=${EMAIL_HOST_USER}
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
-      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
-      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${EMAIL_HOST_USER}
+      - DJANGO_SUPERUSER_PASSWORD=${DATABASE_PASSWORD}
     volumes:
       - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
     depends_on:
@@ -158,6 +164,12 @@ services:
       - GF_RENDERING_SERVER_URL=http://renderer:8081/render
       - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
       - GF_LOG_FILTERS=rendering:debug
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_USER=${EMAIL_HOST_USER}
+      - GF_SMTP_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - GF_SMTP_FROM_ADDRESS=${EMAIL_HOST_USER}
+      - GF_SMTP_FROM_NAME=Grafana
     depends_on:
       - prometheus
       - renderer
@@ -183,6 +195,15 @@ services:
     depends_on:
       - prometheus  
 
+
+  node-exporter:
+      image: prom/node-exporter:latest
+      container_name: node-exporter
+      restart: unless-stopped
+      ports:
+        - "9100:9100"
+      networks:
+        - default
 
 networks:
   default:

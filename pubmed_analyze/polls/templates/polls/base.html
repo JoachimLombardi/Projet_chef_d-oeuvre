@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .vertical-menu {
-            width: 100px;
+            width: 130px;
             position: fixed;
             top: 0;
             left: 0;
@@ -29,11 +29,11 @@
             color: white;
         }
         .content {
-            margin-left: 90px;
+            margin-left: 120px;
             padding: 20px;
         }
         .user-status-bar {
-            margin-left: 110px;
+            margin-left: 130px;
             padding: 10px;
             background-color: #f1f1f1;
             border-bottom: 1px solid #ddd;
@@ -43,23 +43,34 @@
             justify-content: space-between;
             align-items: center;
         }
+        .registration-form {
+            max-width: 600px; 
+            margin: auto; 
+            padding: 20px;
+            border: 1px solid #dee2e6; 
+            border-radius: 0.25rem; 
+            background-color: #f8f9fa; 
+        }
     </style>
 </head>
 <body>
 
-    <!-- Menu vertical inclus depuis un fichier séparé -->
     {% include "polls/includes/menu.html" %}
 
-    <!-- Barre d'état de l'utilisateur connecté et bouton logout -->
     <div class="user-status-bar d-flex justify-content-between align-items-center">
-        <p class="mb-0">Connecté en tant que <strong>{{ user.username }}</strong></p>
-        <form action="{% url 'logout' %}" method="post" class="mb-0">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-        </form>
+        {% if user.is_authenticated %}
+            <p class="mb-0">Connecté en tant que <strong>{{ user.username }}</strong></p>
+            <form action="{% url 'logout' %}" method="post" class="mb-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+            </form>
+            <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm">Voir mon profile</a>
+            <a href="{% url 'create_update_profile' %}" class="btn btn-outline-warning btn-sm mr-2">Modifier mon profile</a>
+            <a href="{% url 'delete_account' %}" class="btn btn-outline-danger btn-sm">Supprimer mon compte</a>
+        {% endif %}
     </div>
+    
 
-    <!-- Contenu principal -->
     <div class="content">
         {% block content %}
         {% endblock %}

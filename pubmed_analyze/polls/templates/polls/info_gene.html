@@ -28,33 +28,16 @@
     
     <h1 class="text-center mb-4">Info gène</h1>
 
-    <form method="POST" action="{% url 'gene' %}" class="mb-4">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Envoyer</button>
-    </form>
-
-    {% if stable_id %}
+    {% if genes %}
     <div class="card mb-4">
         <div class="card-header">
             <h2 class="card-title">Gène :</h2>
         </div>
         <div class="card-body">
-            <p class="card-text">{{ stable_id }}</p>
+            <p class="card-text">{{ genes }}</p>
         </div>
     </div>
     {% endif %}
 
-    
-    {% if description %}
-    <div class="card mb-4">
-        <div class="card-header">
-            <h2 class="card-title">Info gène :</h2>
-        </div>
-        <div class="card-body">
-            <p class="card-text">{{ description }}</p>
-        </div>
-    </div>
-    {% endif %}
 
 {% endblock %}

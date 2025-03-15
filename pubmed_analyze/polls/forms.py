@@ -60,6 +60,24 @@ class ArticleForm(forms.ModelForm):
 
 
     def save_article_with_authors(self, author_affiliation_data, article_id=None):
+        """
+        Saves an article along with its authors and their affiliations.
+
+        This function creates or updates an Article instance in the database using the provided
+        data. If an article ID is given, it attempts to update the existing article;
+        otherwise, it creates a new one. It also handles the creation of Author and
+        Affiliation instances if they do not already exist, and links them to the article
+        through the Authorship model.
+
+        :param author_affiliation_data: A list of dictionaries containing author names and their
+                                        affiliations, where each dictionary has the keys 'author_name'
+                                        and 'affiliations'. Affiliations are separated by pipes ('|').
+        :param article_id: The ID of the article to update. If None, a new article is created.
+        :return: A tuple (created, updated_fields) where 'created' is a boolean indicating whether
+                a new Article was created, and 'updated_fields' is a boolean indicating whether
+                any fields of an existing article were updated.
+        """
+
         updated_fields = False
         if article_id:
             article_initial = get_object_or_404(Article, id=article_id)
