@@ -201,64 +201,65 @@ def scrap_article_to_csv(base_url='https://pubmed.ncbi.nlm.nih.gov', url=None, s
     term = ""
     filter = "2025"
     suffix = term+"_"+filter
-    if not url:
-        links = extract_pubmed_url(base_url, term, filter)
-    else:
-        links = url
-    if suffix_article:
-        suffix += suffix_article
-    for link in links:
-        soup = init_soup(link)
-        if soup is None:
-            continue
-        title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
-        date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
-        date = format_date(date)
-        title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
-        abstract = soup.select('div.abstract-content p')
-        abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
-        if abstract:
-            if isinstance(abstract, list):
-                abstract = " ".join(abstract)
-            pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
-            doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
-            if doi:
-                doi = "https://doi.org/"+doi
-            disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
-            buttons = soup.select('button.keyword-actions-trigger')
-            mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
-            mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
-            url = get_absolute_url(pmid)
-            authors_tags = soup.select('.authors-list-item')
-            authors_affiliations = []
-            seen_authors = set() 
-            for author_tag in authors_tags:
-                author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
-                if author_name and author_name not in seen_authors:
-                    seen_authors.add(author_name)
-                    affiliation_elements = author_tag.select('.affiliation-link')
-                    if affiliation_elements:
-                        affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
-                        authors_affiliations.append({'author_name': author_name, 'affiliations': affiliations_names})
-            articles_data.append({
-            'title_review': title_review,
-            'date': str(date),  
-            'title': title,
-            'abstract': abstract,
-            'pmid': pmid,
-            'doi': doi,
-            'disclosure': disclosure,
-            'mesh_terms': mesh_terms,
-            'url': url,
-            'authors_affiliations': authors_affiliations
-        })
-            output_path = Path(settings.EXPORT_CSV_DIR + "/" + suffix + ".csv")
-            with output_path.open('w', newline='', encoding='utf-8') as csvfile:
-                fieldnames = ['title_review', 'date', 'title', 'abstract', 'pmid', 'doi', 'disclosure', 'mesh_terms', 'url', 'authors_affiliations']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                for article in articles_data:
-                    writer.writerow(article)
+    with requests.Session() as session:
+        if not url:
+            links = extract_pubmed_url(base_url, term, filter, session)
+        else:
+            links = url
+        if suffix_article:
+            suffix += suffix_article
+        for link in links:
+            soup = init_soup(link, session)
+            if soup is None:
+                continue
+            title_review = soup.select_one('button.journal-actions-trigger')['title'] if soup.select_one('button.journal-actions-trigger') else None
+            date = soup.select_one('span.cit').get_text(strip=True).split(";")[0] if soup.select_one('.cit') else None
+            date = format_date(date)
+            title = soup.select_one('h1.heading-title').get_text(strip=True) if soup.select_one('h1.heading-title') else None
+            abstract = soup.select('div.abstract-content p')
+            abstract = [p.get_text(strip=True) for p in abstract] if abstract else None
+            if abstract:
+                if isinstance(abstract, list):
+                    abstract = " ".join(abstract)
+                pmid = soup.select_one('span.identifier.pubmed strong.current-id').get_text(strip=True) if soup.select_one('span.identifier.pubmed strong.current-id') else None
+                doi = soup.select_one('span.identifier.doi a.id-link').get_text(strip=True) if soup.select_one('span.identifier.doi a.id-link') else None
+                if doi:
+                    doi = "https://doi.org/"+doi
+                disclosure = soup.select_one('div.conflict-of-interest div.statement p').get_text(strip=True) if soup.select_one('div.conflict-of-interest div.statement p') else None
+                buttons = soup.select('button.keyword-actions-trigger')
+                mesh_terms = [button.get_text(strip=True) for button in buttons] if buttons else None
+                mesh_terms = ", ".join(mesh_terms) if mesh_terms else None
+                url = get_absolute_url(pmid)
+                authors_tags = soup.select('.authors-list-item')
+                authors_affiliations = []
+                seen_authors = set() 
+                for author_tag in authors_tags:
+                    author_name = author_tag.select_one('.full-name').get_text(strip=True) if author_tag.select_one('.full-name') else None
+                    if author_name and author_name not in seen_authors:
+                        seen_authors.add(author_name)
+                        affiliation_elements = author_tag.select('.affiliation-link')
+                        if affiliation_elements:
+                            affiliations_names = [affil.get('title', None) for affil in affiliation_elements]
+                            authors_affiliations.append({'author_name': author_name, 'affiliations': affiliations_names})
+                articles_data.append({
+                'title_review': title_review,
+                'date': str(date),  
+                'title': title,
+                'abstract': abstract,
+                'pmid': pmid,
+                'doi': doi,
+                'disclosure': disclosure,
+                'mesh_terms': mesh_terms,
+                'url': url,
+                'authors_affiliations': authors_affiliations
+            })
+                output_path = Path(settings.EXPORT_CSV_DIR + "/" + suffix + ".csv")
+                with output_path.open('w', newline='', encoding='utf-8') as csvfile:
+                    fieldnames = ['title_review', 'date', 'title', 'abstract', 'pmid', 'doi', 'disclosure', 'mesh_terms', 'url', 'authors_affiliations']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    for article in articles_data:
+                        writer.writerow(article)
 
 
 @error_handling
@@ -616,13 +617,13 @@ def search_articles(query, index):
     response = rank_doc(query_cleaned, retrieved_docs, 3)
     results = []
     article_ids = [res['id'] for res in response] 
-    article_dict = {
-        article.id: article
-        for article in Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
-    }
     articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
     if index != "all":
         articles = articles.filter(term=index)
+    article_dict = {
+        article.id: article
+        for article in articles
+    }
     for res in response:
         article_id = int(res['id'])
         score = res['score']
@@ -635,13 +636,7 @@ def search_articles(query, index):
                 author_name = authorship.author.name
                 affiliation_name = authorship.affiliation.name
                 affiliations_by_author.setdefault(author_name, set()).add(affiliation_name)
-            authors_affiliations = [
-                {
-                    'author_name': author,
-                    'affiliations': '| '.join(affiliations)  
-                }
-                for author, affiliations in affiliations_by_author.items()
-            ]
+            authors_affiliations = {author: list(affs) for author, affs in affiliations_by_author.items()}
             results.append({
                 'id': article_id,
                 'score': score,
@@ -673,8 +668,8 @@ def generation(query, retrieved_documents, model, index="all"):
     """
 
     context = ""
-    for i, source in enumerate(retrieved_documents):
-        context += f"Abstract n°{i+1}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
+    for source in retrieved_documents:
+        context += f"Abstract n°{source['id']}: " + source['title'] + "." + "\n\n" + source['abstract'] + "\n\n"
     template = """You are an expert in analysing medical abstract and your are talking to a pannel of medical experts. Your task is to use only provided context to answer at best the query.
     If you don't know or if the answer is not in the provided context just say: "I can't answer with the provided context".
 
@@ -714,7 +709,7 @@ def generation(query, retrieved_documents, model, index="all"):
     else:
         response = "I can't answer with the provided context"
     print("la réponse est: ", response)
-    return response, context
+    return response, retrieved_documents
 
 
 @error_handling

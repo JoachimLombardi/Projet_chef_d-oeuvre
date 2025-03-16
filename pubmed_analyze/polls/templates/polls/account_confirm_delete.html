@@ -27,10 +27,6 @@
     <p class="text-center">Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.</p>
     <form method="post" class="text-center">
         {% csrf_token %}
-<<<<<<< HEAD
-=======
-        <input type="hidden" name="_method" value="DELETE">
->>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
         <div class="d-flex justify-content-center mt-3">
             <button type="submit" class="btn btn-danger mr-2">Oui, supprimer mon compte</button>
             <a href="{% url 'article_list' %}" class="btn btn-secondary">Annuler</a>

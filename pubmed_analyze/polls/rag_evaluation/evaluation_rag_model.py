@@ -91,18 +91,13 @@ def search_articles_for_eval(query, research_type, number_of_results, number_of_
         retrieved_docs = response_text.hits
     response = rank_doc(query_cleaned, retrieved_docs, 3)
     results = []
-    article_ids = [res['id'] for res in response]  
-    articles = Article.objects.filter(id__in=article_ids).prefetch_related('authorships__author', 'authorships__affiliation')
     for res in response:
-        article_id = int(res['id'])
         title = res['title']
         abstract = res['abstract']
-        article = next((art for art in articles if art.id == article_id), None)
-        if article:
-            results.append({
-                'title': title,
-                'abstract': abstract            
-                })
+        results.append({
+            'title': title,
+            'abstract': abstract            
+            })
     return results, query
 
 

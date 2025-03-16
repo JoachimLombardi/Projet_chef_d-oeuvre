@@ -45,16 +45,33 @@
     </div>
     {% endif %}
 
-    {% if context %}
+    {% if retrieved_documents %}
     <div class="card">
         <div class="card-header">
             <h2 class="card-title">Contexte :</h2>
         </div>
         <div class="card-body">
-            <p class="card-text">{{ context|linebreaks }}</p>
+            {% for document in retrieved_documents %}
+                <p class="card-text"><strong>Abstract n°{{ document.id }}:</strong> {{ document.title }}.</p>
+                <p class="card-text"><strong>Score:</strong> {{ document.score |floatformat:1  }}.</p>
+                <p class="card-text">{{ document.abstract }}.</p>
+                {% for author, affiliations in document.authors_affiliations.items %}
+                    <li class="mb-2">
+                        <strong>{{ author }}</strong><br>
+                        <span>Affiliations :</span>
+                        <ul>
+                            {% for affiliation in affiliations %}
+                            <li>{{ affiliation }}</li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+                <hr>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
 </div>
 
 {% endblock %}
+

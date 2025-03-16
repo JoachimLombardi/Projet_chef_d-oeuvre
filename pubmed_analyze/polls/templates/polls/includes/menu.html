@@ -2,16 +2,9 @@
     <a href="{% url 'rag_articles' %}" class="{% if request.resolver_match.url_name == 'rag_articles' %}active{% endif %}">RAG sur les articles</a>
     <a href="{% url 'article_list' %}" class="{% if request.resolver_match.url_name == 'article_list' %}active{% endif %}">Liste des Articles</a>
     <a href="{% url 'evaluate_rag' %}" class="{% if request.resolver_match.url_name == 'evaluate_rag' %}active{% endif %}">Evaluation</a>
-<<<<<<< HEAD
     <a href="{% url 'grafana' %}" target="_blank" class="{% if request.resolver_match.url_name == 'grafana' %}active{% endif %}">Grafana</a>
     <a href="{% url 'uptime_kuma' %}" target="_blank" class="{% if request.resolver_match.url_name == 'uptime_kuma' %}active{% endif %}">Uptime Kuma</a>
     <a href="{% url 'get_info_gene' %}" class="{% if request.resolver_match.url_name == 'get_info_gene' %}active{% endif %}">Info gène</a>
     <a href="{% url 'disclaimer' %}" class="{% if request.resolver_match.url_name == 'disclaimer' %}active{% endif %}">Disclaimer</a>
     <a href="{% url 'app_doc' %}" target="_blank" class="{% if request.resolver_match.url_name == 'app_doc' %}active{% endif %}">Documentation de l'application</a>
-=======
-    <a href="{% url 'grafana' %}" class="{% if request.resolver_match.url_name == 'grafana' %}active{% endif %}">Grafana</a>
-    <a href="{% url 'uptime_kuma' %}" class="{% if request.resolver_match.url_name == 'uptime_kuma' %}active{% endif %}">Uptime Kuma</a>
-    <a href="{% url 'get_info_gene' %}" class="{% if request.resolver_match.url_name == 'get_info_gene' %}active{% endif %}">Info gène</a>
-    <a href="{% url 'disclaimer' %}" class="{% if request.resolver_match.url_name == 'disclaimer' %}active{% endif %}">Disclaimer</a>
->>>>>>> 07bd1c18571c6bbfb47f8c669322eb3ec9cdab28
 </div>

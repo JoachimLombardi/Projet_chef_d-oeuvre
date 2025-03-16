@@ -245,12 +245,12 @@ def rag_articles(request):
             query = form.cleaned_data.get('query')
             index = form.cleaned_data.get('index_choice')
             llm = form.cleaned_data.get('llm_choice')
-            response, context = handle_rag_pipeline(query, llm, index)
+            response, retrieved_documents = handle_rag_pipeline(query, llm, index)
             if "error" in response:
                 messages.error(request, response)
                 response = ""
-                context = ""
-            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'context': context})
+                retrieved_documents = ""
+            return render(request, 'polls/rag.html', {'form': form, 'response': response, 'retrieved_documents': retrieved_documents})
         else:
             messages.error(request, "Le formulaire n'est pas valide.")
     return render(request, 'polls/rag.html', {'form': form})
@@ -502,8 +502,6 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                                                                                abstract_weight,
                                                                                rank_scaling_factor)
                 found_abstract = retrieved_documents[0]["abstract"]
-                print(context, flush=True)
-                print(type(context), flush=True)
                 number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
                 score_retrieval_list.append(number)
                 score_generation, scoring_generation_reason = eval_response(query, response, context, model_evaluation)
