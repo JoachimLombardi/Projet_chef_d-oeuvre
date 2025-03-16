@@ -184,7 +184,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'data', 'errors_log', 'errors.log'),
+            'filename': 'data/errors_log/errors.log',
         },
     },
     'loggers': {
