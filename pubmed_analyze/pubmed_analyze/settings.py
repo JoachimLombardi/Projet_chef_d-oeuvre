@@ -19,7 +19,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Define the export directory (make sure the directory exists)
+
 EXPORT_JSON_DIR = os.path.join(BASE_DIR, 'data/json')
 
 # Ensure the directory exists or create it
@@ -32,8 +32,8 @@ if not os.path.exists(RAG_JSON_DIR):
     os.makedirs(RAG_JSON_DIR)
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'rag_articles'  # Redirect to RAG homepage after login
-LOGOUT_REDIRECT_URL = 'login'  # Redirect to login page after logout
+LOGIN_REDIRECT_URL = 'rag_articles'  
+LOGOUT_REDIRECT_URL = 'login'  
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -184,7 +184,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': 'data/errors_log/errors.log',
+            'filename': 'pubmed_analyze/data/errors_log/errors.log',
         },
     },
     'loggers': {
