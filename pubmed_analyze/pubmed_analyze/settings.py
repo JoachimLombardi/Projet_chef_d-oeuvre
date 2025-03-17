@@ -176,6 +176,11 @@ ERROR_NOTIFICATION_EMAIL = [os.getenv('EMAIL_HOST_USER')]
 ADMINS = [('Admin', os.getenv('EMAIL_HOST_USER'))]
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 
+log_dir = os.path.join(os.getcwd(), "data", "errors_log")
+
+# Vérifier si le dossier existe, sinon le créer
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
 
 LOGGING = {
     'version': 1,
@@ -184,7 +189,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': 'pubmed_analyze/data/errors_log/errors.log',
+            'filename': os.path.join(log_dir, 'errors.log'),
         },
     },
     'loggers': {
