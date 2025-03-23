@@ -647,7 +647,7 @@ def search_articles(query, index):
     return results, query
 
 @error_handling
-def generation(query, retrieved_documents, model, index="all"):
+def generation(query, retrieved_documents, model):
     """
     Generate a response to a query based on retrieved medical documents.
 
@@ -700,7 +700,6 @@ def generation(query, retrieved_documents, model, index="all"):
         }
     }
     chat_response = requests.post('http://ollama:11434/api/chat', json=data).json()
-    print("voici la rep:", chat_response, flush=True)
     pattern = r'\{+.*\}'
     match = re.findall(pattern, chat_response['message']['content'], re.DOTALL)[0]
     if match:

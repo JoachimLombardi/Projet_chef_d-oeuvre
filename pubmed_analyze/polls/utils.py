@@ -1,11 +1,14 @@
 from functools import wraps
 import re
+import subprocess
 from dateutil import parser
 from django.conf import settings
 from django.utils import timezone
 from django.core.mail import send_mail
 import traceback
 import logging
+
+logger = logging.getLogger(__name__)
 
 
 def handle_error(e):
@@ -228,6 +231,5 @@ def convert_seconds(seconds):
     return f'{minutes} minutes and {remaining_seconds} seconds'
 
 
-logger = logging.getLogger(__name__)
 
 

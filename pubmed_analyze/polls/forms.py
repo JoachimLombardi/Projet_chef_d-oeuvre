@@ -149,7 +149,9 @@ class RAGForm(forms.Form):
 
     LLM_CHOICE = [
         ("mistral", "mistal 7b"),
-         ("llama3.2", "llama 3.2")
+        ("llama3.2", "llama 3.2"),
+        ("gemma3", "gemma 3"),
+         
     ]
 
     query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -185,17 +187,14 @@ class EvaluationForm(forms.Form):
         ('neural', 'recherche neuronale'),
     ]
 
-    MODELS_GENERATION = [('mistrallite', 'Mistrallite'),
-                         ('mistral-nemo', 'Mistral Némo'),
-                         ('mistral', 'Mistral 7B'),
-                         ('mixtral:8x7b', 'Mixtral 8x7B'),
-                         ('mistral-small', 'Mistral small')]
+    MODELS_GENERATION = [("mistral", "mistal 7b"),
+                        ("llama3.2", "llama 3.2"),
+                        ("gemma3", "gemma 3"),]
     
     MODELS_EVALUATION = [('gpt-4o', 'GPT-4')]
 
     METHOD_CHOICES = [
-        ('hand_made', 'Custom'),
-        ('deep_eval', 'Deep Eval'),
+        ('hand_made', 'Custom')
     ]
 
     research_type = forms.ChoiceField(

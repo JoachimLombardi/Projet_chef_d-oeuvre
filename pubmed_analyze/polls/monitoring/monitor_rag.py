@@ -57,7 +57,7 @@ def handle_rag_pipeline(query, llm, index):
         avg_length = sum(len(doc) for doc in documents) / len(documents) if documents else 0
         document_length.observe(avg_length)  
         with llm_latency.time():
-            response, documents_formated = generation(query, documents, llm, index)
+            response, documents_formated = generation(query, documents, llm)
         rag_success_ratio.set((rag_requests_total._value.get() - rag_errors_total._value.get()) / rag_requests_total._value.get())
         return response, documents_formated
 

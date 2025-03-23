@@ -54,7 +54,7 @@
             {% for document in retrieved_documents %}
                 <p class="card-text"><strong>Abstract n°{{ document.id }}:</strong> {{ document.title }}.</p>
                 <p class="card-text"><strong>Score:</strong> {{ document.score |floatformat:1  }}.</p>
-                <p class="card-text">{{ document.abstract }}.</p>
+                <p class="card-text">{{ document.abstract }}</p>
                 {% for author, affiliations in document.authors_affiliations.items %}
                     <li class="mb-2">
                         <strong>{{ author }}</strong><br>
