@@ -4,7 +4,6 @@
 
 
 services:
-  # Service pour Django
   django:
     build:
       context: .
@@ -66,15 +65,14 @@ services:
       - DJANGO_SUPERUSER_EMAIL=${EMAIL_HOST_USER}
       - DJANGO_SUPERUSER_PASSWORD=${DATABASE_PASSWORD}
     volumes:
-      - ..:/pubmed_analyze  # Monte le code source local dans le conteneur
+      - ..:/pubmed_analyze  
     depends_on:
-      - elasticsearch  # Django dépend d'Elasticsearch pour ce projet
+      - elasticsearch  
       - prometheus
-      - db  # Ajout de la dépendance à la base de données
+      - db 
       - ollama 
 
 
-  # Service pour Elasticsearch
   elasticsearch:
     build:
       context: .
@@ -186,7 +184,7 @@ services:
     image: louislam/uptime-kuma:latest
     container_name: uptime_kuma
     ports:
-      - "3001:3001"  # Port par défaut pour Uptime Kuma
+      - "3001:3001" 
     volumes:
       - ./data/uptime-kuma:/pubmed_analyze/data  
       - /var/run/docker.sock:/var/run/docker.sock

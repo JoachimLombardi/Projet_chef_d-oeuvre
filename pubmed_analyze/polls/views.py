@@ -27,6 +27,8 @@ from rest_framework.decorators import api_view
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 import pdb
+from codecarbon import EmissionsTracker
+
 
 
 openai_key = os.getenv("OPENAI_API_KEY")
@@ -474,6 +476,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
         score_generation_list = []
         eval_rag_list = []
         form = EvaluationForm(request.POST)
+        tracker = EmissionsTracker()
         if form.is_valid():
             research_type = form.cleaned_data['research_type']
             number_of_results = form.cleaned_data['number_of_results']
@@ -493,6 +496,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
             for data in evaluation_data:
                 query = data['query']
                 expected_abstract = data['expected_abstract']
+                tracker.start()
                 response, retrieved_documents, context = rag_articles_for_eval(query,
                                                                                research_type,
                                                                                number_of_results,
@@ -501,6 +505,7 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                                                                                title_weight,
                                                                                abstract_weight,
                                                                                rank_scaling_factor)
+                emissions = tracker.stop()
                 found_abstract = retrieved_documents[0]["abstract"]
                 number, scoring_retrieval_reason = eval_retrieval(query, found_abstract, expected_abstract, model_evaluation) 
                 score_retrieval_list.append(number)
@@ -530,7 +535,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "score_retrieval": round(score_retrieval, 2),
                     "score_generation": round(score_generation, 2),
                     "scoring_retrieval_reason": scoring_retrieval_reason,
-                    "scoring_generation_reason": scoring_generation_reason
+                    "scoring_generation_reason": scoring_generation_reason,
+                    "emissions": emissions
                 })
             elif research_type == "text":
                 eval_rag_list.append({
@@ -544,7 +550,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "score_retrieval": round(score_retrieval, 2),   
                     "score_generation": round(score_generation, 2),
                     "scoring_generation_reason": scoring_generation_reason,
-                    "scoring_generation_reason": scoring_generation_reason
+                    "scoring_generation_reason": scoring_generation_reason,
+                    "emissions": emissions
                 })
             else:
                 eval_rag_list.append({
@@ -557,7 +564,8 @@ def evaluate_rag(request, queries=queries, expected_abstracts=expected_abstracts
                     "score_retrieval": round(score_retrieval, 2),
                     "score_generation": round(score_generation, 2),
                     "scoring_retrieval_reason": scoring_retrieval_reason,
-                    "scoring_generation_reason": scoring_generation_reason
+                    "scoring_generation_reason": scoring_generation_reason,
+                    "emissions": emissions
                 })
             results_path = Path(settings.RAG_JSON_DIR) / f"results_eval_rag_{model_generation}_{choose_eval_method}_{research_type}_{number_of_results}_{model_evaluation}_{number_of_articles}_{title_weight}_{abstract_weight}_{rank_scaling_factor}.json"
             with results_path.open('w', encoding='utf-8') as f:
