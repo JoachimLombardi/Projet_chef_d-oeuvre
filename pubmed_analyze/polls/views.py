@@ -11,9 +11,10 @@ from pathlib import Path
 import time
 from django.conf import settings
 from polls.monitoring.monitor_rag import handle_rag_pipeline
+from pubmed_analyze.polls.business_logic import function_calling
 from .models import Article, ArticlesWithAuthors, RnaPrecomputed
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, RAGForm, EvaluationForm
+from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, FunctionCallingForm, RAGForm, EvaluationForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -680,6 +681,22 @@ def disclaimer(request):
     HttpResponse: An HTTP response with the rendered Disclaimer page.
     """
     return render(request, 'polls/disclaimer.html')
+
+
+def llm_choice(request):
+    forms = FunctionCallingForm(request.POST or None)
+    if request.method == 'POST':
+        if forms.is_valid():
+            query = forms.cleaned_data.get('query')
+            llm_choice = forms.cleaned_data.get('llm_choice')
+            response = function_calling(query, llm_choice)
+            if "error" in response:
+                messages.error(request, response["error"])
+                response = ""
+            return render(request, 'polls/function_calling.html', {'response': response})
+        else:
+            messages.error(request, "Le formulaire est invalide.")
+    return render(request, 'polls/function_calling.html', {'forms': forms})
 
 
 

@@ -242,3 +242,16 @@ class EvaluationForm(forms.Form):
 class GeneForm(forms.Form):
     gene_name = forms.CharField(label="Recherche  un gène", widget=forms.TextInput(attrs={'class': 'form-control'}))
    
+
+
+class FunctionCallingForm(forms.Form):
+    LLM_CHOICE = [
+        ("mistral", "mistal 7b"),
+        ("llama3.2", "llama 3.2"),
+        ("gemma3", "gemma 3"),
+         
+    ]
+    query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    llm_choice = forms.ChoiceField(choices=LLM_CHOICE, label="Choisissez un llm", 
+                                   widget=forms.Select(attrs={'class': 'form-select'}), 
+                                   required=True)

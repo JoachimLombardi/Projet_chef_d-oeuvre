@@ -24,6 +24,7 @@ urlpatterns = [
     path('article/read/', views.article_list, name='article_list'), 
     path('article/<int:id>/delete/', views.delete_article, name='delete_article'), 
     path('articles/rag/', views.rag_articles, name='rag_articles'),
+    path('function_calling/', views.rag_articles, name='function_calling'),
     path('register/create_update/', views.create_or_update_register, name='create_update_profile'),
     path('profile/', views.user_profile, name='profile'),
     path('login/', views.custom_login, name='login'),
@@ -37,5 +38,6 @@ urlpatterns = [
     path('gene/', views.get_info_gene, name='get_info_gene'),
     path("app_doc/", schema_view.with_ui("swagger", cache_timeout=0), name="app_doc"),
     path('disclaimer/', views.disclaimer, name='disclaimer'),
+
 
 ]

@@ -1,6 +1,9 @@
 
 import csv
+import functools
 import re
+
+import pandas as pd
 from elasticsearch_dsl import Search
 import numpy as np
 from sentence_transformers import CrossEncoder
@@ -738,3 +741,160 @@ def rank_doc(query, retrieved_docs, topN):
     top_indices = np.argsort(scores)[::-1][:topN]
     top_pairs = [{**text[index], "score": scores[index]} for index in top_indices]
     return top_pairs  
+
+
+def function_calling(query, model):
+    """
+    Call a function based on its name and parameters.
+
+    This function takes a query string and a function name and parameters and returns the result
+    of the called function.
+
+    Parameters:
+    query (str): The query string to be answered.
+    function_name (str): The name of the function to be called.
+    function_parameters (dict): A dictionary containing the parameters for the function.
+
+    Returns:
+    str: The result of the called function.
+    """
+
+    file_path = "data/text/PS_LibreAcces_Personne_activite_202503110953.txt"
+    df = pd.read_csv(file_path, sep="|", dtype=str) 
+
+
+    def filter_name_general_practitioners(df, commune):
+        if commune in df["Libellé commune (coord. structure)"].unique():
+            print({'nom_médecin': df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == "Versailles"].head(5).tolist()})
+            return json.dumps({'nom_médecin': df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].head(5).tolist()})
+        return json.dumps({'erreur': 'Commune introuvable'})
+
+
+    def filter_count_general_practitioners(df, commune):
+        if commune in df["Libellé commune (coord. structure)"].unique():
+            print({'nombre_médecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == "Versailles"].count())})
+            return json.dumps({'nombre_médecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].count())})
+        return json.dumps({'erreur': 'Commune introuvable'})
+
+
+    def filter_id_number_general_practitioners(df, nom):
+        if nom in df["Nom d'exercice"].unique():
+            print({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == "LEGER"].head(1).tolist()})
+            return json.dumps({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == nom].head(1).tolist()})
+        return json.dumps({'erreur': 'Nom introuvable'})
+    tools = [
+        {
+            "type": "function",
+            "function":{
+            "name": "filter_name_general_practitioners",
+            "description": "Filtre le nom des médecin généralistes par commune",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "commune": {
+                        "type": "string",
+                        "description": "Nom de la commune"
+                        }
+                    },
+                "required": ["commune"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function":{
+            "name": "filter_count_general_practitioners",
+            "description": "Filtre le nombre des médecin généralistes par commune",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "commune": {
+                        "type": "string",
+                        "description": "Nom de la commune"
+                        }
+                    },
+                "required": ["commune"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function":{
+            "name": "get_quartiers_osm",
+            "description": "Filtre les quartiers par commune",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "commune": {
+                        "type": "string",
+                        "description": "Nom de la commune"
+                        }
+                    },
+                "required": ["commune"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function":{
+            "name": "filter_id_number_general_practitioners",
+            "description": "Filtre l'identifiant des médecin-Generalistes par nom",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nom": {
+                        "type": "string",
+                        "description": "Nom du médecin-Generalistes"
+                        }
+                    },
+                "required": ["nom"]
+                }
+            }
+        }
+    ]
+    names_to_functions = {
+        "filter_name_general_practitioners": functools.partial(filter_name_general_practitioners, df),
+        "filter_count_general_practitioners": functools.partial(filter_count_general_practitioners, df),
+        "filter_id_number_general_practitioners": functools.partial(filter_id_number_general_practitioners, df)
+    }
+
+    try:
+        print('api ollama mistral call')
+        messages = [{"role": "user", "content": query}]
+        data =  {
+                "model": model,
+                "messages": messages,
+                "tools": tools,
+                "stream": False,
+                "echo": False,
+                "max_tokens": 5000,
+                "temperature": 0,
+                "top_p": 1e-6,
+                "top_k": -1,
+                "logprobs": None,
+                "n": 1,
+                "best_of": 1,
+                "use_beam_search": False,
+                "seed":42,
+        }
+
+        response = requests.post('http://ollama:11434/api/chat', json=data).json()
+        print("response :", response)
+        messages.append(response["message"])
+        tool_call = response["messsage"]["tool_calls"][0]
+        function_name = tool_call["function"]["name"]
+        function_params = json.loads(tool_call["function"]["arguments"])
+        function_result = names_to_functions[function_name](**function_params)
+        print(function_result)
+        messages.append({"role": "tool", "name": function_name, "content": function_result})
+        print(messages)
+        data = {
+            "model": model,
+            "messages": messages,
+        }
+        response = requests.post('http://ollama:11434/api/chat', json=data).json()
+        response = response["message"]["content"]
+        print("===============\n", response)
+    except Exception as e:
+        print(f"Mistral API call failed with error: {e}")
+        response = {}
