@@ -23,13 +23,21 @@ services:
         else
           echo 'Superutilisateur déjà existant.'
         fi
+<<<<<<< HEAD
         if ! python manage.py shell -c \"from pubmed_analyze.models import Article; exit(1 if Article.objects.exists() else 0)\"; then
+=======
+        if ! python manage.py shell -c \"from .models import Article; exit(1 if Article.objects.exists() else 0)\"; then
+>>>>>>> 3db89d36 (function_call_code)
           echo 'Ajout des articles à la base de données...'
           python manage.py commands article_to_database
         else
           echo 'Les articles sont déjà ajoutés.'
         fi
+<<<<<<< HEAD
         if ! python manage.py shell -c \"from pubmed_analyze.models import ArticlesWithAuthors; exit(1 if ArticlesWithAuthors.objects.exists() else 0)\"; then
+=======
+        if ! python manage.py shell -c \"from .models import ArticlesWithAuthors; exit(1 if ArticlesWithAuthors.objects.exists() else 0)\"; then
+>>>>>>> 3db89d36 (function_call_code)
         echo 'Ajout des articles avec auteurs à la base de données...'
         python manage.py commands article_full_to_database
         else

@@ -43,9 +43,9 @@ class Article(models.Model):
     term = models.CharField(null=True, max_length=200, verbose_name='term', db_column='term')
     authors = models.ManyToManyField(Authors, through='Authorship', related_name='articles')
 
-    def get_vector(article):
-        title = text_processing(article.title) 
-        abstract = text_processing(article.abstract)  
+    def get_vector(self):
+        title = text_processing(self.title) 
+        abstract = text_processing(self.abstract)  
         return model.encode(title + " " + abstract).tolist()
   
     def __str__(self):

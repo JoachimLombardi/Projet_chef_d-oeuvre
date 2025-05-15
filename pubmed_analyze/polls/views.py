@@ -11,7 +11,7 @@ from pathlib import Path
 import time
 from django.conf import settings
 from polls.monitoring.monitor_rag import handle_rag_pipeline
-from pubmed_analyze.polls.business_logic import function_calling
+from polls.business_logic import function_calling
 from .models import Article, ArticlesWithAuthors, RnaPrecomputed
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ArticleForm, AuthorAffiliationFormSet, CustomUserCreationForm, FunctionCallingForm, RAGForm, EvaluationForm
@@ -683,20 +683,38 @@ def disclaimer(request):
     return render(request, 'polls/disclaimer.html')
 
 
+@swagger_auto_schema(
+    method='get',
+    operation_description="Displays the function calling page with a form to call a function.",
+    responses={
+        200: 'Returns a rendered function calling page.',
+        500: 'Internal Server Error if something goes wrong.',
+    }
+)
+@swagger_auto_schema(
+    method='post',
+    operation_description="Calls a function based on the form data.",
+    responses={
+        200: 'Returns a rendered function calling page with the result of the function call.',
+        500: 'Internal Server Error if something goes wrong.',
+    }
+)
+@api_view(['GET', 'POST'])
+@error_handling
 def llm_choice(request):
-    forms = FunctionCallingForm(request.POST or None)
+    form = FunctionCallingForm(request.POST or None)
     if request.method == 'POST':
-        if forms.is_valid():
-            query = forms.cleaned_data.get('query')
-            llm_choice = forms.cleaned_data.get('llm_choice')
+        if form.is_valid():
+            query = form.cleaned_data.get('query')
+            llm_choice = form.cleaned_data.get('llm_choice')
             response = function_calling(query, llm_choice)
             if "error" in response:
                 messages.error(request, response["error"])
                 response = ""
-            return render(request, 'polls/function_calling.html', {'response': response})
+            return render(request, 'polls/function_calling.html', {'form': form, 'response': response})
         else:
             messages.error(request, "Le formulaire est invalide.")
-    return render(request, 'polls/function_calling.html', {'forms': forms})
+    return render(request, 'polls/function_calling.html', {'form': form})
 
 
 

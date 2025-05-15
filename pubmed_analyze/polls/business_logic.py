@@ -1,6 +1,7 @@
 
 import csv
 import functools
+import os
 import re
 
 import pandas as pd
@@ -710,7 +711,7 @@ def generation(query, retrieved_documents, model):
         response = json.loads(match)['response']
     else:
         response = "I can't answer with the provided context"
-    print("la réponse est: ", response)
+    print("la réponse est: ", response, flush=True)
     return response, retrieved_documents
 
 
@@ -761,7 +762,125 @@ def function_calling(query, model):
 
     file_path = "data/text/PS_LibreAcces_Personne_activite_202503110953.txt"
     df = pd.read_csv(file_path, sep="|", dtype=str) 
+    code = '''def analyze_health_data(patients):
+    from statistics import mean
+    bmi_list = []
+    for p in patients:
+        bmi = p["weight"] / (p["height"] ** 2)
+        bmi_list.append(bmi)
+    return {
+        "average_age": mean([p["age"] for p in patients]),
+        "average_bmi": round(mean(bmi_list), 2),
+        "bmi_values": [round(b, 2) for b in bmi_list]
+    }
+    '''
 
+    system_prompt = """
+    You are an AI assistant.
+    Your job is to reply to questions related to the pubmed database.
+    The pubmed data model represents a list of articles, their authors, and their affiliations.
+
+    To answer user questions, you have one tool at your disposal.
+
+    Firstly, a function called "get_sql_schema_of_table" which has a single parameter named "table" whose value is an element
+    of the following list: ["Authors", "Article", "Authorship", "Article_authors"].
+
+    A function called "run_sql_query" which has a single parameter named "sql_code".
+    It will run SQL code on the pubmed database. The SQL dialect is PostgreSQL.
+
+    For a given question, your job is to:
+    1. Get the schemas of the tables that might help you answer the question using the "get_sql_schema_of_table" function.
+    2. Run a PostgreSQL query on the relevant tables using the "run_sql_query" function.
+    3. Answer the user based on the result of the SQL query.
+
+    You will always remain factual, you will not hallucinate, and you will say that you don't know if you don't know.
+    You will politely ask the user to shoot another question if the question is not related to the pubmed database.
+    """
+
+    # def run_sql_query(sql_code):
+    #     """
+    #     Executes the given SQL query against the database and returns the results.
+
+    #     Args:
+    #         sql_code (str): The SQL query to be executed.
+
+    #     Returns:
+    #         result: The results of the SQL query.
+    #     """
+    #     db = SQLDatabase.from_uri(os.getenv("DATABASE_URL"))
+    #     return db.run(sql_code)
+
+
+    def get_sql_schema_of_table(table):
+        """
+        Returns the SQL CREATE TABLE statement for a Django model mapped to a PostgreSQL table.
+
+        Args:
+            table (str): Name of the table (case-sensitive, Django model name)
+
+        Returns:
+            str: SQL CREATE TABLE statement or error message
+        """
+        if table == "Affiliations":
+            return """The table Affiliations was created with the following code:
+
+        CREATE TABLE "Affiliations" (
+            "id" serial PRIMARY KEY,
+            "name of affiliation" text
+        );
+            """
+
+        if table == "Authors":
+            return """The table Authors was created with the following code:
+
+        CREATE TABLE "Authors" (
+            "id" serial PRIMARY KEY,
+            "name of author" varchar(2000)
+        );
+            """
+
+        if table == "Article":
+            return """The table Article was created with the following code:
+
+        CREATE TABLE "Article" (
+            "id" serial PRIMARY KEY,
+            "title of review" varchar(2000),
+            "date of publication" date,
+            "title of article" varchar(2000),
+            "abstract" text,
+            "pubmed id" integer,
+            "doi" varchar(200),
+            "conflict of interest" text,
+            "mesh terms" text,
+            "url" varchar(200),
+            "term" varchar(200)
+        );
+            """
+
+        if table == "Authorship":
+            return """The table Authorship was created with the following code:
+
+        CREATE TABLE "Authorship" (
+            "id" serial PRIMARY KEY,
+            "article_id" integer NOT NULL REFERENCES "Article" ("id") ON DELETE CASCADE,
+            "author_id" integer NOT NULL REFERENCES "Authors" ("id") ON DELETE CASCADE,
+            "affiliation_id" integer NOT NULL REFERENCES "Affiliations" ("id") ON DELETE CASCADE,
+            UNIQUE ("article_id", "author_id", "affiliation_id")
+        );
+            """
+
+        if table == "Article_authors":  
+            return """The table Article_authors was created with the following code:
+
+        CREATE TABLE "Article_authors" (
+            "id" serial PRIMARY KEY,
+            "article_id" integer NOT NULL REFERENCES "Article" ("id") ON DELETE CASCADE,
+            "authors_id" integer NOT NULL REFERENCES "Authors" ("id") ON DELETE CASCADE
+        );
+            """
+        return f"The table {table} does not exist in the schema."
+
+    
 
     def filter_name_general_practitioners(df, commune):
         if commune in df["Libellé commune (coord. structure)"].unique():
@@ -773,7 +892,7 @@ def function_calling(query, model):
     def filter_count_general_practitioners(df, commune):
         if commune in df["Libellé commune (coord. structure)"].unique():
             print({'nombre_médecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == "Versailles"].count())})
-            return json.dumps({'nombre_médecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].count())})
+            return json.dumps({'nombre_medecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].count())})
         return json.dumps({'erreur': 'Commune introuvable'})
 
 
@@ -782,6 +901,15 @@ def function_calling(query, model):
             print({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == "LEGER"].head(1).tolist()})
             return json.dumps({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == nom].head(1).tolist()})
         return json.dumps({'erreur': 'Nom introuvable'})
+    
+
+    def analyze_health_data(code: str, patients: list):
+        local_vars = {}
+        exec(code, {}, local_vars)  # Exécute le code, remplit local_vars avec la fonction `run`
+        if "run" not in local_vars:
+            raise ValueError("Function 'run' not defined in snippet.")
+        return local_vars["run"](patients) 
+    
     tools = [
         {
             "type": "function",
@@ -850,51 +978,476 @@ def function_calling(query, model):
                 "required": ["nom"]
                 }
             }
+        },
+        {
+            "type": "function",
+            "function": {
+            "name": "analyze_health_data",
+            "description": "Analyse un ensemble de données de santé et retourne des statistiques clés.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "patients": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "age": {"type": "integer", "description": "Age du patient"},
+                            "weight": {"type": "number", "description": "Poids du patient"},
+                            "height": {"type": "number", "description": "Taille du patient"}
+                            },
+                            "required": ["age", "weight", "height"]
+                            },
+                            "description": "Liste de patients avec âge, poids (kg) et taille (m)"
+                        }
+                    },
+                    "required": ["patients"]
+                }
+            }
         }
+        
+
+        # {
+        # "type": "function",
+        # "function": {
+        #     "name": "get_sql_schema_of_table",
+        #     "description": "Get the schema of a table in the pubmed database",
+        #     "parameters": {
+        #         "type": "object",
+        #         "properties": {
+        #             "table": {
+        #                 "type": "string",
+        #                 "enum": ["Authors", "Article", "Authorship", "Article_authors"],
+        #                 "description": "The question asked by the user",
+        #                 },
+        #             },
+        #         "required": ["table"],
+        #         },
+        #     },
+        # },
+        # {
+        #     "type": "function",
+        #     "function": {
+        #         "name": "run_sql_query",
+        #         "description": "Run an SQL query on the pubmed database",
+        #         "parameters": {
+        #             "type": "object",
+        #             "properties": {
+        #                 "sql_code": {
+        #                     "type": "string",
+        #                     "description": "SQL code to be run",
+        #                 },
+        #             },
+        #             "required": ["sql_code"],
+        #         },
+        #     },
+        # }
     ]
     names_to_functions = {
         "filter_name_general_practitioners": functools.partial(filter_name_general_practitioners, df),
         "filter_count_general_practitioners": functools.partial(filter_count_general_practitioners, df),
-        "filter_id_number_general_practitioners": functools.partial(filter_id_number_general_practitioners, df)
+        "filter_id_number_general_practitioners": functools.partial(filter_id_number_general_practitioners, df),
+        "generate_statistics": functools.partial(analyze_health_data, code),
+        "get_sql_schema_of_table": functools.partial(get_sql_schema_of_table),
+        # "run_sql_query": functools.partial(run_sql_query),
     }
+    for attempt in range(1,4):
+        try:
+            print('api ollama mistral call')
+            messages = [{"role":"system", "content": "Tu dois toujours utiliser les fonctions pour répondre"}, {"role": "user", "content": query}]
+            data =  {
+                    "model": model,
+                    "messages": messages,
+                    "tools": tools,
+                    "stream": False,
+                    "echo": False,
+                    "max_tokens": 5000,
+                    "temperature": 0,
+                    "top_p": 1e-6,
+                    "top_k": -1,
+                    "logprobs": None,
+                    "n": 1,
+                    "best_of": 1,
+                    "use_beam_search": False,
+                    "seed":42,
+            }
 
-    try:
-        print('api ollama mistral call')
-        messages = [{"role": "user", "content": query}]
-        data =  {
+            response = requests.post('http://ollama:11434/api/chat', json=data).json()
+            print("response :", response, flush=True)
+            messages.append(response["message"])
+            tool_call = response["message"]["tool_calls"][0]
+            function_name = tool_call["function"]["name"]
+            try:
+                function_params = json.loads(tool_call["function"]["arguments"])
+            except:
+                function_params = tool_call["function"]["arguments"]
+            print("function_params: ", function_params, flush=True)
+            function_result = names_to_functions[function_name](**function_params)
+            print("function_result: ", function_result, flush=True)
+            if isinstance(function_result, dict):
+                function_result = json.dumps(function_result)
+            messages.append({"role": "tool", "name": function_name, "content": function_result})
+            print(messages)
+            data = {
                 "model": model,
                 "messages": messages,
-                "tools": tools,
-                "stream": False,
-                "echo": False,
-                "max_tokens": 5000,
-                "temperature": 0,
-                "top_p": 1e-6,
-                "top_k": -1,
-                "logprobs": None,
-                "n": 1,
-                "best_of": 1,
-                "use_beam_search": False,
-                "seed":42,
-        }
+                "stream": False
+            }
+            print(type(data), flush=True)
+            response = requests.post('http://ollama:11434/api/chat', json=data).json()
+            print("===============\n", response, flush=True)
+            response = response["message"]["content"]
+            print("===============\n", response, flush=True)
+            return response
+        except Exception as e:
+            print(f"Mistral API call failed with error: {e}", flush=True)
+    return response["message"]["content"]
+    
 
-        response = requests.post('http://ollama:11434/api/chat', json=data).json()
-        print("response :", response)
-        messages.append(response["message"])
-        tool_call = response["messsage"]["tool_calls"][0]
-        function_name = tool_call["function"]["name"]
-        function_params = json.loads(tool_call["function"]["arguments"])
-        function_result = names_to_functions[function_name](**function_params)
-        print(function_result)
-        messages.append({"role": "tool", "name": function_name, "content": function_result})
-        print(messages)
-        data = {
-            "model": model,
-            "messages": messages,
-        }
-        response = requests.post('http://ollama:11434/api/chat', json=data).json()
-        response = response["message"]["content"]
-        print("===============\n", response)
-    except Exception as e:
-        print(f"Mistral API call failed with error: {e}")
-        response = {}
+# def function_calling(query, model, verbose=True):
+    # """
+    # Call a function based on its name and parameters.
+
+    # This function takes a query string and a function name and parameters and returns the result
+    # of the called function.
+
+    # Parameters:
+    # query (str): The query string to be answered.
+    # function_name (str): The name of the function to be called.
+    # function_parameters (dict): A dictionary containing the parameters for the function.
+
+    # Returns:
+    # str: The result of the called function.
+    # """
+
+    # file_path = "data/text/PS_LibreAcces_Personne_activite_202503110953.txt"
+    # df = pd.read_csv(file_path, sep="|", dtype=str) 
+
+
+    # def filter_name_general_practitioners(df, commune):
+    #     if commune in df["Libellé commune (coord. structure)"].unique():
+    #         print({'nom_médecin': df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == "Versailles"].head(5).tolist()})
+    #         return json.dumps({'nom_médecin': df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].head(5).tolist()})
+    #     return json.dumps({'erreur': 'Commune introuvable'})
+
+
+    # def filter_count_general_practitioners(df, commune):
+    #     if commune in df["Libellé commune (coord. structure)"].unique():
+    #         print({'nombre_médecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == "Versailles"].count())})
+    #         return json.dumps({'nombre_medecin': int(df["Nom d'exercice"][df['Libellé commune (coord. structure)'] == commune].count())})
+    #     return json.dumps({'erreur': 'Commune introuvable'})
+
+
+    # def filter_id_number_general_practitioners(df, nom):
+    #     if nom in df["Nom d'exercice"].unique():
+    #         print({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == "LEGER"].head(1).tolist()})
+    #         return json.dumps({'identifiant': df["Identification nationale PP"][df["Nom d'exercice"] == nom].head(1).tolist()})
+    #     return json.dumps({'erreur': 'Nom introuvable'})
+    
+    
+    # def run_sql_query(sql_code):
+    #     """
+    #     Executes the given SQL query against the database and returns the results.
+
+    #     Args:
+    #         sql_code (str): The SQL query to be executed.
+
+    #     Returns:
+    #         result: The results of the SQL query.
+    #     """
+    #     db = SQLDatabase.from_uri(os.getenv("DATABASE_URL"))
+    #     return db.run(sql_code)
+
+
+    # def get_sql_schema_of_table(table):
+    #     """
+    #     Returns the SQL CREATE TABLE statement for a Django model mapped to a PostgreSQL table.
+
+    #     Args:
+    #         table (str): Name of the table (case-sensitive, Django model name)
+
+    #     Returns:
+    #         str: SQL CREATE TABLE statement or error message
+    #     """
+    #     if table == "Affiliations":
+    #         return """The table Affiliations was created with the following code:
+
+    #     CREATE TABLE "Affiliations" (
+    #         "id" serial PRIMARY KEY,
+    #         "name of affiliation" text
+    #     );
+    #         """
+
+    #     if table == "Authors":
+    #         return """The table Authors was created with the following code:
+
+    #     CREATE TABLE "Authors" (
+    #         "id" serial PRIMARY KEY,
+    #         "name of author" varchar(2000)
+    #     );
+    #         """
+
+    #     if table == "Article":
+    #         return """The table Article was created with the following code:
+
+    #     CREATE TABLE "Article" (
+    #         "id" serial PRIMARY KEY,
+    #         "title of review" varchar(2000),
+    #         "date of publication" date,
+    #         "title of article" varchar(2000),
+    #         "abstract" text,
+    #         "pubmed id" integer,
+    #         "doi" varchar(200),
+    #         "conflict of interest" text,
+    #         "mesh terms" text,
+    #         "url" varchar(200),
+    #         "term" varchar(200)
+    #     );
+    #         """
+
+    #     if table == "Authorship":
+    #         return """The table Authorship was created with the following code:
+
+    #     CREATE TABLE "Authorship" (
+    #         "id" serial PRIMARY KEY,
+    #         "article_id" integer NOT NULL REFERENCES "Article" ("id") ON DELETE CASCADE,
+    #         "author_id" integer NOT NULL REFERENCES "Authors" ("id") ON DELETE CASCADE,
+    #         "affiliation_id" integer NOT NULL REFERENCES "Affiliations" ("id") ON DELETE CASCADE,
+    #         UNIQUE ("article_id", "author_id", "affiliation_id")
+    #     );
+    #         """
+
+    #     if table == "Article_authors":  
+    #         return """The table Article_authors was created with the following code:
+
+    #     CREATE TABLE "Article_authors" (
+    #         "id" serial PRIMARY KEY,
+    #         "article_id" integer NOT NULL REFERENCES "Article" ("id") ON DELETE CASCADE,
+    #         "authors_id" integer NOT NULL REFERENCES "Authors" ("id") ON DELETE CASCADE
+    #     );
+    #         """
+    #     return f"The table {table} does not exist in the schema."
+
+
+    
+    # tools = [
+    #     {
+    #         "type": "function",
+    #         "function":{
+    #         "name": "filter_name_general_practitioners",
+    #         "description": "Filtre le nom des médecin généralistes par commune",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "commune": {
+    #                     "type": "string",
+    #                     "description": "Nom de la commune"
+    #                     }
+    #                 },
+    #             "required": ["commune"]
+    #             }
+    #         }
+    #     },
+    #     {
+    #         "type": "function",
+    #         "function":{
+    #         "name": "filter_count_general_practitioners",
+    #         "description": "Filtre le nombre des médecin généralistes par commune",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "commune": {
+    #                     "type": "string",
+    #                     "description": "Nom de la commune"
+    #                     }
+    #                 },
+    #             "required": ["commune"]
+    #             }
+    #         }
+    #     },
+    #     {
+    #         "type": "function",
+    #         "function":{
+    #         "name": "get_quartiers_osm",
+    #         "description": "Filtre les quartiers par commune",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "commune": {
+    #                     "type": "string",
+    #                     "description": "Nom de la commune"
+    #                     }
+    #                 },
+    #             "required": ["commune"]
+    #             }
+    #         }
+    #     },
+    #     {
+    #         "type": "function",
+    #         "function":{
+    #         "name": "filter_id_number_general_practitioners",
+    #         "description": "Filtre l'identifiant des médecin-Generalistes par nom",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "nom": {
+    #                     "type": "string",
+    #                     "description": "Nom du médecin-Generalistes"
+    #                     }
+    #                 },
+    #             "required": ["nom"]
+    #             }
+    #         }
+    #     },
+    #      {
+    #         "type": "function",
+    #         "function": {
+    #             "name": "get_sql_schema_of_table",
+    #             "description": "Get the schema of a table in the pubmed database",
+    #             "parameters": {
+    #                 "type": "object",
+    #                 "properties": {
+    #                     "table": {
+    #                         "type": "string",
+    #                         "enum": ["Authors", "Article", "Authorship", "Article_authors"],
+    #                         "description": "The question asked by the user",
+    #                     },
+    #                 },
+    #                 "required": ["table"],
+    #             },
+    #         },
+    #     },
+    #     {
+    #         "type": "function",
+    #         "function": {
+    #             "name": "run_sql_query",
+    #             "description": "Run an SQL query on the pubmed database",
+    #             "parameters": {
+    #                 "type": "object",
+    #                 "properties": {
+    #                     "sql_code": {
+    #                         "type": "string",
+    #                         "description": "SQL code to be run",
+    #                     },
+    #                 },
+    #                 "required": ["sql_code"],
+    #             },
+    #         },
+    #     }
+    # ]
+
+    # names_to_functions = {
+    #     "filter_name_general_practitioners": functools.partial(filter_name_general_practitioners, df),
+    #     "filter_count_general_practitioners": functools.partial(filter_count_general_practitioners, df),
+    #     "filter_id_number_general_practitioners": functools.partial(filter_id_number_general_practitioners, df)
+    # }
+
+    # system_prompt = """
+    # You are an AI assistant.
+    # Your job is to reply to questions related to the pubmed database.
+    # The pubmed data model represents a list of articles, their authors, and their affiliations.
+
+    # To answer user questions, you have one tool at your disposal.
+
+    # Firstly, a function called "get_sql_schema_of_table" which has a single parameter named "table" whose value is an element
+    # of the following list: ["Authors", "Article", "Authorship", "Article_authors"].
+
+    # A function called "run_sql_query" which has a single parameter named "sql_code".
+    # It will run SQL code on the pubmed database. The SQL dialect is PostgreSQL.
+
+    # For a given question, your job is to:
+    # 1. Get the schemas of the tables that might help you answer the question using the "get_sql_schema_of_table" function.
+    # 2. Run a SQLite query on the relevant tables using the "run_sql_query" function.
+    # 3. Answer the user based on the result of the SQL query.
+
+    # You will always remain factual, you will not hallucinate, and you will say that you don't know if you don't know.
+    # You will politely ask the user to shoot another question if the question is not related to the pubmed database.
+    # """
+
+    # messages = [
+    #     {
+    #         "role": "system",
+    #         "content": system_prompt
+    #     },
+    #     {
+    #         "role": "user",
+    #         "content": query
+    #     }
+    # ]
+
+    # used_run_sql = False
+    # used_get_sql_schema_of_table = False
+    # # Function to determine tool choice based on usage
+    # def tool_choice(used_run_sql, used_get_sql_schema_of_table):
+    #     # If the question is out of topic the agent is not expected to run a tool call
+    #     if not used_get_sql_schema_of_table:
+    #         return "auto"
+    #     # The agent is expected to run "used_run_sql" after getting the specifications of the tables of interest
+    #     if used_get_sql_schema_of_table and not used_run_sql:
+    #         return "any"
+    #     # The agent is not expected to run a tool call after querying the SQL table
+    #     if used_run_sql and used_get_sql_schema_of_table:
+    #         return "none"
+    #     return "auto"
+    # iteration = 0
+    # max_iteration = 2
+    # try:
+    #     while iteration < max_iteration:
+    #         data =  {
+    #                 "model": model,
+    #                 "messages": messages,
+    #                 "tools": tools,
+    #                 "stream": False,
+    #                 "echo": False,
+    #                 "max_tokens": 5000,
+    #                 "temperature": 0,
+    #                 "top_p": 1e-6,
+    #                 "top_k": -1,
+    #                 "logprobs": None,
+    #                 "n": 1,
+    #                 "best_of": 1,
+    #                 "use_beam_search": False,
+    #                 "seed":42,
+    #                 "tool_choice": tool_choice(used_run_sql, used_get_sql_schema_of_table)
+    #         }
+
+    #         response = requests.post('http://ollama:11434/api/chat', json=data).json()
+    #         print("response :", response, flush=True)
+    #         messages.append(response["message"])
+    #         tool_calls = response["message"]["tool_calls"]
+    #         if not tool_calls:
+    #             if verbose:
+    #                 print(f"Assistant: {response['message']['content']}\n")
+    #             return response["message"]["content"]
+    #         for tool_call in tool_calls:
+    #             function_name = tool_call["function"]["name"]
+    #             print("function_params: ", tool_call["function"]["arguments"], flush=True)
+    #             try:
+    #                 function_params = json.loads(tool_call["function"]["arguments"])
+    #             except:
+    #                 function_params = tool_call["function"]["arguments"]
+    #             if function_name == "get_sql_schema_of_table":
+    #                 function_result = get_sql_schema_of_table(function_params['table'])
+    #                 if verbose:
+    #                     print(f"Tool: Getting SQL schema of table {function_params['table']}\n")
+    #                 used_get_sql_schema_of_table = True
+    #             elif function_name == "run_sql_query":
+    #                 function_result = run_sql_query(function_params['sql_code'])
+    #                 if verbose:
+    #                     print(f"Tool: Running code {function_params['sql_code']}\n")
+    #                 used_run_sql = True
+    #             else:
+    #                 function_result = names_to_functions[function_name](**function_params)
+    #             print("function_result: ", function_result, flush=True)
+    #             if isinstance(function_result, dict):
+    #                 function_result = json.dumps(function_result)
+    #             messages.append({"role": "tool", "name": function_name, "content": function_result, "tool_call_id": tool_call["id"]})
+    #             print(messages)
+    #         iteration += 1
+    #     print("===============\n", response, flush=True)
+    #     return response["message"]["content"]
+    # except Exception as e:
+    #         print(f"Mistral API call failed with error: {e}", flush=True)
+    #         response = {}
+    #         return response
+    

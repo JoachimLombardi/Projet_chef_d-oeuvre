@@ -246,10 +246,7 @@ class GeneForm(forms.Form):
 
 class FunctionCallingForm(forms.Form):
     LLM_CHOICE = [
-        ("mistral", "mistal 7b"),
-        ("llama3.2", "llama 3.2"),
-        ("gemma3", "gemma 3"),
-         
+    ("mistral-small", "mistral small") 
     ]
     query = forms.CharField(label="Poser une question", widget=forms.TextInput(attrs={'class': 'form-control'}))
     llm_choice = forms.ChoiceField(choices=LLM_CHOICE, label="Choisissez un llm", 

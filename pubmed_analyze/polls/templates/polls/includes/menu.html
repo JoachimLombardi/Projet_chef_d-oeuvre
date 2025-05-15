@@ -6,5 +6,5 @@
     <a href="{% url 'uptime_kuma' %}" target="_blank" class="{% if request.resolver_match.url_name == 'uptime_kuma' %}active{% endif %}">Uptime Kuma</a>
     <a href="{% url 'get_info_gene' %}" class="{% if request.resolver_match.url_name == 'get_info_gene' %}active{% endif %}">Info gène</a>
     <a href="{% url 'disclaimer' %}" class="{% if request.resolver_match.url_name == 'disclaimer' %}active{% endif %}">Disclaimer</a>
-    <a href="{% url 'app_doc' %}" target="_blank" class="{% if request.resolver_match.url_name == 'app_doc' %}active{% endif %}">Documentation de l'application</a>
+    <a href="{% url 'function_calling' %}" class="{% if request.resolver_match.url_name == 'function_calling' %}active{% endif %}">Function Calling</a>
 </div>

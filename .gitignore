@@ -175,3 +175,4 @@ vllm_models/
 elasticsearch-8.15.1
 
 pubmed_analyze/docker/data/*
+PS_LibreAcces_Personne_activite_202503110953.txt
